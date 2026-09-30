@@ -30,6 +30,8 @@ struct SolarView: View {
     /// suggested in ENPHASE_INTEGRATION_SPEC.md for small German residential systems.
     private let feedInTariffPerKWh = 0.08
 
+    @State private var requestsUsedThisMonth: Int?
+
     var body: some View {
         NavigationStack {
             content
@@ -49,7 +51,10 @@ struct SolarView: View {
                         }
                         ToolbarItem(placement: .primaryAction) {
                             Button {
-                                Task { await model.refresh() }
+                                Task {
+                                    await model.refresh()
+                                    requestsUsedThisMonth = await model.requestsUsedThisMonth()
+                                }
                             } label: {
                                 Label("Aktualisieren", systemImage: "arrow.clockwise")
                             }
@@ -59,6 +64,7 @@ struct SolarView: View {
         }
         .task {
             await model.start()
+            requestsUsedThisMonth = await model.requestsUsedThisMonth()
         }
     }
 
@@ -80,6 +86,12 @@ struct SolarView: View {
             if let today = model.today {
                 ScrollView {
                     MetricsView(sample: today, feedInTariffPerKWh: feedInTariffPerKWh)
+                    if let requestsUsedThisMonth {
+                        Text("Enphase-Abfragen diesen Monat: \(requestsUsedThisMonth) / \(EnphaseRequestBudget.monthlyLimit)")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .padding(.bottom, 8)
+                    }
                 }
             } else {
                 ProgressView("Lade Anlagendaten…")

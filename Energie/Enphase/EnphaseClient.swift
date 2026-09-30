@@ -10,6 +10,12 @@ import Foundation
 enum EnphaseClientError: Error, LocalizedError {
     case invalidResponse
     case http(status: Int, body: String)
+    /// HTTP 429 with a decodable body (F4.3) — more specific than `.http` because it carries
+    /// when the limit resets, so callers/UI can say more than just "try again".
+    case rateLimited(period: String?, periodEnd: Date?)
+    /// The monthly request budget (F4.2) is used up — thrown by `perform(url:)` *before* any
+    /// network access, not a response from Enphase.
+    case monthlyBudgetExhausted
 
     var errorDescription: String? {
         switch self {
@@ -17,16 +23,37 @@ enum EnphaseClientError: Error, LocalizedError {
             return "Enphase hat eine unerwartete Antwort geschickt."
         case .http(let status, let body):
             return "Enphase-Anfrage fehlgeschlagen (HTTP \(status)): \(body)"
+        case .rateLimited(let period, let periodEnd):
+            let periodLabel = period == "month" ? "Monats" : "Minuten"
+            if let periodEnd {
+                return "Enphase-\(periodLabel)-Limit erreicht. Nächster Versuch ab \(periodEnd.formatted(date: .omitted, time: .shortened))."
+            }
+            return "Enphase-\(periodLabel)-Limit erreicht. Bitte später erneut versuchen."
+        case .monthlyBudgetExhausted:
+            return "Monatliches Abfrage-Kontingent für Enphase ist erschöpft. Weitere Abrufe sind erst im nächsten Monat wieder möglich."
         }
     }
 }
 
+/// Body Enphase sends with HTTP 429 (see ENPHASE_API_WERTE.md): `period` is "minute" or "month".
+private struct EnphaseRateLimitErrorBody: Decodable {
+    let period: String?
+    let periodEnd: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case period
+        case periodEnd = "period_end"
+    }
+}
+
 /// Authenticated Enphase API access. Every request carries both required headers
-/// (`Authorization: Bearer <token>` and `key: <API key>`, see ENPHASE_API_WERTE.md) and passes
-/// through the shared minute throttle first.
+/// (`Authorization: Bearer <token>` and `key: <API key>`, see ENPHASE_API_WERTE.md), is gated by
+/// the monthly budget (F4.2) and passes through the shared minute throttle (F4.1) before going
+/// out; a successfully sent request is then counted against the budget.
 struct EnphaseClient {
     var urlSession: URLSession = .shared
     var throttle: EnphaseRequestThrottle
+    var budget: EnphaseRequestBudget
     var apiKey: @Sendable () -> String
     var accessToken: @Sendable () async throws -> String
 
@@ -78,6 +105,9 @@ struct EnphaseClient {
     }
 
     private func perform<T: Decodable>(_ url: URL) async throws -> T {
+        guard await !budget.isExhausted() else {
+            throw EnphaseClientError.monthlyBudgetExhausted
+        }
         await throttle.acquire()
 
         var request = URLRequest(url: url)
@@ -85,8 +115,19 @@ struct EnphaseClient {
         request.setValue(apiKey(), forHTTPHeaderField: "key")
 
         let (data, response) = try await urlSession.data(for: request)
+        await budget.recordRequest()
+
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EnphaseClientError.invalidResponse
+        }
+        if httpResponse.statusCode == 429 {
+            if let rateLimit = try? JSONDecoder().decode(EnphaseRateLimitErrorBody.self, from: data) {
+                throw EnphaseClientError.rateLimited(
+                    period: rateLimit.period,
+                    periodEnd: rateLimit.periodEnd.map { Date(timeIntervalSince1970: TimeInterval($0)) }
+                )
+            }
+            throw EnphaseClientError.http(status: 429, body: String(data: data, encoding: .utf8) ?? "")
         }
         guard (200..<300).contains(httpResponse.statusCode) else {
             throw EnphaseClientError.http(status: httpResponse.statusCode, body: String(data: data, encoding: .utf8) ?? "")

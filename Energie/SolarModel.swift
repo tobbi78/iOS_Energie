@@ -54,6 +54,7 @@ final class SolarModel {
     private let settings: EnphaseSettings
     private let oauthClient: EnphaseOAuthClient
     private let throttle: EnphaseRequestThrottle
+    private let budget: EnphaseRequestBudget
     private let urlSession: URLSession
     private let now: @Sendable () -> Date
     private let modelContext: ModelContext
@@ -66,6 +67,7 @@ final class SolarModel {
         modelContext: ModelContext,
         oauthClient: EnphaseOAuthClient = EnphaseOAuthClient(),
         throttle: EnphaseRequestThrottle = EnphaseRequestThrottle(),
+        budget: EnphaseRequestBudget = EnphaseRequestBudget(),
         urlSession: URLSession = .shared,
         userDefaults: UserDefaults = .standard,
         now: @escaping @Sendable () -> Date = { Date() }
@@ -74,10 +76,16 @@ final class SolarModel {
         self.modelContext = modelContext
         self.oauthClient = oauthClient
         self.throttle = throttle
+        self.budget = budget
         self.urlSession = urlSession
         self.userDefaults = userDefaults
         self.now = now
         state = SolarModel.initialState(settings: settings)
+    }
+
+    /// Requests already used against the monthly budget this calendar month (F4.4).
+    func requestsUsedThisMonth() async -> Int {
+        await budget.usedThisMonth()
     }
 
     /// Runs once when the PV section first appears: polls today's live values first, then
@@ -362,6 +370,7 @@ final class SolarModel {
         return EnphaseClient(
             urlSession: urlSession,
             throttle: throttle,
+            budget: budget,
             apiKey: { apiKey },
             accessToken: { [self] in try await self.validAccessToken() }
         )
