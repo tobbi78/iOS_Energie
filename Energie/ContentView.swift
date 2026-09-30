@@ -5,57 +5,35 @@
 //  Created by Tobias Florian on 30.09.26.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
+/// App root. A `TabView` even with a single tab today, so a future heat-pump section can be
+/// added as a sibling tab without restructuring the navigation (see BACKLOG.md, "Zukünftige
+/// zweite Energiequelle: Wärmepumpe").
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @State private var settings = EnphaseSettings()
+    @State private var solarModel: SolarModel?
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+        TabView {
+            Tab("PV-Anlage", systemImage: "sun.max.fill") {
+                if let solarModel {
+                    SolarView(model: solarModel)
+                } else {
+                    ProgressView()
                 }
             }
-        } detail: {
-            Text("Select an item")
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+        .task {
+            guard solarModel == nil else { return }
+            solarModel = SolarModel(settings: settings, modelContext: modelContext)
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: PVDailySample.self, inMemory: true)
 }
