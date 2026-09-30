@@ -80,17 +80,25 @@ final class SolarModel {
         state = SolarModel.initialState(settings: settings)
     }
 
-    /// Runs once when the PV section first appears: backfills missing history, finalizes any
-    /// not-yet-final past days, then polls today's live values (F3.2/F3.3, "Umsetzungsstand").
+    /// Runs once when the PV section first appears: polls today's live values first, then
+    /// backfills missing history and finalizes past days in the background (F3.2/F3.3).
+    ///
+    /// Order matters here: `refresh()` alone never needs more than ~6 requests (system lookup +
+    /// 5 "today" endpoints), comfortably under the shared minute throttle. Backfill and finalize
+    /// can each add 5 more — on a first run or after a multi-day gap that easily exceeds the
+    /// throttle's limit, which makes it deliberately *sleep* for up to ~75s before the
+    /// over-the-limit request goes out (see `EnphaseRequestThrottle`). Running `refresh()` first
+    /// means the screen already shows today's values before that sleep can happen, instead of
+    /// the whole screen being stuck on the loading spinner for it.
     func start() async {
         guard settings.credentials.isComplete, settings.tokens != nil else {
             state = SolarModel.initialState(settings: settings)
             return
         }
+        await refresh()
         await backfillMissingDaysIfNeeded()
         await runDailyFinalizeIfNeeded()
         pruneOldDailySamplesIfNeeded()
-        await refresh()
     }
 
     private static func initialState(settings: EnphaseSettings) -> SolarState {
