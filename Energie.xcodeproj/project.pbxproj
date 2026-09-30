@@ -1,0 +1,554 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		89340A3F306D4B8C005BA574 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 89340A2E306D4B89005BA574;
+			remoteInfo = Energie;
+		};
+		89340A49306D4B8C005BA574 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 89340A2E306D4B89005BA574;
+			remoteInfo = Energie;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		89340A2F306D4B89005BA574 /* Energie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Energie.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		89340A3E306D4B8C005BA574 /* EnergieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EnergieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		89340A48306D4B8C005BA574 /* EnergieUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EnergieUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		89340A31306D4B89005BA574 /* Energie */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Energie;
+			sourceTree = "<group>";
+		};
+		89340A41306D4B8C005BA574 /* EnergieTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = EnergieTests;
+			sourceTree = "<group>";
+		};
+		89340A4B306D4B8C005BA574 /* EnergieUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = EnergieUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		89340A2C306D4B89005BA574 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		89340A3B306D4B8C005BA574 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		89340A45306D4B8C005BA574 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		89340A26306D4B89005BA574 = {
+			isa = PBXGroup;
+			children = (
+				89340A31306D4B89005BA574 /* Energie */,
+				89340A41306D4B8C005BA574 /* EnergieTests */,
+				89340A4B306D4B8C005BA574 /* EnergieUITests */,
+				89340A30306D4B89005BA574 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		89340A30306D4B89005BA574 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				89340A2F306D4B89005BA574 /* Energie.app */,
+				89340A3E306D4B8C005BA574 /* EnergieTests.xctest */,
+				89340A48306D4B8C005BA574 /* EnergieUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		89340A2E306D4B89005BA574 /* Energie */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 89340A50306D4B8C005BA574 /* Build configuration list for PBXNativeTarget "Energie" */;
+			buildPhases = (
+				89340A2B306D4B89005BA574 /* Sources */,
+				89340A2C306D4B89005BA574 /* Frameworks */,
+				89340A2D306D4B89005BA574 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				89340A31306D4B89005BA574 /* Energie */,
+			);
+			name = Energie;
+			productName = Energie;
+			productReference = 89340A2F306D4B89005BA574 /* Energie.app */;
+			productType = "com.apple.product-type.application";
+		};
+		89340A3D306D4B8C005BA574 /* EnergieTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 89340A53306D4B8C005BA574 /* Build configuration list for PBXNativeTarget "EnergieTests" */;
+			buildPhases = (
+				89340A3A306D4B8C005BA574 /* Sources */,
+				89340A3B306D4B8C005BA574 /* Frameworks */,
+				89340A3C306D4B8C005BA574 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				89340A40306D4B8C005BA574 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				89340A41306D4B8C005BA574 /* EnergieTests */,
+			);
+			name = EnergieTests;
+			productName = EnergieTests;
+			productReference = 89340A3E306D4B8C005BA574 /* EnergieTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		89340A47306D4B8C005BA574 /* EnergieUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 89340A56306D4B8C005BA574 /* Build configuration list for PBXNativeTarget "EnergieUITests" */;
+			buildPhases = (
+				89340A44306D4B8C005BA574 /* Sources */,
+				89340A45306D4B8C005BA574 /* Frameworks */,
+				89340A46306D4B8C005BA574 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				89340A4A306D4B8C005BA574 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				89340A4B306D4B8C005BA574 /* EnergieUITests */,
+			);
+			name = EnergieUITests;
+			productName = EnergieUITests;
+			productReference = 89340A48306D4B8C005BA574 /* EnergieUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		89340A27306D4B89005BA574 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					89340A2E306D4B89005BA574 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					89340A3D306D4B8C005BA574 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = 89340A2E306D4B89005BA574;
+					};
+					89340A47306D4B8C005BA574 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = 89340A2E306D4B89005BA574;
+					};
+				};
+			};
+			buildConfigurationList = 89340A2A306D4B89005BA574 /* Build configuration list for PBXProject "Energie" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 89340A26306D4B89005BA574;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 89340A30306D4B89005BA574 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				89340A2E306D4B89005BA574 /* Energie */,
+				89340A3D306D4B8C005BA574 /* EnergieTests */,
+				89340A47306D4B8C005BA574 /* EnergieUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		89340A2D306D4B89005BA574 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		89340A3C306D4B8C005BA574 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		89340A46306D4B8C005BA574 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		89340A2B306D4B89005BA574 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		89340A3A306D4B8C005BA574 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		89340A44306D4B8C005BA574 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		89340A40306D4B8C005BA574 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 89340A2E306D4B89005BA574 /* Energie */;
+			targetProxy = 89340A3F306D4B8C005BA574 /* PBXContainerItemProxy */;
+		};
+		89340A4A306D4B8C005BA574 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 89340A2E306D4B89005BA574 /* Energie */;
+			targetProxy = 89340A49306D4B8C005BA574 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		89340A4E306D4B8C005BA574 /* Debug configuration for PBXProject "Energie" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		89340A4F306D4B8C005BA574 /* Release configuration for PBXProject "Energie" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		89340A51306D4B8C005BA574 /* Debug configuration for PBXNativeTarget "Energie" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		89340A52306D4B8C005BA574 /* Release configuration for PBXNativeTarget "Energie" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		89340A54306D4B8C005BA574 /* Debug configuration for PBXNativeTarget "EnergieTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.EnergieTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Energie.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Energie";
+			};
+			name = Debug;
+		};
+		89340A55306D4B8C005BA574 /* Release configuration for PBXNativeTarget "EnergieTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.EnergieTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Energie.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Energie";
+			};
+			name = Release;
+		};
+		89340A57306D4B8C005BA574 /* Debug configuration for PBXNativeTarget "EnergieUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.EnergieUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Energie;
+			};
+			name = Debug;
+		};
+		89340A58306D4B8C005BA574 /* Release configuration for PBXNativeTarget "EnergieUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.EnergieUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Energie;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		89340A2A306D4B89005BA574 /* Build configuration list for PBXProject "Energie" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				89340A4E306D4B8C005BA574 /* Debug configuration for PBXProject "Energie" */,
+				89340A4F306D4B8C005BA574 /* Release configuration for PBXProject "Energie" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		89340A50306D4B8C005BA574 /* Build configuration list for PBXNativeTarget "Energie" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				89340A51306D4B8C005BA574 /* Debug configuration for PBXNativeTarget "Energie" */,
+				89340A52306D4B8C005BA574 /* Release configuration for PBXNativeTarget "Energie" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		89340A53306D4B8C005BA574 /* Build configuration list for PBXNativeTarget "EnergieTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				89340A54306D4B8C005BA574 /* Debug configuration for PBXNativeTarget "EnergieTests" */,
+				89340A55306D4B8C005BA574 /* Release configuration for PBXNativeTarget "EnergieTests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		89340A56306D4B8C005BA574 /* Build configuration list for PBXNativeTarget "EnergieUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				89340A57306D4B8C005BA574 /* Debug configuration for PBXNativeTarget "EnergieUITests" */,
+				89340A58306D4B8C005BA574 /* Release configuration for PBXNativeTarget "EnergieUITests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 89340A27306D4B89005BA574 /* Project object */;
+	validationLevel = 1;
+}
