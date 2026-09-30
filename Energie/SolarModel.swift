@@ -88,6 +88,19 @@ final class SolarModel {
         await budget.usedThisMonth()
     }
 
+    /// Read-only access for the settings screen (F6.1) — credentials stay owned by `settings`.
+    var credentials: EnphaseCredentials { settings.credentials }
+    var systemID: Int? { settings.systemID }
+
+    /// Clears the current session so the next appearance shows the sign-in prompt again.
+    /// Deliberately keeps credentials/system info, since those are tied to the Enphase
+    /// developer app/installation, not the OAuth session.
+    func signOut() {
+        settings.setTokens(nil)
+        today = nil
+        state = .needsSignIn
+    }
+
     /// Runs once when the PV section first appears: polls today's live values first, then
     /// backfills missing history and finalizes past days in the background (F3.2/F3.3).
     ///
@@ -117,7 +130,12 @@ final class SolarModel {
 
     func saveCredentials(clientID: String, clientSecret: String, apiKey: String) {
         settings.setCredentials(clientID: clientID, clientSecret: clientSecret, apiKey: apiKey)
-        state = settings.tokens == nil ? .needsSignIn : .loading
+        // A changed client/secret needs a fresh OAuth session regardless of whether one already
+        // existed — also avoids leaving `state` stuck on `.loading` with nothing to resolve it
+        // (previously unreachable from the sign-in-less credentials form, but reachable now that
+        // the settings screen (F6.1) can save credentials while already signed in).
+        settings.setTokens(nil)
+        state = .needsSignIn
     }
 
     /// Runs the OAuth authorization-code flow via SwiftUI's `WebAuthenticationSession` and, on

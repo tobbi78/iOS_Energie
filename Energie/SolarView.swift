@@ -26,10 +26,6 @@ struct SolarView: View {
     var model: SolarModel
     var displayPreferences: PVDisplayPreferences
 
-    /// Placeholder until F6.2 (adjustable feed-in tariff setting) lands; matches the default
-    /// suggested in ENPHASE_INTEGRATION_SPEC.md for small German residential systems.
-    private let feedInTariffPerKWh = 0.08
-
     @State private var requestsUsedThisMonth: Int?
 
     var body: some View {
@@ -39,17 +35,6 @@ struct SolarView: View {
                 .toolbar {
                     if model.state == .ready {
                         ToolbarItem(placement: .primaryAction) {
-                            NavigationLink {
-                                PVHistoryScreen(
-                                    dailySamples: dailySamples,
-                                    yearlySamples: yearlySamples,
-                                    displayPreferences: displayPreferences
-                                )
-                            } label: {
-                                Label("Verlauf", systemImage: "chart.xyaxis.line")
-                            }
-                        }
-                        ToolbarItem(placement: .primaryAction) {
                             Button {
                                 Task {
                                     await model.refresh()
@@ -57,6 +42,26 @@ struct SolarView: View {
                                 }
                             } label: {
                                 Label("Aktualisieren", systemImage: "arrow.clockwise")
+                            }
+                        }
+                        ToolbarItem(placement: .primaryAction) {
+                            Menu {
+                                NavigationLink {
+                                    PVHistoryScreen(
+                                        dailySamples: dailySamples,
+                                        yearlySamples: yearlySamples,
+                                        displayPreferences: displayPreferences
+                                    )
+                                } label: {
+                                    Label("Verlauf", systemImage: "chart.xyaxis.line")
+                                }
+                                NavigationLink {
+                                    PVSettingsScreen(model: model, displayPreferences: displayPreferences)
+                                } label: {
+                                    Label("Einstellungen", systemImage: "gearshape")
+                                }
+                            } label: {
+                                Label("Mehr", systemImage: "ellipsis.circle")
                             }
                         }
                     }
@@ -85,7 +90,7 @@ struct SolarView: View {
         case .ready:
             if let today = model.today {
                 ScrollView {
-                    MetricsView(sample: today, feedInTariffPerKWh: feedInTariffPerKWh)
+                    MetricsView(sample: today, feedInTariffPerKWh: displayPreferences.feedInTariffPerKWh)
                     if let requestsUsedThisMonth {
                         Text("Enphase-Abfragen diesen Monat: \(requestsUsedThisMonth) / \(EnphaseRequestBudget.monthlyLimit)")
                             .font(.caption)
@@ -123,6 +128,75 @@ private struct PVHistoryScreen: View {
             )
         }
         .navigationTitle("Verlauf")
+    }
+}
+
+// MARK: - Settings submenu
+
+/// Connection status/sign-out, editable credentials, and the feed-in tariff (F6.1/F6.2).
+private struct PVSettingsScreen: View {
+    var model: SolarModel
+    var displayPreferences: PVDisplayPreferences
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var clientID = ""
+    @State private var clientSecret = ""
+    @State private var apiKey = ""
+    @State private var tariffText = ""
+
+    var body: some View {
+        Form {
+            Section("Verbindung") {
+                if let systemID = model.systemID {
+                    LabeledContent("Anlage", value: "\(systemID)")
+                }
+                Button("Abmelden", role: .destructive) {
+                    model.signOut()
+                    dismiss()
+                }
+            }
+
+            Section {
+                TextField("Client-ID", text: $clientID)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                SecureField("Client-Secret", text: $clientSecret)
+                SecureField("API-Key", text: $apiKey)
+                Button("Zugangsdaten speichern") {
+                    model.saveCredentials(clientID: clientID, clientSecret: clientSecret, apiKey: apiKey)
+                }
+                .disabled(clientID.isEmpty || clientSecret.isEmpty || apiKey.isEmpty)
+            } header: {
+                Text("Zugangsdaten")
+            } footer: {
+                Text("Ein Ändern der Zugangsdaten erfordert eine erneute Anmeldung.")
+            }
+
+            Section {
+                HStack {
+                    TextField("Tarif", text: $tariffText)
+                        .keyboardType(.decimalPad)
+                    Text("€/kWh")
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Einspeisevergütung")
+            } footer: {
+                Text("Richtwert ohne Abrechnungsanspruch für die geschätzte Vergütung bei der Einspeisung-Kachel.")
+            }
+        }
+        .navigationTitle("Einstellungen")
+        .onAppear {
+            let credentials = model.credentials
+            clientID = credentials.clientID
+            clientSecret = credentials.clientSecret
+            apiKey = credentials.apiKey
+            tariffText = displayPreferences.feedInTariffPerKWh.formatted(.number.precision(.fractionLength(2)))
+        }
+        .onChange(of: tariffText) { _, newValue in
+            guard let value = Double(newValue.replacingOccurrences(of: ",", with: ".")), value > 0 else { return }
+            displayPreferences.setFeedInTariffPerKWh(value)
+        }
     }
 }
 
