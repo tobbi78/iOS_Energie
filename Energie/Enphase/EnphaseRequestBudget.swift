@@ -16,6 +16,10 @@ import Foundation
 /// An actor, like `EnphaseRequestThrottle`, since `EnphaseClient` can issue several requests
 /// concurrently (`async let` in `SolarModel`) and a plain read-increment-write on `UserDefaults`
 /// would otherwise be racy.
+///
+/// Instantiated with `SharedAppGroup.userDefaults` so the widget extension's independent copy
+/// of this file (`EnergieWidget/EnphaseRequestBudget.swift` — separate target/module, see that
+/// file's header comment) shares the same budget. Keep both copies byte-identical.
 actor EnphaseRequestBudget {
     static let monthlyLimit = 1000
 

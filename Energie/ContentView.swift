@@ -29,7 +29,11 @@ struct ContentView: View {
         }
         .task {
             guard solarModel == nil else { return }
-            solarModel = SolarModel(settings: settings, modelContext: modelContext)
+            solarModel = SolarModel(
+                settings: settings,
+                modelContext: modelContext,
+                budget: EnphaseRequestBudget(userDefaults: SharedAppGroup.userDefaults)
+            )
         }
     }
 }
