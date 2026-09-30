@@ -17,6 +17,7 @@ enum EnphaseSecretKey: String, CaseIterable {
     case refreshToken
     case tokenExpiresAt
     case systemID
+    case operationalAt
 }
 
 /// Storage abstraction for Enphase secrets, injectable so tests never touch the real Keychain.

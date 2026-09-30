@@ -55,6 +55,28 @@ struct EnphaseClient {
         try await perform(EnphaseEndpoints.batteryTelemetry(systemID: systemID))
     }
 
+    // MARK: - Lifetime (daily) series — backfill (F3.2) and daily finalize (F3.3)
+
+    func fetchEnergyLifetime(systemID: Int, startDate: Date? = nil) async throws -> EnphaseEnergyLifetimeResponse {
+        try await perform(EnphaseEndpoints.energyLifetime(systemID: systemID, startDate: startDate))
+    }
+
+    func fetchConsumptionLifetime(systemID: Int, startDate: Date? = nil) async throws -> EnphaseConsumptionLifetimeResponse {
+        try await perform(EnphaseEndpoints.consumptionLifetime(systemID: systemID, startDate: startDate))
+    }
+
+    func fetchImportLifetime(systemID: Int, startDate: Date? = nil) async throws -> EnphaseImportLifetimeResponse {
+        try await perform(EnphaseEndpoints.energyImportLifetime(systemID: systemID, startDate: startDate))
+    }
+
+    func fetchExportLifetime(systemID: Int, startDate: Date? = nil) async throws -> EnphaseExportLifetimeResponse {
+        try await perform(EnphaseEndpoints.energyExportLifetime(systemID: systemID, startDate: startDate))
+    }
+
+    func fetchBatteryLifetime(systemID: Int, startDate: Date? = nil) async throws -> EnphaseBatteryLifetimeResponse {
+        try await perform(EnphaseEndpoints.batteryLifetime(systemID: systemID, startDate: startDate))
+    }
+
     private func perform<T: Decodable>(_ url: URL) async throws -> T {
         await throttle.acquire()
 

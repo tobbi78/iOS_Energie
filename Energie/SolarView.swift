@@ -6,6 +6,7 @@
 //
 
 import AuthenticationServices
+import SwiftData
 import SwiftUI
 
 /// PV accent color, kept separate from a potential future heat-pump accent (see BACKLOG.md,
@@ -19,7 +20,11 @@ extension ShapeStyle where Self == Color {
 /// one (see BACKLOG.md).
 struct SolarView: View {
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
+    @Query(sort: \PVDailySample.date) private var dailySamples: [PVDailySample]
+    @Query private var yearlySamples: [PVYearlySample]
+
     var model: SolarModel
+    var displayPreferences: PVDisplayPreferences
 
     /// Placeholder until F6.2 (adjustable feed-in tariff setting) lands; matches the default
     /// suggested in ENPHASE_INTEGRATION_SPEC.md for small German residential systems.
@@ -41,6 +46,9 @@ struct SolarView: View {
                     }
                 }
         }
+        .task {
+            await model.start()
+        }
     }
 
     @ViewBuilder
@@ -59,7 +67,14 @@ struct SolarView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .ready:
             if let today = model.today {
-                MetricsView(sample: today, feedInTariffPerKWh: feedInTariffPerKWh)
+                ScrollView {
+                    MetricsView(sample: today, feedInTariffPerKWh: feedInTariffPerKWh)
+                    PVHistoryChartsView(
+                        dailySamples: dailySamples,
+                        yearlySamples: yearlySamples,
+                        displayPreferences: displayPreferences
+                    )
+                }
             } else {
                 ProgressView("Lade Anlagendaten…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -151,40 +166,38 @@ private struct MetricsView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
-                MetricCard(
-                    title: "Autarkiegrad",
-                    value: sample.selfSufficiencyRate.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? "–",
-                    icon: "leaf.fill",
-                    tint: .green
-                )
-                MetricCard(
-                    title: "Produktion",
-                    value: formattedKWh(sample.producedWh),
-                    icon: "sun.max.fill",
-                    tint: .pvAccent
-                )
-                MetricCard(
-                    title: "Verbrauch",
-                    value: formattedKWh(sample.consumedWh),
-                    icon: "house.fill",
-                    tint: .blue
-                )
-                MetricCard(
-                    title: "Einspeisung",
-                    value: formattedKWh(sample.exportedWh),
-                    subtitle: "≈ \(sample.estimatedFeedInRevenue(tariffPerKWh: feedInTariffPerKWh).formatted(.currency(code: "EUR")))",
-                    icon: "bolt.horizontal.fill",
-                    tint: .teal
-                )
-            }
-            .padding()
-
-            BatteryCard(sample: sample)
-                .padding(.horizontal)
-                .padding(.bottom)
+        LazyVGrid(columns: columns, spacing: 16) {
+            MetricCard(
+                title: "Autarkiegrad",
+                value: sample.selfSufficiencyRate.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? "–",
+                icon: "leaf.fill",
+                tint: .green
+            )
+            MetricCard(
+                title: "Produktion",
+                value: formattedKWh(sample.producedWh),
+                icon: "sun.max.fill",
+                tint: .pvAccent
+            )
+            MetricCard(
+                title: "Verbrauch",
+                value: formattedKWh(sample.consumedWh),
+                icon: "house.fill",
+                tint: .blue
+            )
+            MetricCard(
+                title: "Einspeisung",
+                value: formattedKWh(sample.exportedWh),
+                subtitle: "≈ \(sample.estimatedFeedInRevenue(tariffPerKWh: feedInTariffPerKWh).formatted(.currency(code: "EUR")))",
+                icon: "bolt.horizontal.fill",
+                tint: .teal
+            )
         }
+        .padding()
+
+        BatteryCard(sample: sample)
+            .padding(.horizontal)
+            .padding(.bottom)
     }
 
     private func formattedKWh(_ wh: Double) -> String {

@@ -41,6 +41,9 @@ final class EnphaseSettings {
     private(set) var credentials: EnphaseCredentials
     private(set) var tokens: EnphaseTokens?
     private(set) var systemID: Int?
+    /// Commissioning/grid-connection date of the system, used as the backfill start point
+    /// (F3.2) instead of an arbitrary fixed window.
+    private(set) var operationalAt: Date?
 
     init(store: EnphaseSecretStoring = EnphaseKeychainStore()) {
         self.store = store
@@ -64,6 +67,10 @@ final class EnphaseSettings {
         if let systemIDString = store.read(.systemID), let id = Int(systemIDString) {
             systemID = id
         }
+
+        if let operationalAtString = store.read(.operationalAt), let interval = TimeInterval(operationalAtString) {
+            operationalAt = Date(timeIntervalSince1970: interval)
+        }
     }
 
     func setCredentials(clientID: String, clientSecret: String, apiKey: String) {
@@ -83,5 +90,10 @@ final class EnphaseSettings {
     func setSystemID(_ systemID: Int?) {
         self.systemID = systemID
         store.write(.systemID, value: systemID.map(String.init))
+    }
+
+    func setOperationalAt(_ date: Date?) {
+        operationalAt = date
+        store.write(.operationalAt, value: date.map { String($0.timeIntervalSince1970) })
     }
 }

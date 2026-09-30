@@ -16,9 +16,13 @@ struct EnphaseSystemsResponse: Decodable {
 
 struct EnphaseSystemDTO: Decodable {
     let systemID: Int
+    /// Unix seconds; commissioning/grid-connection date. Used as the backfill start point
+    /// (F3.2) instead of an arbitrary fixed window.
+    let operationalAt: Int?
 
     enum CodingKeys: String, CodingKey {
         case systemID = "system_id"
+        case operationalAt = "operational_at"
     }
 }
 
@@ -108,5 +112,106 @@ struct EnphaseBatteryTelemetryResponse: Decodable {
     /// Percent of charge as of the most recent interval, `nil` if no interval was reported yet.
     var latestSocPercent: Double? {
         intervals.last?.soc.percent
+    }
+}
+
+// MARK: - Lifetime (daily) series, used for backfill (F3.2) and daily finalize (F3.3)
+
+/// A day-indexed value from a `_lifetime` series, resolved to a concrete calendar day.
+///
+/// Trailing zeros mean "not yet reported", not "0 Wh" (see ENPHASE_API_WERTE.md) — callers
+/// decide how to treat them; this type only pairs values with their day.
+struct EnphaseLifetimeDailyValue {
+    let date: Date
+    let value: Double
+}
+
+private func dailyValues(startDateString: String, values: [Double]) -> [EnphaseLifetimeDailyValue] {
+    let formatter = DateFormatter()
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.dateFormat = "yyyy-MM-dd"
+    formatter.timeZone = TimeZone.current
+    guard let startDate = formatter.date(from: startDateString) else { return [] }
+
+    let calendar = Calendar.current
+    return values.enumerated().compactMap { offset, value in
+        calendar.date(byAdding: .day, value: offset, to: startDate).map {
+            EnphaseLifetimeDailyValue(date: calendar.startOfDay(for: $0), value: value)
+        }
+    }
+}
+
+struct EnphaseEnergyLifetimeResponse: Decodable {
+    let startDate: String
+    let production: [Double]
+
+    enum CodingKeys: String, CodingKey {
+        case startDate = "start_date"
+        case production
+    }
+
+    var dailyValues: [EnphaseLifetimeDailyValue] {
+        Energie.dailyValues(startDateString: startDate, values: production)
+    }
+}
+
+struct EnphaseConsumptionLifetimeResponse: Decodable {
+    let startDate: String
+    let consumption: [Double]
+
+    enum CodingKeys: String, CodingKey {
+        case startDate = "start_date"
+        case consumption
+    }
+
+    var dailyValues: [EnphaseLifetimeDailyValue] {
+        Energie.dailyValues(startDateString: startDate, values: consumption)
+    }
+}
+
+struct EnphaseImportLifetimeResponse: Decodable {
+    let startDate: String
+    let imported: [Double]
+
+    enum CodingKeys: String, CodingKey {
+        case startDate = "start_date"
+        case imported = "import"
+    }
+
+    var dailyValues: [EnphaseLifetimeDailyValue] {
+        Energie.dailyValues(startDateString: startDate, values: imported)
+    }
+}
+
+struct EnphaseExportLifetimeResponse: Decodable {
+    let startDate: String
+    let exported: [Double]
+
+    enum CodingKeys: String, CodingKey {
+        case startDate = "start_date"
+        case exported = "export"
+    }
+
+    var dailyValues: [EnphaseLifetimeDailyValue] {
+        Energie.dailyValues(startDateString: startDate, values: exported)
+    }
+}
+
+struct EnphaseBatteryLifetimeResponse: Decodable {
+    let startDate: String
+    let charge: [Double]
+    let discharge: [Double]
+
+    enum CodingKeys: String, CodingKey {
+        case startDate = "start_date"
+        case charge, discharge
+    }
+
+    var dailyChargedValues: [EnphaseLifetimeDailyValue] {
+        Energie.dailyValues(startDateString: startDate, values: charge)
+    }
+
+    var dailyDischargedValues: [EnphaseLifetimeDailyValue] {
+        Energie.dailyValues(startDateString: startDate, values: discharge)
     }
 }

@@ -13,6 +13,7 @@ struct EnergieApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             PVDailySample.self,
+            PVYearlySample.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

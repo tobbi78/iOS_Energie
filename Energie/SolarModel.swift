@@ -29,6 +29,16 @@ enum SolarState: Equatable {
     case error(String)
 }
 
+/// The five `_lifetime` series, re-keyed by calendar day for easy lookup during backfill/finalize.
+private struct LifetimeDailyMaps {
+    var produced: [Date: Double] = [:]
+    var consumed: [Date: Double] = [:]
+    var imported: [Date: Double] = [:]
+    var exported: [Date: Double] = [:]
+    var charged: [Date: Double] = [:]
+    var discharged: [Date: Double] = [:]
+}
+
 /// Coordinates Enphase auth + polling for the PV section, independent of any other future data
 /// source (see BACKLOG.md, "Übertragbares Architekturmuster": one model per source, own state,
 /// own poll loop — a heat pump model would be a sibling, not a shared "DashboardModel").
@@ -47,6 +57,9 @@ final class SolarModel {
     private let urlSession: URLSession
     private let now: @Sendable () -> Date
     private let modelContext: ModelContext
+    private let userDefaults: UserDefaults
+
+    private static let lastFinalizeRunDayKey = "SolarModel.lastFinalizeRunDay"
 
     init(
         settings: EnphaseSettings,
@@ -54,6 +67,7 @@ final class SolarModel {
         oauthClient: EnphaseOAuthClient = EnphaseOAuthClient(),
         throttle: EnphaseRequestThrottle = EnphaseRequestThrottle(),
         urlSession: URLSession = .shared,
+        userDefaults: UserDefaults = .standard,
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.settings = settings
@@ -61,8 +75,22 @@ final class SolarModel {
         self.oauthClient = oauthClient
         self.throttle = throttle
         self.urlSession = urlSession
+        self.userDefaults = userDefaults
         self.now = now
         state = SolarModel.initialState(settings: settings)
+    }
+
+    /// Runs once when the PV section first appears: backfills missing history, finalizes any
+    /// not-yet-final past days, then polls today's live values (F3.2/F3.3, "Umsetzungsstand").
+    func start() async {
+        guard settings.credentials.isComplete, settings.tokens != nil else {
+            state = SolarModel.initialState(settings: settings)
+            return
+        }
+        await backfillMissingDaysIfNeeded()
+        await runDailyFinalizeIfNeeded()
+        pruneOldDailySamplesIfNeeded()
+        await refresh()
     }
 
     private static func initialState(settings: EnphaseSettings) -> SolarState {
@@ -150,7 +178,10 @@ final class SolarModel {
     }
 
     private func resolveSystemID(client: EnphaseClient) async throws -> Int {
-        if let systemID = settings.systemID {
+        // Re-fetches once even if `systemID` is already cached, as long as `operationalAt` is
+        // still unknown — covers a settings cache written before that field existed (see
+        // BACKLOG.md "Komplette Historie statt 30-Tage-Fenster").
+        if let systemID = settings.systemID, settings.operationalAt != nil {
             return systemID
         }
         let systems = try await client.fetchSystems()
@@ -158,7 +189,162 @@ final class SolarModel {
             throw EnphaseClientError.invalidResponse
         }
         settings.setSystemID(first.systemID)
+        if let operationalAt = first.operationalAt {
+            settings.setOperationalAt(Date(timeIntervalSince1970: TimeInterval(operationalAt)))
+        }
         return first.systemID
+    }
+
+    /// Fetches and re-keys the five `_lifetime` series by calendar day (F3.2/F3.3).
+    private func fetchLifetimeMaps(client: EnphaseClient, systemID: Int, startDate: Date) async throws -> LifetimeDailyMaps {
+        async let energy = client.fetchEnergyLifetime(systemID: systemID, startDate: startDate)
+        async let consumption = client.fetchConsumptionLifetime(systemID: systemID, startDate: startDate)
+        async let imported = client.fetchImportLifetime(systemID: systemID, startDate: startDate)
+        async let exported = client.fetchExportLifetime(systemID: systemID, startDate: startDate)
+        async let battery = client.fetchBatteryLifetime(systemID: systemID, startDate: startDate)
+
+        let energyResponse = try await energy
+        let consumptionResponse = try await consumption
+        let importResponse = try await imported
+        let exportResponse = try await exported
+        let batteryResponse = try await battery
+
+        var maps = LifetimeDailyMaps()
+        for entry in energyResponse.dailyValues { maps.produced[entry.date] = entry.value }
+        for entry in consumptionResponse.dailyValues { maps.consumed[entry.date] = entry.value }
+        for entry in importResponse.dailyValues { maps.imported[entry.date] = entry.value }
+        for entry in exportResponse.dailyValues { maps.exported[entry.date] = entry.value }
+        for entry in batteryResponse.dailyChargedValues { maps.charged[entry.date] = entry.value }
+        for entry in batteryResponse.dailyDischargedValues { maps.discharged[entry.date] = entry.value }
+        return maps
+    }
+
+    /// Inserts `PVDailySample` rows for any day between the backfill start day and yesterday
+    /// that isn't stored locally yet (F3.2). Best-effort: a failure here (e.g. offline) is not
+    /// surfaced as an error state — the gap simply remains and is retried on the next start.
+    func backfillMissingDaysIfNeeded() async {
+        do {
+            let client = try makeClient()
+            let systemID = try await resolveSystemID(client: client)
+
+            let today = Calendar.current.startOfDay(for: now())
+            let startDay = PVBackfillPlanner.backfillStartDay(operationalAt: settings.operationalAt, today: today)
+            let existingDays = Set(try modelContext.fetch(FetchDescriptor<PVDailySample>()).map(\.date))
+            let missingDays = PVBackfillPlanner.missingDays(existingDays: existingDays, from: startDay, today: today)
+            guard !missingDays.isEmpty else { return }
+
+            let maps = try await fetchLifetimeMaps(client: client, systemID: systemID, startDate: startDay)
+            for day in missingDays {
+                modelContext.insert(
+                    PVDailySample(
+                        date: day,
+                        producedWh: maps.produced[day] ?? 0,
+                        consumedWh: maps.consumed[day] ?? 0,
+                        importedWh: maps.imported[day] ?? 0,
+                        exportedWh: maps.exported[day] ?? 0,
+                        batterySocPercent: nil,
+                        batteryChargedWh: maps.charged[day] ?? 0,
+                        batteryDischargedWh: maps.discharged[day] ?? 0,
+                        isFinal: true
+                    )
+                )
+            }
+        } catch {
+            // Best-effort — see doc comment above.
+        }
+    }
+
+    /// Once per calendar day, replaces any not-yet-final past day with the final `_lifetime`
+    /// values (F3.3). Runs before the live poll in `start()` so "today" never gets finalized.
+    func runDailyFinalizeIfNeeded() async {
+        let today = Calendar.current.startOfDay(for: now())
+        if let lastRun = userDefaults.object(forKey: Self.lastFinalizeRunDayKey) as? Date,
+           Calendar.current.isDate(lastRun, inSameDayAs: today) {
+            return
+        }
+
+        do {
+            let nonFinalPastDays = try modelContext.fetch(
+                FetchDescriptor<PVDailySample>(predicate: #Predicate { !$0.isFinal && $0.date < today })
+            )
+            guard let earliestNonFinal = nonFinalPastDays.map(\.date).min() else {
+                userDefaults.set(today, forKey: Self.lastFinalizeRunDayKey)
+                return
+            }
+
+            let client = try makeClient()
+            let systemID = try await resolveSystemID(client: client)
+            let maps = try await fetchLifetimeMaps(client: client, systemID: systemID, startDate: earliestNonFinal)
+
+            for sample in nonFinalPastDays {
+                let produced = maps.produced[sample.date] ?? 0
+                let consumed = maps.consumed[sample.date] ?? 0
+                let imported = maps.imported[sample.date] ?? 0
+                let exported = maps.exported[sample.date] ?? 0
+
+                // Trailing zeros mean Enphase hasn't reported this day yet, not a genuine 0 Wh
+                // day (ENPHASE_API_WERTE.md) — leave it non-final and retry on the next run.
+                guard produced != 0 || consumed != 0 || imported != 0 || exported != 0 else { continue }
+
+                sample.producedWh = produced
+                sample.consumedWh = consumed
+                sample.importedWh = imported
+                sample.exportedWh = exported
+                sample.batteryChargedWh = maps.charged[sample.date] ?? sample.batteryChargedWh
+                sample.batteryDischargedWh = maps.discharged[sample.date] ?? sample.batteryDischargedWh
+                sample.isFinal = true
+            }
+
+            userDefaults.set(today, forKey: Self.lastFinalizeRunDayKey)
+        } catch {
+            // Best-effort, same reasoning as backfillMissingDaysIfNeeded().
+        }
+    }
+
+    /// Folds daily rows older than a year into `PVYearlySample` totals and deletes the source
+    /// rows (F3.6), so the local database doesn't grow without bound over multi-year use.
+    func pruneOldDailySamplesIfNeeded() {
+        do {
+            let allDailySamples = try modelContext.fetch(FetchDescriptor<PVDailySample>())
+            let today = now()
+            let oldSamples = allDailySamples.filter { PVHistoryPruner.isEligibleForPruning(date: $0.date, now: today) }
+            guard !oldSamples.isEmpty else { return }
+
+            let existingYearlySamples = try modelContext.fetch(FetchDescriptor<PVYearlySample>())
+            let calendar = Calendar.current
+
+            for (yearStart, rowsInYear) in PVHistoryPruner.groupByYear(oldSamples, calendar: calendar) {
+                let yearEnd = calendar.date(byAdding: .year, value: 1, to: yearStart) ?? yearStart
+                let total = PVPeriodAggregation.total(of: rowsInYear, from: yearStart, to: yearEnd, isRunning: false)
+
+                if let existingYear = existingYearlySamples.first(where: { calendar.isDate($0.yearStart, equalTo: yearStart, toGranularity: .year) }) {
+                    existingYear.producedWh += total.producedWh
+                    existingYear.consumedWh += total.consumedWh
+                    existingYear.importedWh += total.importedWh
+                    existingYear.exportedWh += total.exportedWh
+                    existingYear.batteryChargedWh += total.batteryChargedWh
+                    existingYear.batteryDischargedWh += total.batteryDischargedWh
+                } else {
+                    modelContext.insert(
+                        PVYearlySample(
+                            yearStart: yearStart,
+                            producedWh: total.producedWh,
+                            consumedWh: total.consumedWh,
+                            importedWh: total.importedWh,
+                            exportedWh: total.exportedWh,
+                            batteryChargedWh: total.batteryChargedWh,
+                            batteryDischargedWh: total.batteryDischargedWh
+                        )
+                    )
+                }
+
+                for row in rowsInYear {
+                    modelContext.delete(row)
+                }
+            }
+        } catch {
+            // Maintenance task — a failure just means we try again on the next launch.
+        }
     }
 
     private func makeClient() throws -> EnphaseClient {

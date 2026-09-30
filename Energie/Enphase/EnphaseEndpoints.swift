@@ -79,4 +79,41 @@ enum EnphaseEndpoints {
     static func batteryTelemetry(systemID: Int) -> URL {
         baseURL.appendingPathComponent("api/v4/systems/\(systemID)/telemetry/battery")
     }
+
+    // MARK: - Lifetime (daily) series, used for backfill (F3.2) and daily finalize (F3.3)
+
+    static func energyLifetime(systemID: Int, startDate: Date? = nil) -> URL {
+        lifetimeURL(path: "api/v4/systems/\(systemID)/energy_lifetime", startDate: startDate)
+    }
+
+    static func consumptionLifetime(systemID: Int, startDate: Date? = nil) -> URL {
+        lifetimeURL(path: "api/v4/systems/\(systemID)/consumption_lifetime", startDate: startDate)
+    }
+
+    static func energyImportLifetime(systemID: Int, startDate: Date? = nil) -> URL {
+        lifetimeURL(path: "api/v4/systems/\(systemID)/energy_import_lifetime", startDate: startDate)
+    }
+
+    static func energyExportLifetime(systemID: Int, startDate: Date? = nil) -> URL {
+        lifetimeURL(path: "api/v4/systems/\(systemID)/energy_export_lifetime", startDate: startDate)
+    }
+
+    static func batteryLifetime(systemID: Int, startDate: Date? = nil) -> URL {
+        lifetimeURL(path: "api/v4/systems/\(systemID)/battery_lifetime", startDate: startDate)
+    }
+
+    private static let lifetimeDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone.current
+        return formatter
+    }()
+
+    private static func lifetimeURL(path: String, startDate: Date?) -> URL {
+        guard let startDate else { return baseURL.appendingPathComponent(path) }
+        var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "start_date", value: lifetimeDateFormatter.string(from: startDate))]
+        return components.url!
+    }
 }

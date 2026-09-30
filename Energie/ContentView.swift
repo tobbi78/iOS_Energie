@@ -14,13 +14,14 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var settings = EnphaseSettings()
+    @State private var displayPreferences = PVDisplayPreferences()
     @State private var solarModel: SolarModel?
 
     var body: some View {
         TabView {
             Tab("PV-Anlage", systemImage: "sun.max.fill") {
                 if let solarModel {
-                    SolarView(model: solarModel)
+                    SolarView(model: solarModel, displayPreferences: displayPreferences)
                 } else {
                     ProgressView()
                 }
@@ -35,5 +36,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: PVDailySample.self, inMemory: true)
+        .modelContainer(for: [PVDailySample.self, PVYearlySample.self], inMemory: true)
 }
