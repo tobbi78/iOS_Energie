@@ -37,6 +37,17 @@ struct SolarView: View {
                 .toolbar {
                     if model.state == .ready {
                         ToolbarItem(placement: .primaryAction) {
+                            NavigationLink {
+                                PVHistoryScreen(
+                                    dailySamples: dailySamples,
+                                    yearlySamples: yearlySamples,
+                                    displayPreferences: displayPreferences
+                                )
+                            } label: {
+                                Label("Verlauf", systemImage: "chart.xyaxis.line")
+                            }
+                        }
+                        ToolbarItem(placement: .primaryAction) {
                             Button {
                                 Task { await model.refresh() }
                             } label: {
@@ -69,11 +80,6 @@ struct SolarView: View {
             if let today = model.today {
                 ScrollView {
                     MetricsView(sample: today, feedInTariffPerKWh: feedInTariffPerKWh)
-                    PVHistoryChartsView(
-                        dailySamples: dailySamples,
-                        yearlySamples: yearlySamples,
-                        displayPreferences: displayPreferences
-                    )
                 }
             } else {
                 ProgressView("Lade Anlagendaten…")
@@ -84,6 +90,27 @@ struct SolarView: View {
                 Task { await model.refresh() }
             }
         }
+    }
+}
+
+// MARK: - History submenu
+
+/// Dedicated screen for the history charts (F3.4), reached via the toolbar instead of living
+/// inline on the main PV screen, which stays focused on today's live values.
+private struct PVHistoryScreen: View {
+    let dailySamples: [PVDailySample]
+    let yearlySamples: [PVYearlySample]
+    var displayPreferences: PVDisplayPreferences
+
+    var body: some View {
+        ScrollView {
+            PVHistoryChartsView(
+                dailySamples: dailySamples,
+                yearlySamples: yearlySamples,
+                displayPreferences: displayPreferences
+            )
+        }
+        .navigationTitle("Verlauf")
     }
 }
 

@@ -8,7 +8,7 @@
 import Charts
 import SwiftUI
 
-/// Common shape for anything a history bar chart can plot a period of — implemented by both
+/// Common shape for anything a history line chart can plot a period of — implemented by both
 /// `PVDailySample` (via `periodStart`) and `PVPeriodTotal`, matching the "PVSeriesBar" pattern
 /// documented in BACKLOG.md F3.4.
 private protocol PVSeriesBar {
@@ -31,15 +31,6 @@ private struct PVSeriesPoint: Identifiable {
     let valueKWh: Double
 }
 
-private func seriesColor(forLabel label: String) -> Color {
-    switch label {
-    case "Produktion": .pvAccent
-    case "Verbrauch": .blue
-    case "Einspeisung": .teal
-    default: .gray
-    }
-}
-
 private func points(from bars: [some PVSeriesBar], selection: PVSeriesSelection) -> [PVSeriesPoint] {
     bars.flatMap { bar -> [PVSeriesPoint] in
         var points: [PVSeriesPoint] = []
@@ -56,13 +47,20 @@ private func points(from bars: [some PVSeriesBar], selection: PVSeriesSelection)
     }
 }
 
-/// One grouped bar chart for a given period granularity (day/month/year), see BACKLOG.md F3.4
-/// for the underlying Swift Charts pattern (`PlottableValue.value(_:_:unit:calendar:)` +
-/// `.position(by:)` for calendar-aware grouping).
-private struct PVBarChart: View {
+/// One line chart for a given period granularity (day/month/year). Each series becomes its own
+/// line via `.foregroundStyle(by:)` — grouping by a plotted value, not just a per-mark color, is
+/// what keeps Swift Charts from merging separate series into a single line (see BACKLOG.md F3.4,
+/// "Falle: Mehrere LineMarks ohne unterscheidendes by:-Attribut verschmelzen").
+private struct PVLineChart: View {
     let title: String
     let points: [PVSeriesPoint]
     let unit: Calendar.Component
+
+    private static let seriesColors: KeyValuePairs<String, Color> = [
+        "Produktion": .pvAccent,
+        "Verbrauch": .blue,
+        "Einspeisung": .teal,
+    ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -76,13 +74,14 @@ private struct PVBarChart: View {
                     .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
             } else {
                 Chart(points) { point in
-                    BarMark(
+                    LineMark(
                         x: .value("Zeitraum", point.period, unit: unit),
                         y: .value("kWh", point.valueKWh)
                     )
-                    .position(by: .value("Reihe", point.seriesLabel))
-                    .foregroundStyle(seriesColor(forLabel: point.seriesLabel))
+                    .foregroundStyle(by: .value("Reihe", point.seriesLabel))
+                    .symbol(by: .value("Reihe", point.seriesLabel))
                 }
+                .chartForegroundStyleScale(Self.seriesColors)
                 .frame(height: 180)
             }
         }
@@ -117,12 +116,12 @@ struct PVHistoryChartsView: View {
             }
             .pickerStyle(.segmented)
 
-            PVBarChart(
+            PVLineChart(
                 title: "Letzte 30 Tage",
                 points: points(from: lastThirtyDays, selection: displayPreferences.seriesSelection),
                 unit: .day
             )
-            PVBarChart(
+            PVLineChart(
                 title: "Letzte 12 Monate",
                 points: points(
                     from: PVPeriodAggregation.lastTwelveMonths(dailySamples, now: now),
@@ -130,7 +129,7 @@ struct PVHistoryChartsView: View {
                 ),
                 unit: .month
             )
-            PVBarChart(
+            PVLineChart(
                 title: "Jahre",
                 points: points(
                     from: PVPeriodAggregation.years(dailySamples, archivedYears: yearlySamples, now: now),
