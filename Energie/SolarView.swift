@@ -210,11 +210,12 @@ private struct MetricCard: View {
             Text(title)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            if let subtitle {
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
+            // Always reserve one caption line, even without a subtitle, so every card in the
+            // grid has the same height (previously only the feed-in card had a subtitle line).
+            Text(subtitle ?? " ")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .opacity(subtitle == nil ? 0 : 1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
