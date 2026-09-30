@@ -2,7 +2,11 @@
 
 Sammlung aller Anforderungen/Features, bevor mit der Umsetzung begonnen wird. Quellen: `ENPHASE_API_WERTE.md` (API-Referenz), `ENPHASE_INTEGRATION_SPEC.md` (Architekturentwurf der PV-Integration) und `ERKENNTNISSE_MACOS.md` (Erfahrungsbericht aus dem gesamten macOS-Schwesterprojekt, inkl. Viessmann-Wärmepumpe) — alle drei ursprünglich für ein **separates macOS-Projekt** geschrieben. macOS-/Wärmepumpen-spezifische Teile (Sidebar/MenuBarExtra, `DashboardModel`, Sandbox-Abwägungen, NSImage-Icons, AppleScript-Benachrichtigungen) sind hier **nicht** übernommen — nur Enphase-API-Fakten, datenseitige Architektur und übertragbare Engineering-Lektionen wurden extrahiert und für iOS neu bewertet.
 
-Status aller Einträge: **Backlog** (nichts umgesetzt).
+Status aller Einträge: **Backlog**, außer wo unten als umgesetzt markiert.
+
+## Umsetzungsstand
+
+- **✅ Branch `feature/enphase-pv-basis` (2026-09-30, noch nicht gemergt):** Erster dünner Ende-zu-Ende-Slice. OAuth2-Login (F1.1, via `WebAuthenticationSession`, kein Info.plist-Eintrag nötig), Zugangsdaten-Verwaltung (F1.2) und lokale Keychain-Speicherung (F1.3, bewusst **nicht** iCloud-synchronisiert, siehe Epic-0-Rückstellung), Token-Refresh (F1.4), Systemerkennung (F1.5), Momentanwerte-Kennzahlenkarten inkl. Autarkiegrad/Speicherzustand/geschätzter Vergütung (F2.1–F2.3), ein lokales `PVDailySample`-Modell mit Default-Werten an der Deklaration (F3.1/F8.2-Lektion von Anfang an beachtet) und eine minimale Minuten-Drossel als Sicherheitsnetz (F4.1-light, 75s/10 Requests — volles Monatsbudget-Management F4.2–F4.4 folgt separat). Noch **nicht** enthalten: Backfill (F3.2), täglicher Abschluss-Durchlauf (F3.3), Diagramme (F3.4/F3.5), Pruning (F3.6), Widget (F5.4/F5.6), Benachrichtigungen (F5.5), Einstellungen-Screen für Tarif (F6.2 — aktuell als Konstante 0,08 €/kWh hartkodiert). Token-Antwortformat gegen Enphase noch nicht mit echten Zugangsdaten verifiziert (siehe "Bekannte Unsicherheiten" unten).
 
 ## Zusammenarbeits-Konventionen (aus `ERKENNTNISSE_MACOS.md` übernommen, 2026-09-30)
 
