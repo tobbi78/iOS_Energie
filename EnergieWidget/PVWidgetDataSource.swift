@@ -61,6 +61,12 @@ enum PVWidgetDataSource {
         case http(Int)
     }
 
+    /// Requests used against the shared monthly budget so far this calendar month — used by
+    /// `PVWidgetPollPacing` to decide how long to wait before the next poll (F4.2).
+    static func requestsUsedThisMonth() async -> Int {
+        await budget.usedThisMonth()
+    }
+
     /// Last successfully fetched snapshot, shown as a fallback when a fresh fetch fails (e.g.
     /// offline, budget exhausted) so the widget degrades gracefully instead of going blank.
     static func cachedSnapshot() -> Snapshot? {
