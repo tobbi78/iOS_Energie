@@ -47,6 +47,9 @@ enum PVWidgetDataSource {
     struct Snapshot: Codable {
         let producedWh: Double
         let selfSufficiencyRate: Double?
+        /// Not shown in the widget's own UI (out of scope for F5.4) — fetched only so
+        /// `PVWidgetAlerts` can check it for the low-battery notification (F5.5).
+        let batterySocPercent: Double?
         let fetchedAt: Date
     }
 
@@ -97,13 +100,23 @@ enum PVWidgetDataSource {
                 url: baseURL.appendingPathComponent("api/v4/systems/\(systemID)/energy_import_telemetry"),
                 accessToken: accessToken, apiKey: apiKey
             )
+            async let battery: BatteryTelemetryDTO = perform(
+                url: baseURL.appendingPathComponent("api/v4/systems/\(systemID)/telemetry/battery"),
+                accessToken: accessToken, apiKey: apiKey
+            )
 
             let summaryResponse = try await summary
             let consumedWh = try await consumption.intervals.reduce(0) { $0 + $1.enwh }
             let importedWh = try await imported.intervals.flatMap { $0 }.reduce(0) { $0 + ($1.whImported ?? 0) }
             let selfSufficiencyRate = consumedWh > 0 ? (consumedWh - importedWh) / consumedWh : nil
+            let batterySocPercent = try await battery.intervals.last?.soc.percent
 
-            let snapshot = Snapshot(producedWh: summaryResponse.energyToday, selfSufficiencyRate: selfSufficiencyRate, fetchedAt: Date())
+            let snapshot = Snapshot(
+                producedWh: summaryResponse.energyToday,
+                selfSufficiencyRate: selfSufficiencyRate,
+                batterySocPercent: batterySocPercent,
+                fetchedAt: Date()
+            )
             if let data = try? JSONEncoder().encode(snapshot) {
                 sharedDefaults.set(data, forKey: cacheKey)
             }
@@ -131,6 +144,14 @@ enum PVWidgetDataSource {
             enum CodingKeys: String, CodingKey { case whImported = "wh_imported" }
         }
         let intervals: [[Entry]]
+    }
+
+    private struct BatteryTelemetryDTO: Decodable {
+        struct Interval: Decodable {
+            struct StateOfCharge: Decodable { let percent: Double }
+            let soc: StateOfCharge
+        }
+        let intervals: [Interval]
     }
 
     private static func perform<T: Decodable>(url: URL, accessToken: String, apiKey: String) async throws -> T {

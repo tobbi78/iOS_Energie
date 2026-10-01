@@ -9,6 +9,7 @@ import AuthenticationServices
 import Foundation
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 enum SolarError: Error, LocalizedError {
     case signInRequired
@@ -116,10 +117,24 @@ final class SolarModel {
             state = SolarModel.initialState(settings: settings)
             return
         }
+        await requestNotificationAuthorizationIfNeeded()
         await refresh()
         await backfillMissingDaysIfNeeded()
         await runDailyFinalizeIfNeeded()
         pruneOldDailySamplesIfNeeded()
+    }
+
+    /// The widget extension schedules the actual alerts (F5.5) — it's the process that polls
+    /// regularly in the background, so it's the one that can actually notice an outage/low
+    /// battery/exhausted budget while the user isn't looking at the app. Extensions share their
+    /// containing app's notification permission (no separate Settings entry of their own), so
+    /// this request — made here, where there's a foreground app to show the system prompt —
+    /// covers both.
+    private func requestNotificationAuthorizationIfNeeded() async {
+        let center = UNUserNotificationCenter.current()
+        let notificationSettings = await center.notificationSettings()
+        guard notificationSettings.authorizationStatus == .notDetermined else { return }
+        _ = try? await center.requestAuthorization(options: [.alert, .sound])
     }
 
     private static func initialState(settings: EnphaseSettings) -> SolarState {

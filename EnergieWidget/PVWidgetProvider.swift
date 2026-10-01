@@ -11,7 +11,7 @@ struct PVWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> PVWidgetEntry {
         PVWidgetEntry(
             date: .now,
-            snapshot: PVWidgetDataSource.Snapshot(producedWh: 4200, selfSufficiencyRate: 0.62, fetchedAt: .now),
+            snapshot: PVWidgetDataSource.Snapshot(producedWh: 4200, selfSufficiencyRate: 0.62, batterySocPercent: 54, fetchedAt: .now),
             state: .ready
         )
     }
@@ -24,7 +24,10 @@ struct PVWidgetProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PVWidgetEntry>) -> Void) {
         Task {
-            let entry = await makeEntry()
+            // Alerts (F5.5) only fire from this real, periodic refresh path — not from
+            // getSnapshot(), which WidgetKit also calls for quick previews (e.g. the widget
+            // gallery) where triggering a notification would be surprising/spurious.
+            let entry = await makeEntry(triggerAlerts: true)
             // WidgetKit's own daily/hourly refresh budget ultimately governs how often this
             // actually re-runs — this is only a request for "no sooner than".
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: entry.date)
@@ -33,11 +36,17 @@ struct PVWidgetProvider: TimelineProvider {
         }
     }
 
-    private func makeEntry() async -> PVWidgetEntry {
+    private func makeEntry(triggerAlerts: Bool = false) async -> PVWidgetEntry {
         switch await PVWidgetDataSource.fetchLatestSnapshot() {
         case .success(let snapshot):
+            if triggerAlerts {
+                PVWidgetAlerts.handleSuccess(snapshot: snapshot)
+            }
             return PVWidgetEntry(date: .now, snapshot: snapshot, state: .ready)
         case .failure(let error):
+            if triggerAlerts {
+                PVWidgetAlerts.handleFailure(error)
+            }
             let state: PVWidgetEntry.State
             switch error {
             case .notSignedIn: state = .notSignedIn

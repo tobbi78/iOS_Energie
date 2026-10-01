@@ -100,7 +100,7 @@ struct EnergieWidget: Widget {
 } timeline: {
     PVWidgetEntry(
         date: .now,
-        snapshot: PVWidgetDataSource.Snapshot(producedWh: 4200, selfSufficiencyRate: 0.62, fetchedAt: .now),
+        snapshot: PVWidgetDataSource.Snapshot(producedWh: 4200, selfSufficiencyRate: 0.62, batterySocPercent: 54, fetchedAt: .now),
         state: .ready
     )
     PVWidgetEntry(date: .now, snapshot: nil, state: .notSignedIn)
