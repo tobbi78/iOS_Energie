@@ -9,6 +9,8 @@ import Foundation
 
 enum ViessmannClientError: Error, LocalizedError {
     case invalidResponse
+    case unauthorized
+    case rateLimited(retryAfter: TimeInterval?)
     case http(status: Int, body: String)
     case noInstallationFound
     case noGatewayFound
@@ -18,6 +20,13 @@ enum ViessmannClientError: Error, LocalizedError {
         switch self {
         case .invalidResponse:
             return "Viessmann hat eine unerwartete Antwort geschickt."
+        case .unauthorized:
+            return "Die Viessmann-Anmeldung ist abgelaufen oder ungültig."
+        case .rateLimited(let retryAfter):
+            if let retryAfter {
+                return "Viessmann-Anfragelimit erreicht. Nächster Versuch in \(Int(retryAfter))s."
+            }
+            return "Viessmann-Anfragelimit erreicht. Bitte später erneut versuchen."
         case .http(let status, let body):
             return "Viessmann-Anfrage fehlgeschlagen (HTTP \(status)): \(body)"
         case .noInstallationFound:
@@ -30,29 +39,24 @@ enum ViessmannClientError: Error, LocalizedError {
     }
 }
 
-/// Authenticated Viessmann API access for equipment discovery (installation → gateway → device).
-/// Unlike Enphase there is no known fixed rate limit (see ERKENNTNISSE_MACOS.md) — only a safe
-/// polling cadence (5–15 min) — so, unlike `EnphaseClient`, no throttle/budget gate is needed
-/// here; the poll cadence itself is enforced by `HeatPumpModel`'s timer (HP-2).
+/// Authenticated Viessmann API access for equipment discovery and feature polling. Unlike
+/// Enphase there is no known fixed rate limit (see ERKENNTNISSE_MACOS.md) — only a safe polling
+/// cadence (5–15 min) — so, unlike `EnphaseClient`, no throttle/budget gate is needed here; the
+/// poll cadence itself is enforced by `HeatPumpModel`'s timer (HP-2). 429 responses are still
+/// handled defensively, same as the macOS sibling project does.
 struct ViessmannClient {
     var urlSession: URLSession = .shared
     var accessToken: @Sendable () async throws -> String
 
+    /// `includeGateways=true` returns the full installation → gateway → device tree in one call.
     func fetchInstallations() async throws -> [ViessmannInstallationDTO] {
         let response: ViessmannListResponse<ViessmannInstallationDTO> = try await perform(ViessmannEndpoints.installationsURL)
         return response.data
     }
 
-    func fetchGateways(installationID: Int) async throws -> [ViessmannGatewayDTO] {
-        let response: ViessmannListResponse<ViessmannGatewayDTO> = try await perform(
-            ViessmannEndpoints.gatewaysURL(installationID: installationID)
-        )
-        return response.data
-    }
-
-    func fetchDevices(installationID: Int, gatewaySerial: String) async throws -> [ViessmannDeviceDTO] {
-        let response: ViessmannListResponse<ViessmannDeviceDTO> = try await perform(
-            ViessmannEndpoints.devicesURL(installationID: installationID, gatewaySerial: gatewaySerial)
+    func fetchFeatures(installationID: Int, gatewaySerial: String, deviceID: String) async throws -> [ViessmannFeatureDTO] {
+        let response: ViessmannListResponse<ViessmannFeatureDTO> = try await perform(
+            ViessmannEndpoints.featuresURL(installationID: installationID, gatewaySerial: gatewaySerial, deviceID: deviceID)
         )
         return response.data
     }
@@ -63,11 +67,10 @@ struct ViessmannClient {
         guard let installation = try await fetchInstallations().first else {
             throw ViessmannClientError.noInstallationFound
         }
-        guard let gateway = try await fetchGateways(installationID: installation.id).first else {
+        guard let gateway = installation.gateways.first else {
             throw ViessmannClientError.noGatewayFound
         }
-        let devices = try await fetchDevices(installationID: installation.id, gatewaySerial: gateway.serial)
-        guard let device = devices.mostLikelyHeatingDevice else {
+        guard let device = gateway.devices.mostLikelyHeatingDevice else {
             throw ViessmannClientError.noDeviceFound
         }
         return ViessmannDeviceSelection(installationID: installation.id, gatewaySerial: gateway.serial, deviceID: device.id)
@@ -81,9 +84,17 @@ struct ViessmannClient {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ViessmannClientError.invalidResponse
         }
-        guard (200..<300).contains(httpResponse.statusCode) else {
+        switch httpResponse.statusCode {
+        case 200..<300:
+            break
+        case 401:
+            throw ViessmannClientError.unauthorized
+        case 429:
+            let retryAfter = httpResponse.value(forHTTPHeaderField: "Retry-After").flatMap(TimeInterval.init)
+            throw ViessmannClientError.rateLimited(retryAfter: retryAfter)
+        default:
             throw ViessmannClientError.http(status: httpResponse.statusCode, body: String(data: data, encoding: .utf8) ?? "")
         }
-        return try JSONDecoder().decode(T.self, from: data)
+        return try JSONDecoder.viessmann.decode(T.self, from: data)
     }
 }

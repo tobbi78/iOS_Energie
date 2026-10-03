@@ -24,11 +24,13 @@ enum ViessmannOAuthError: Error, LocalizedError {
     }
 }
 
-/// Token response shape per the Viessmann IoT API (see ViessmannEndpoints.swift for the caveat
-/// that this hasn't been verified against a real login yet).
+/// Token response shape per the Viessmann IoT API. `refreshToken` is optional: verified against
+/// the macOS sibling project (`Viessmann/OAuthClient.swift`), whose comment notes Viessmann does
+/// not always return a new refresh token on a `refresh_token` grant — the previous one must be
+/// kept in that case, or the next refresh has nothing to send.
 private struct ViessmannTokenResponse: Decodable {
     let accessToken: String
-    let refreshToken: String
+    let refreshToken: String?
     let expiresIn: TimeInterval
 
     enum CodingKeys: String, CodingKey {
@@ -63,15 +65,15 @@ struct ViessmannOAuthClient {
         }
 
         let body = ViessmannEndpoints.tokenExchangeBody(clientID: clientID, code: code, codeVerifier: codeVerifier)
-        return try await requestTokens(body: body)
+        return try await requestTokens(body: body, previousRefreshToken: nil)
     }
 
     func refresh(tokens: ViessmannTokens, clientID: String) async throws -> ViessmannTokens {
         let body = ViessmannEndpoints.tokenRefreshBody(clientID: clientID, refreshToken: tokens.refreshToken)
-        return try await requestTokens(body: body)
+        return try await requestTokens(body: body, previousRefreshToken: tokens.refreshToken)
     }
 
-    private func requestTokens(body: [String: String]) async throws -> ViessmannTokens {
+    private func requestTokens(body: [String: String], previousRefreshToken: String?) async throws -> ViessmannTokens {
         var request = URLRequest(url: ViessmannEndpoints.tokenURL)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -89,9 +91,12 @@ struct ViessmannOAuthClient {
         }
 
         let decoded = try JSONDecoder().decode(ViessmannTokenResponse.self, from: data)
+        guard let refreshToken = decoded.refreshToken ?? previousRefreshToken else {
+            throw ViessmannOAuthError.invalidResponse
+        }
         return ViessmannTokens(
             accessToken: decoded.accessToken,
-            refreshToken: decoded.refreshToken,
+            refreshToken: refreshToken,
             expiresAt: now().addingTimeInterval(decoded.expiresIn)
         )
     }

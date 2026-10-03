@@ -9,20 +9,24 @@ import Foundation
 
 /// URL/endpoint construction for the Viessmann IoT API.
 ///
-/// **Not yet verified against a real login** (no Viessmann Client-ID/credentials were available
-/// while writing this): these are the publicly documented Viessmann IoT API v1/v2 paths (same
-/// ones used by the well-known `pyViCare`/Home Assistant Viessmann integrations), not something
-/// copied from this project's macOS sibling (its `Viessmann/OAuthClient.swift` source wasn't
-/// available here — only the behavioral summary in ERKENNTNISSE_MACOS.md). Verify/correct here
-/// and in `VIESSMANN_API_WERTE.md` once the first real login happens, same as was done for
-/// `EnphaseOAuthClient`.
+/// Verified against the real, working implementation in the macOS sibling project
+/// (https://github.com/tobbi78/Dashboard_Waermepumpe, `Viessmann/ViessmannEndpoints.swift` and
+/// `Viessmann/OAuthClient.swift`) — the initial version of this file guessed at the classic
+/// `viessmann.com` hostnames from public docs, which was wrong: Viessmann has since moved to
+/// `viessmann-climatesolutions.com`.
 enum ViessmannEndpoints {
-    static let authorizationURL = URL(string: "https://iam.viessmann.com/idp/v3/authorize")!
-    static let tokenURL = URL(string: "https://iam.viessmann.com/idp/v3/token")!
-    static let apiBaseURL = URL(string: "https://api.viessmann.com")!
+    static let authorizationURL = URL(string: "https://iam.viessmann-climatesolutions.com/idp/v3/authorize")!
+    static let tokenURL = URL(string: "https://iam.viessmann-climatesolutions.com/idp/v3/token")!
+    /// Already includes the `/iot/v2` API version prefix, unlike Enphase's `baseURL`.
+    static let apiBaseURL = URL(string: "https://api.viessmann-climatesolutions.com/iot/v2")!
 
     /// Custom callback scheme for the OAuth redirect. Must be registered as the exact redirect
-    /// URI for the Client-ID in the Viessmann developer portal: "\(callbackScheme)://\(callbackHost)".
+    /// URI for this app's Client-ID in the Viessmann developer portal:
+    /// "\(callbackScheme)://\(callbackHost)". The macOS app registered its own Client-ID with
+    /// "de.florian.tobias.Dashboard-Waermepumpe://oauth-callback" — this iOS app is a different
+    /// client and needs its own redirect URI added in the portal (either as a second redirect
+    /// URI on the same Client-ID, if Viessmann allows more than one, or under a separate
+    /// Client-ID for iOS).
     ///
     /// No Info.plist `CFBundleURLTypes` entry is needed: `WebAuthenticationSession` intercepts
     /// the redirect itself before it would reach the app as a regular deep link (same as Enphase).
@@ -40,12 +44,12 @@ enum ViessmannEndpoints {
     static func authorizationURL(clientID: String, codeChallenge: String) -> URL {
         var components = URLComponents(url: authorizationURL, resolvingAgainstBaseURL: false)!
         components.queryItems = [
-            URLQueryItem(name: "response_type", value: "code"),
             URLQueryItem(name: "client_id", value: clientID),
             URLQueryItem(name: "redirect_uri", value: redirectURI),
-            URLQueryItem(name: "scope", value: scope),
+            URLQueryItem(name: "response_type", value: "code"),
             URLQueryItem(name: "code_challenge", value: codeChallenge),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
+            URLQueryItem(name: "scope", value: scope),
         ]
         return components.url!
     }
@@ -55,8 +59,8 @@ enum ViessmannEndpoints {
             "grant_type": "authorization_code",
             "client_id": clientID,
             "redirect_uri": redirectURI,
-            "code": code,
             "code_verifier": codeVerifier,
+            "code": code,
         ]
     }
 
@@ -68,19 +72,18 @@ enum ViessmannEndpoints {
         ]
     }
 
-    static let installationsURL = URL(string: "https://api.viessmann.com/iot/v2/equipment/installations")!
-
-    static func gatewaysURL(installationID: Int) -> URL {
-        apiBaseURL.appendingPathComponent("iot/v2/equipment/installations/\(installationID)/gateways")
-    }
-
-    static func devicesURL(installationID: Int, gatewaySerial: String) -> URL {
-        apiBaseURL.appendingPathComponent("iot/v2/equipment/installations/\(installationID)/gateways/\(gatewaySerial)/devices")
+    /// `includeGateways=true` returns the full installation → gateway → device tree in one call,
+    /// so no separate `/gateways`/`/devices` endpoints are needed (unlike an earlier, unverified
+    /// version of this file assumed).
+    static var installationsURL: URL {
+        var components = URLComponents(url: apiBaseURL.appendingPathComponent("equipment/installations"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "includeGateways", value: "true")]
+        return components.url!
     }
 
     static func featuresURL(installationID: Int, gatewaySerial: String, deviceID: String) -> URL {
         apiBaseURL.appendingPathComponent(
-            "iot/v2/features/installations/\(installationID)/gateways/\(gatewaySerial)/devices/\(deviceID)/features"
+            "features/installations/\(installationID)/gateways/\(gatewaySerial)/devices/\(deviceID)/features"
         )
     }
 }
