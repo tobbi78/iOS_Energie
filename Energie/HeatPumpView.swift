@@ -61,9 +61,8 @@ struct HeatPumpView: View {
                     }
                 }
         }
-        .task {
-            await model.start()
-        }
+        // No .task here: the model is started once in ContentView (HP-5), so it loads even if
+        // the user lands on the "Start" tab first and never visits "Wärmepumpe" directly.
     }
 
     @ViewBuilder

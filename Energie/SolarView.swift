@@ -62,7 +62,9 @@ struct SolarView: View {
                 }
         }
         .task {
-            await model.start()
+            // Starting the model itself now happens once in ContentView (HP-5), so it loads
+            // even if the user lands on the "Start" tab first — this only refreshes the
+            // displayed budget counter, a cheap local read with no network request.
             requestsUsedThisMonth = await model.requestsUsedThisMonth()
         }
     }
