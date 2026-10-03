@@ -14,6 +14,7 @@ struct EnergieApp: App {
         let schema = Schema([
             PVDailySample.self,
             PVYearlySample.self,
+            HeatPumpEfficiencySample.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
