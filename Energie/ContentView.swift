@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Identifies the three top-level sections so `HomeView` can jump straight into a tab (HP-5).
 enum AppTab: Hashable {
-    case home, pv, heatPump
+    case home, pv, heatPump, settings
 }
 
 /// App root. A `TabView` so PV and the heat pump stay independent sections, with a combined
@@ -34,7 +34,7 @@ struct ContentView: View {
             }
             Tab("PV-Anlage", systemImage: "sun.max.fill", value: .pv) {
                 if let solarModel {
-                    SolarView(model: solarModel, displayPreferences: displayPreferences, budgetSettings: budgetSettings)
+                    SolarView(model: solarModel, displayPreferences: displayPreferences)
                 } else {
                     ProgressView()
                 }
@@ -42,6 +42,18 @@ struct ContentView: View {
             Tab("Wärmepumpe", systemImage: "heater.vertical.fill", value: .heatPump) {
                 if let heatPumpModel {
                     HeatPumpView(model: heatPumpModel)
+                } else {
+                    ProgressView()
+                }
+            }
+            Tab("Einstellungen", systemImage: "gearshape.fill", value: .settings) {
+                if let solarModel, let heatPumpModel {
+                    SettingsView(
+                        solarModel: solarModel,
+                        displayPreferences: displayPreferences,
+                        budgetSettings: budgetSettings,
+                        heatPumpModel: heatPumpModel
+                    )
                 } else {
                     ProgressView()
                 }

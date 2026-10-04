@@ -21,7 +21,7 @@ final class EnergieUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppLaunchesOnStartTabWithAllThreeTabsPresent() throws {
+    func testAppLaunchesOnStartTabWithAllFourTabsPresent() throws {
         let app = XCUIApplication()
         app.launch()
 
@@ -33,6 +33,7 @@ final class EnergieUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Start"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["PV-Anlage"].exists)
         XCTAssertTrue(app.buttons["Wärmepumpe"].exists)
+        XCTAssertTrue(app.buttons["Einstellungen"].exists)
         // "Start" is the default/first tab — its own content should already be visible.
         XCTAssertTrue(app.navigationBars["Start"].waitForExistence(timeout: 5))
     }
@@ -55,8 +56,9 @@ final class EnergieUITests: XCTestCase {
     }
 
     /// Exercises `SolarView`'s three non-ready states (credentials form / sign-in prompt) when
-    /// not already signed in, or its detail screens (`PVHistoryChartsView`, settings) when a
+    /// not already signed in, or its "Verlauf" detail screen (`PVHistoryChartsView`) when a
     /// prior manual test session left it signed in — either way, real `body` code runs.
+    /// `PVSettingsScreen` is exercised separately via the "Einstellungen" tab, not here.
     @MainActor
     func testPVAnlageTabRendersWhicheverStateItIsInAndDetailScreensIfReady() throws {
         let app = XCUIApplication()
@@ -75,23 +77,18 @@ final class EnergieUITests: XCTestCase {
             return
         }
 
-        // .ready (or .error/.rateLimited, which still show the "Mehr" menu's sibling toolbar
-        // button in this app) — drill into the detail screens via the "Mehr" menu.
-        let moreButton = app.navigationBars["PV-Anlage"].buttons["Mehr"]
-        guard moreButton.waitForExistence(timeout: 3) else { return }
-        moreButton.tap()
-        app.buttons["Verlauf"].tap()
+        // .ready (or .error/.rateLimited, which still show the toolbar's "Verlauf" button).
+        let historyButton = app.navigationBars["PV-Anlage"].buttons["Verlauf"]
+        guard historyButton.waitForExistence(timeout: 3) else { return }
+        historyButton.tap()
         XCTAssertTrue(app.navigationBars["Verlauf"].waitForExistence(timeout: 5))
         app.navigationBars["Verlauf"].buttons["PV-Anlage"].tap()
-
-        moreButton.tap()
-        app.buttons["Einstellungen"].tap()
-        XCTAssertTrue(app.navigationBars["Einstellungen"].waitForExistence(timeout: 5))
     }
 
-    /// Exercises `HeatPumpView`'s three non-ready states, or all five detail screens
-    /// (`DetailSectionComponents`-based Heizkreise/Warmwasser/Effizienz/Verdichter plus
-    /// Einstellungen) when already signed in.
+    /// Exercises `HeatPumpView`'s three non-ready states, or all four diagnostic detail screens
+    /// (`DetailSectionComponents`-based Heizkreise/Warmwasser/Effizienz/Verdichter) when already
+    /// signed in. `HeatPumpSettingsScreen` is exercised separately via the "Einstellungen" tab,
+    /// not here.
     @MainActor
     func testWaermepumpeTabRendersWhicheverStateItIsInAndDetailScreensIfReady() throws {
         let app = XCUIApplication()
@@ -113,12 +110,36 @@ final class EnergieUITests: XCTestCase {
         let moreButton = app.navigationBars["Wärmepumpe"].buttons["Mehr"]
         guard moreButton.waitForExistence(timeout: 3) else { return }
 
-        for screen in ["Heizkreise", "Warmwasser", "Effizienz & Verbrauch", "Verdichter & Kältekreis", "Einstellungen"] {
+        for screen in ["Heizkreise", "Warmwasser", "Effizienz & Verbrauch", "Verdichter & Kältekreis"] {
             moreButton.tap()
             app.buttons[screen].tap()
             XCTAssertTrue(app.navigationBars[screen].waitForExistence(timeout: 5), "Expected \(screen) to appear")
             app.navigationBars[screen].buttons["Wärmepumpe"].tap()
         }
+    }
+
+    /// Exercises the consolidated "Einstellungen" tab (`SettingsView`) and, through it, both
+    /// `PVSettingsScreen` and `HeatPumpSettingsScreen` — the single place either source's
+    /// settings now live, replacing the former per-tab "Mehr" > "Einstellungen" entries.
+    @MainActor
+    func testEinstellungenTabNavigatesToBothSettingsScreens() throws {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.buttons["Einstellungen"].firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Einstellungen"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Einstellungen"].waitForExistence(timeout: 5))
+
+        // Tapping the row's own text, not `.buttons[...]`, since that label is ambiguous with
+        // the bottom tab bar's identically-labeled button (same reasoning as
+        // testHomeSectionHeadersNavigateToTheirTabs) — a plain `.firstMatch` on the button query
+        // can land on the tab bar instead of this list row and switch tabs rather than push.
+        app.staticTexts["PV-Anlage"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["PV-Anlage"].waitForExistence(timeout: 5))
+        app.navigationBars["PV-Anlage"].buttons["Einstellungen"].tap()
+
+        app.staticTexts["Wärmepumpe"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Wärmepumpe"].waitForExistence(timeout: 5))
+        app.navigationBars["Wärmepumpe"].buttons["Einstellungen"].tap()
     }
 
     @MainActor
