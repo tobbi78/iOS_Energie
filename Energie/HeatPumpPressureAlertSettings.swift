@@ -14,13 +14,19 @@ import Foundation
 ///
 /// Simpler than the macOS sibling project's `PressureAlertSettings`: no `recipient` field, since
 /// this sends a local notification to the device itself rather than an iMessage to someone.
+///
+/// Backed by the shared App Group `UserDefaults` (not plain `.standard`) because the heat-pump
+/// widget extension's own pressure-alert check needs to read the same configured threshold/
+/// enabled-state — the widget doesn't link this class (same tooling limitation as
+/// `EnphaseBudgetSettings`), so it reads the keys below directly via `SharedAppGroup.userDefaults`;
+/// keep them in sync by hand if they ever change.
 @Observable
 @MainActor
 final class HeatPumpPressureAlertSettings {
-    private static let thresholdKey = "HeatPumpPressureAlertSettings.threshold"
-    private static let isEnabledKey = "HeatPumpPressureAlertSettings.isEnabled"
-    private static let recoveryMessageEnabledKey = "HeatPumpPressureAlertSettings.recoveryMessageEnabled"
-    private static let repeatIntervalKey = "HeatPumpPressureAlertSettings.repeatInterval"
+    static let thresholdKey = "HeatPumpPressureAlertSettings.threshold"
+    static let isEnabledKey = "HeatPumpPressureAlertSettings.isEnabled"
+    static let recoveryMessageEnabledKey = "HeatPumpPressureAlertSettings.recoveryMessageEnabled"
+    static let repeatIntervalKey = "HeatPumpPressureAlertSettings.repeatInterval"
 
     /// Suggested by the reference values in `heating.configuration.pressure.total`
     /// (`defaultPressure` 1.5 bar − `normalPressureDelta` 0.6 bar ≈ 0.9 bar, see
@@ -35,7 +41,7 @@ final class HeatPumpPressureAlertSettings {
     private(set) var recoveryMessageEnabled: Bool
     private(set) var repeatInterval: TimeInterval
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = SharedAppGroup.userDefaults) {
         self.defaults = defaults
         threshold = defaults.object(forKey: Self.thresholdKey) as? Double ?? Self.defaultThreshold
         isEnabled = defaults.object(forKey: Self.isEnabledKey) as? Bool ?? true
