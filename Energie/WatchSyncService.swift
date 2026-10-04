@@ -25,6 +25,20 @@
 import Foundation
 import WatchConnectivity
 
+/// Just the slice of `WCSession` this service needs, so tests can inject a fake instead of the
+/// real (unsubclassable) `WCSession` — same DI pattern already used throughout the app (e.g.
+/// `EnphaseClient`'s injected `URLSession`).
+protocol WatchConnectivitySession: AnyObject {
+    var activationState: WCSessionActivationState { get }
+    var isPaired: Bool { get }
+    var isWatchAppInstalled: Bool { get }
+    var delegate: WCSessionDelegate? { get set }
+    func activate()
+    func updateApplicationContext(_ applicationContext: [String: Any]) throws
+}
+
+extension WCSession: WatchConnectivitySession {}
+
 @MainActor
 final class WatchSyncService: NSObject {
     struct PVUpdate: Equatable {
@@ -41,12 +55,12 @@ final class WatchSyncService: NSObject {
         var fetchedAt: Date
     }
 
-    private let session: WCSession?
+    private let session: WatchConnectivitySession?
     private var latestPV: PVUpdate?
     private var latestHeatPump: HeatPumpUpdate?
-    private var lastSentSnapshot: WatchSnapshot?
+    private(set) var lastSentSnapshot: WatchSnapshot?
 
-    init(session: WCSession? = WCSession.isSupported() ? .default : nil) {
+    init(session: WatchConnectivitySession? = WCSession.isSupported() ? WCSession.default : nil) {
         self.session = session
         super.init()
         session?.delegate = self
