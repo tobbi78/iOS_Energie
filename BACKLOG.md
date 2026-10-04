@@ -178,7 +178,7 @@ Keine Features, sondern Arbeitsweisen, die sich in der Vorlage bewährt haben un
 
 - Format der OAuth-Token-Antwort ungetestet.
 - Vorzeichen-Konvention von `grid_power`/`battery_power` in `live_data` laut Spec nicht definiert.
-- Tatsächliches Monats-/Minutenkontingent des gebuchten Enphase-Plans nicht offiziell bekannt.
+- ~~Tatsächliches Monats-/Minutenkontingent des gebuchten Enphase-Plans nicht offiziell bekannt.~~ — am 2026-10-04 durch eigene Recherche des Nutzers auf der Enphase-Website als gesichert bestätigt (1000/Monat, siehe `EnphaseRequestBudget.monthlyLimit`).
 - Nachlaufende Nullen in `_lifetime`-Zeitreihen bedeuten "noch nicht gemeldet", nicht "0 Wh".
 
 ## Offene Rückfragen an den Nutzer

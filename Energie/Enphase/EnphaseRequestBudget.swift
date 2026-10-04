@@ -9,8 +9,8 @@ import Foundation
 
 /// Persistent per-calendar-month request counter (F4.2).
 ///
-/// Enphase's actual monthly quota isn't officially documented — 1000/month is a user-supplied
-/// assumption (see ENPHASE_API_WERTE.md/BACKLOG.md), enforced here so the app has a defined,
+/// 1000/month is the confirmed quota for the booked Enphase plan (verified by the user against
+/// the Enphase developer portal, see BACKLOG.md), enforced here so the app has a defined,
 /// predictable behavior instead of silently exceeding it and finding out via 429s alone.
 ///
 /// An actor, like `EnphaseRequestThrottle`, since `EnphaseClient` can issue several requests
