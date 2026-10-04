@@ -61,6 +61,10 @@ final class SolarModel {
     private let now: @Sendable () -> Date
     private let modelContext: ModelContext
     private let userDefaults: UserDefaults
+    /// Hands the latest PV values off to a paired Apple Watch (see BACKLOG.md, "Zielplattform
+    /// Apple Watch"). `nil` by default so existing call sites/tests are unaffected — `ContentView`
+    /// injects the real instance.
+    private let watchSyncService: WatchSyncService?
 
     private static let lastFinalizeRunDayKey = "SolarModel.lastFinalizeRunDay"
 
@@ -73,6 +77,7 @@ final class SolarModel {
         budget: EnphaseRequestBudget = EnphaseRequestBudget(),
         urlSession: URLSession = .shared,
         userDefaults: UserDefaults = .standard,
+        watchSyncService: WatchSyncService? = nil,
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.settings = settings
@@ -83,6 +88,7 @@ final class SolarModel {
         self.budget = budget
         self.urlSession = urlSession
         self.userDefaults = userDefaults
+        self.watchSyncService = watchSyncService
         self.now = now
         state = SolarModel.initialState(settings: settings)
     }
@@ -206,6 +212,12 @@ final class SolarModel {
             upsertToday(sample)
             today = sample
             state = .ready
+            watchSyncService?.updatePV(WatchSyncService.PVUpdate(
+                producedTodayWh: sample.producedWh,
+                selfSufficiencyRate: sample.selfSufficiencyRate,
+                batterySocPercent: sample.batterySocPercent,
+                fetchedAt: now()
+            ))
         } catch {
             state = .error(error.localizedDescription)
         }
