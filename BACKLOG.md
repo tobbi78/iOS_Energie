@@ -171,7 +171,7 @@ Keine Features, sondern Arbeitsweisen, die sich in der Vorlage bewährt haben un
 - **Mehrfachanlagen-Unterstützung.**
 - ~~Zusammenführung mit einer weiteren Energiedatenquelle~~ — seit 2026-10-04 umgesetzt, siehe Umsetzungsstand und `Plans/Waermepumpe-Integration.md`.
 - **Schreibender Zugriff** (Batterie-Einstellungen, Storm-Guard, Lasteuerung, EV-Charger Start/Stop) — reines Monitoring-Dashboard, keine `PUT`-Endpunkte.
-- **EV-Charger-Auswertung** — nur relevant, falls tatsächlich eine IQ-Wallbox vorhanden ist (zu klären).
+- ~~EV-Charger-Auswertung~~ — am 2026-10-04 per echtem Abruf von `GET /api/v4/systems/{system_id}/devices` gegen die reale Anlage verifiziert: `ev_chargers` ist leer, keine IQ-Wallbox vorhanden. Damit endgültig nicht relevant, nicht nur zurückgestellt.
 - ~~Echtes Hintergrund-Monitoring für die Wärmepumpe~~ — seit 2026-10-04 umgesetzt, siehe Umsetzungsstand (`feature/waermepumpe-widget`).
 
 ## Bekannte Unsicherheiten aus der API-Recherche (nicht app-spezifisch, aber relevant für Zeitplanung/Tests)
@@ -187,4 +187,4 @@ Alle bisherigen Rückfragen sind geklärt (siehe "Entscheidungen" oben und "Zusa
 
 ## Noch zu verifizieren (unabhängig von einer reinen Rückfrage)
 
-- **Tatsächlich verbaute Hardware** — Verbrauchszähler (CT) und/oder IQ-Wallbox (EV-Charger)? Nutzer vermutet "ja", aber unbestätigt (Stand 2026-09-30). Verifizierbar erst mit echtem API-Zugriff über `GET /api/v4/systems/{system_id}/devices` (Abschnitt "Gerätetypen" in `ENPHASE_API_WERTE.md`: Schlüssel `meters` für Verbrauchs-/Produktionszähler, `ev_chargers` für Wallboxen) — sobald F1.1–F1.5 (Auth + Systemerkennung) stehen, diesen Endpunkt einmal gegen die echte Anlage abrufen und hier eintragen. Bis dahin bleiben **F2.1 Verbrauch/Autarkiegrad** und die **EV-Charger-Auswertung** (aktuell unter "Bewusst zurückgestellt") mit dieser Unsicherheit behaftet — falls kein Verbrauchszähler vorhanden ist, liefern `telemetry/consumption_meter`, `energy_import/export_telemetry` etc. laut Doku leere Listen/Nullen statt echter Werte, und Autarkiegrad könnte dann nicht berechnet werden.
+- ~~Tatsächlich verbaute Hardware~~ — am 2026-10-04 per echtem, einmaligem Abruf von `GET /api/v4/systems/{system_id}/devices` gegen die reale Anlage verifiziert (temporärer Diagnose-Code, nicht im Repo verblieben): `devices.meters` enthält sowohl `"production"` als auch `"consumption"` — ein Verbrauchszähler (CT) **ist** verbaut. `devices.ev_chargers` ist leer — **keine** IQ-Wallbox vorhanden. Damit ist **F2.1 Verbrauch/Autarkiegrad** bestätigt verlässlich (passend dazu zeigt die App bereits reale Verbrauchs-/Autarkiegrad-Werte, nicht nur Nullen) und die **EV-Charger-Auswertung** endgültig als nicht relevant einsortiert (siehe oben).
