@@ -19,6 +19,7 @@ struct SolarView: View {
 
     var model: SolarModel
     var displayPreferences: PVDisplayPreferences
+    var budgetSettings: EnphaseBudgetSettings
 
     @State private var requestsUsedThisMonth: Int?
 
@@ -50,7 +51,7 @@ struct SolarView: View {
                                     Label("Verlauf", systemImage: "chart.xyaxis.line")
                                 }
                                 NavigationLink {
-                                    PVSettingsScreen(model: model, displayPreferences: displayPreferences)
+                                    PVSettingsScreen(model: model, displayPreferences: displayPreferences, budgetSettings: budgetSettings)
                                 } label: {
                                     Label("Einstellungen", systemImage: "gearshape")
                                 }
@@ -133,6 +134,7 @@ private struct PVHistoryScreen: View {
 private struct PVSettingsScreen: View {
     var model: SolarModel
     var displayPreferences: PVDisplayPreferences
+    var budgetSettings: EnphaseBudgetSettings
 
     @Environment(\.dismiss) private var dismiss
     @State private var clientID = ""
@@ -179,6 +181,22 @@ private struct PVSettingsScreen: View {
                 Text("Einspeisevergütung")
             } footer: {
                 Text("Richtwert ohne Abrechnungsanspruch für die geschätzte Vergütung bei der Einspeisung-Kachel.")
+            }
+
+            Section {
+                Stepper(
+                    "Reserve: \(budgetSettings.monthlyReserve) Anfragen",
+                    value: Binding(
+                        get: { budgetSettings.monthlyReserve },
+                        set: { budgetSettings.setMonthlyReserve($0) }
+                    ),
+                    in: EnphaseBudgetSettings.minimumReserve...EnphaseBudgetSettings.maximumReserve,
+                    step: 5
+                )
+            } header: {
+                Text("Monatsbudget-Reserve")
+            } footer: {
+                Text("Wird vom Live-Abruf-Budget zurückgehalten, damit der tägliche Abschluss-Durchlauf am Monatsende immer noch Anfragen übrig hat.")
             }
         }
         .navigationTitle("Einstellungen")

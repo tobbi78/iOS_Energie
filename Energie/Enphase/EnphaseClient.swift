@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum EnphaseClientError: Error, LocalizedError {
+enum EnphaseClientError: Error, LocalizedError, Equatable {
     case invalidResponse
     case http(status: Int, body: String)
     /// HTTP 429 with a decodable body (F4.3) — more specific than `.http` because it carries
@@ -56,6 +56,9 @@ struct EnphaseClient {
     var budget: EnphaseRequestBudget
     var apiKey: @Sendable () -> String
     var accessToken: @Sendable () async throws -> String
+    /// How much of the monthly budget to hold back (F6.3) — configurable via
+    /// `EnphaseBudgetSettings` instead of the previous hardcoded `20`.
+    var reserve: @Sendable () -> Int = { EnphaseBudgetSettings.defaultReserve }
 
     func fetchSystems() async throws -> [EnphaseSystemDTO] {
         let response: EnphaseSystemsResponse = try await perform(EnphaseEndpoints.systems)
@@ -105,7 +108,7 @@ struct EnphaseClient {
     }
 
     private func perform<T: Decodable>(_ url: URL) async throws -> T {
-        guard await !budget.isExhausted() else {
+        guard await !budget.isExhausted(reserve: reserve()) else {
             throw EnphaseClientError.monthlyBudgetExhausted
         }
         await throttle.acquire()

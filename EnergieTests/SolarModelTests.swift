@@ -62,6 +62,7 @@ struct SolarModelTests {
         try SolarModel(
             settings: settings,
             modelContext: makeContext(),
+            budgetSettings: EnphaseBudgetSettings(userDefaults: UserDefaults(suiteName: UUID().uuidString)!),
             throttle: EnphaseRequestThrottle(),
             budget: EnphaseRequestBudget(userDefaults: UserDefaults(suiteName: UUID().uuidString)!),
             urlSession: MockURLProtocol.makeSession(),

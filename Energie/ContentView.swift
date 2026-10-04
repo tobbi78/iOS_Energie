@@ -20,6 +20,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var enphaseSettings = EnphaseSettings()
     @State private var displayPreferences = PVDisplayPreferences()
+    @State private var budgetSettings = EnphaseBudgetSettings()
     @State private var solarModel: SolarModel?
     @State private var viessmannSettings = ViessmannSettings()
     @State private var pressureAlertSettings = HeatPumpPressureAlertSettings()
@@ -33,7 +34,7 @@ struct ContentView: View {
             }
             Tab("PV-Anlage", systemImage: "sun.max.fill", value: .pv) {
                 if let solarModel {
-                    SolarView(model: solarModel, displayPreferences: displayPreferences)
+                    SolarView(model: solarModel, displayPreferences: displayPreferences, budgetSettings: budgetSettings)
                 } else {
                     ProgressView()
                 }
@@ -51,6 +52,7 @@ struct ContentView: View {
             let model = SolarModel(
                 settings: enphaseSettings,
                 modelContext: modelContext,
+                budgetSettings: budgetSettings,
                 budget: EnphaseRequestBudget(userDefaults: SharedAppGroup.userDefaults)
             )
             solarModel = model

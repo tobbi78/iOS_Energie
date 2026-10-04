@@ -53,6 +53,7 @@ final class SolarModel {
     private(set) var today: PVDailySample?
 
     private let settings: EnphaseSettings
+    private let budgetSettings: EnphaseBudgetSettings
     private let oauthClient: EnphaseOAuthClient
     private let throttle: EnphaseRequestThrottle
     private let budget: EnphaseRequestBudget
@@ -66,6 +67,7 @@ final class SolarModel {
     init(
         settings: EnphaseSettings,
         modelContext: ModelContext,
+        budgetSettings: EnphaseBudgetSettings,
         oauthClient: EnphaseOAuthClient = EnphaseOAuthClient(),
         throttle: EnphaseRequestThrottle = EnphaseRequestThrottle(),
         budget: EnphaseRequestBudget = EnphaseRequestBudget(),
@@ -75,6 +77,7 @@ final class SolarModel {
     ) {
         self.settings = settings
         self.modelContext = modelContext
+        self.budgetSettings = budgetSettings
         self.oauthClient = oauthClient
         self.throttle = throttle
         self.budget = budget
@@ -398,14 +401,16 @@ final class SolarModel {
 
     private func makeClient() throws -> EnphaseClient {
         // Captured now (on the main actor) rather than read inside the @Sendable closure below,
-        // which may run off the main actor and cannot access `settings` directly.
+        // which may run off the main actor and cannot access `settings`/`budgetSettings` directly.
         let apiKey = settings.credentials.apiKey
+        let reserve = budgetSettings.monthlyReserve
         return EnphaseClient(
             urlSession: urlSession,
             throttle: throttle,
             budget: budget,
             apiKey: { apiKey },
-            accessToken: { [self] in try await self.validAccessToken() }
+            accessToken: { [self] in try await self.validAccessToken() },
+            reserve: { reserve }
         )
     }
 

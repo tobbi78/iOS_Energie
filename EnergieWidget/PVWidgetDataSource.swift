@@ -40,6 +40,13 @@ enum PVWidgetDataSource {
     static let sharedDefaults = UserDefaults(suiteName: "group.de.florian.tobias.Energie") ?? .standard
 
     private static let budget = EnphaseRequestBudget(userDefaults: sharedDefaults)
+
+    /// Mirrors `EnphaseBudgetSettings.reserveKey`/`.defaultReserve` (F6.3) — duplicated as a raw
+    /// key string rather than linking that app-only class, same tooling limitation as the other
+    /// duplicated files in this target. Keep in sync by hand if the key or default ever changes.
+    static var configuredReserve: Int {
+        sharedDefaults.object(forKey: "EnphaseBudgetSettings.monthlyReserve") as? Int ?? PVWidgetPollPacing.monthlyReserve
+    }
     private static let throttle = EnphaseRequestThrottle()
     private static let baseURL = URL(string: "https://api.enphaseenergy.com")!
     private static let cacheKey = "PVWidgetDataSource.lastSnapshot"
@@ -89,7 +96,7 @@ enum PVWidgetDataSource {
             return .failure(.notSignedIn)
         }
 
-        guard await !budget.isExhausted() else {
+        guard await !budget.isExhausted(reserve: configuredReserve) else {
             return .failure(.monthlyBudgetExhausted)
         }
 

@@ -17,8 +17,10 @@ import Foundation
 
 enum PVWidgetPollPacing {
     static let requestsPerPoll = 4
-    /// Matches EnphaseRequestBudget's default reserve, kept here too so pacing and the hard
-    /// gate agree on how much budget is actually "available" for live polling.
+    /// Default reserve (F6.3 makes this user-configurable via `EnphaseBudgetSettings` in the app;
+    /// the widget reads the same shared UserDefaults key directly, see `PVWidgetProvider`, since
+    /// it can't link that app-only class — same tooling limitation as the other duplicated files
+    /// in this target). Used only when no stored value exists yet.
     static let monthlyReserve = 20
     /// Never poll more often than this, even with a nearly-untouched budget.
     static let minimumInterval: TimeInterval = 15 * 60
@@ -32,10 +34,11 @@ enum PVWidgetPollPacing {
     static func nextPollDelay(
         usedThisMonth: Int,
         monthlyLimit: Int,
+        reserve: Int = monthlyReserve,
         now: Date,
         calendar: Calendar = .current
     ) -> TimeInterval {
-        let usableBudget = max(0, monthlyLimit - monthlyReserve - usedThisMonth)
+        let usableBudget = max(0, monthlyLimit - reserve - usedThisMonth)
         let remainingPolls = usableBudget / requestsPerPoll
         guard remainingPolls > 0 else { return fallbackInterval }
 
