@@ -7,12 +7,38 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		892357A43072E7EF003FB076 /* EnergieWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 892357A33072E7EF003FB076 /* EnergieWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		892357B03072E7F1003FB076 /* EnergieWatch.app in Resources */ = {isa = PBXBuildFile; fileRef = 8923579E3072E7EF003FB076 /* EnergieWatch.app */; };
+		892357BD3072E7FA003FB076 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89340B85306DBF27005BA574 /* WidgetKit.framework */; };
+		892357BE3072E7FA003FB076 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89340B87306DBF27005BA574 /* SwiftUI.framework */; };
+		892357C93072E7FB003FB076 /* EnergieWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 892357BC3072E7FA003FB076 /* EnergieWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		89340B86306DBF27005BA574 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89340B85306DBF27005BA574 /* WidgetKit.framework */; };
 		89340B88306DBF27005BA574 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89340B87306DBF27005BA574 /* SwiftUI.framework */; };
 		89340B93306DBF29005BA574 /* EnergieWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 89340B83306DBF27005BA574 /* EnergieWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		892357A53072E7EF003FB076 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 892357A23072E7EF003FB076;
+			remoteInfo = "EnergieWatch Watch App";
+		};
+		892357AE3072E7F1003FB076 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8923579D3072E7EF003FB076;
+			remoteInfo = EnergieWatch;
+		};
+		892357C73072E7FB003FB076 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 892357BB3072E7FA003FB076;
+			remoteInfo = EnergieWatchWidgetExtension;
+		};
 		89340A3F306D4B8C005BA574 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
@@ -37,6 +63,24 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		892357B43072E7F1003FB076 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolder = Product;
+			files = (
+				892357A43072E7EF003FB076 /* EnergieWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+		};
+		892357CE3072E7FB003FB076 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				892357C93072E7FB003FB076 /* EnergieWatchWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
 		89340B94306DBF29005BA574 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			dstPath = "";
@@ -49,6 +93,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8923579E3072E7EF003FB076 /* EnergieWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EnergieWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		892357A33072E7EF003FB076 /* EnergieWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "EnergieWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		892357BC3072E7FA003FB076 /* EnergieWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EnergieWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		89340A2F306D4B89005BA574 /* Energie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Energie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		89340A3E306D4B8C005BA574 /* EnergieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EnergieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		89340A48306D4B8C005BA574 /* EnergieUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EnergieUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -59,6 +106,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		892357CA3072E7FB003FB076 /* Exceptions for "EnergieWatchWidget" folder in "EnergieWatchWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 892357BB3072E7FA003FB076 /* EnergieWatchWidgetExtension */;
+		};
 		89340B97306DBF29005BA574 /* Exceptions for "EnergieWidget" folder in "EnergieWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -69,6 +123,19 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		892357A73072E7EF003FB076 /* EnergieWatch Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "EnergieWatch Watch App";
+			sourceTree = "<group>";
+		};
+		892357BF3072E7FA003FB076 /* EnergieWatchWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				892357CA3072E7FB003FB076 /* Exceptions for "EnergieWatchWidget" folder in "EnergieWatchWidgetExtension" target */,
+			);
+			path = EnergieWatchWidget;
+			sourceTree = "<group>";
+		};
 		89340A31306D4B89005BA574 /* Energie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Energie;
@@ -95,6 +162,18 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		892357A03072E7EF003FB076 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		892357B93072E7FA003FB076 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				892357BE3072E7FA003FB076 /* SwiftUI.framework in Frameworks */,
+				892357BD3072E7FA003FB076 /* WidgetKit.framework in Frameworks */,
+			);
+		};
 		89340A2C306D4B89005BA574 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -128,6 +207,8 @@
 				89340A41306D4B8C005BA574 /* EnergieTests */,
 				89340A4B306D4B8C005BA574 /* EnergieUITests */,
 				89340B89306DBF27005BA574 /* EnergieWidget */,
+				892357A73072E7EF003FB076 /* EnergieWatch Watch App */,
+				892357BF3072E7FA003FB076 /* EnergieWatchWidget */,
 				89340B84306DBF27005BA574 /* Frameworks */,
 				89340A30306D4B89005BA574 /* Products */,
 			);
@@ -140,6 +221,9 @@
 				89340A3E306D4B8C005BA574 /* EnergieTests.xctest */,
 				89340A48306D4B8C005BA574 /* EnergieUITests.xctest */,
 				89340B83306DBF27005BA574 /* EnergieWidgetExtension.appex */,
+				8923579E3072E7EF003FB076 /* EnergieWatch.app */,
+				892357A33072E7EF003FB076 /* EnergieWatch Watch App.app */,
+				892357BC3072E7FA003FB076 /* EnergieWatchWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -156,6 +240,63 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		8923579D3072E7EF003FB076 /* EnergieWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 892357B53072E7F1003FB076 /* Build configuration list for PBXNativeTarget "EnergieWatch" */;
+			buildPhases = (
+				8923579C3072E7EF003FB076 /* Resources */,
+				892357B43072E7F1003FB076 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				892357A63072E7EF003FB076 /* PBXTargetDependency */,
+			);
+			name = EnergieWatch;
+			productName = EnergieWatch;
+			productReference = 8923579E3072E7EF003FB076 /* EnergieWatch.app */;
+			productType = "com.apple.product-type.application.watchapp2-container";
+		};
+		892357A23072E7EF003FB076 /* EnergieWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 892357B13072E7F1003FB076 /* Build configuration list for PBXNativeTarget "EnergieWatch Watch App" */;
+			buildPhases = (
+				8923579F3072E7EF003FB076 /* Sources */,
+				892357A03072E7EF003FB076 /* Frameworks */,
+				892357A13072E7EF003FB076 /* Resources */,
+				892357CE3072E7FB003FB076 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				892357C83072E7FB003FB076 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				892357A73072E7EF003FB076 /* EnergieWatch Watch App */,
+			);
+			name = "EnergieWatch Watch App";
+			productName = "EnergieWatch Watch App";
+			productReference = 892357A33072E7EF003FB076 /* EnergieWatch Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		892357BB3072E7FA003FB076 /* EnergieWatchWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 892357CB3072E7FB003FB076 /* Build configuration list for PBXNativeTarget "EnergieWatchWidgetExtension" */;
+			buildPhases = (
+				892357B83072E7FA003FB076 /* Sources */,
+				892357B93072E7FA003FB076 /* Frameworks */,
+				892357BA3072E7FA003FB076 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				892357BF3072E7FA003FB076 /* EnergieWatchWidget */,
+			);
+			name = EnergieWatchWidgetExtension;
+			productName = EnergieWatchWidgetExtension;
+			productReference = 892357BC3072E7FA003FB076 /* EnergieWatchWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		89340A2E306D4B89005BA574 /* Energie */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 89340A50306D4B8C005BA574 /* Build configuration list for PBXNativeTarget "Energie" */;
@@ -169,6 +310,7 @@
 			);
 			dependencies = (
 				89340B92306DBF29005BA574 /* PBXTargetDependency */,
+				892357AF3072E7F1003FB076 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				89340A31306D4B89005BA574 /* Energie */,
@@ -248,6 +390,15 @@
 				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					8923579D3072E7EF003FB076 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					892357A23072E7EF003FB076 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					892357BB3072E7FA003FB076 = {
+						CreatedOnToolsVersion = 27.0;
+					};
 					89340A2E306D4B89005BA574 = {
 						CreatedOnToolsVersion = 27.0;
 					};
@@ -283,14 +434,33 @@
 				89340A3D306D4B8C005BA574 /* EnergieTests */,
 				89340A47306D4B8C005BA574 /* EnergieUITests */,
 				89340B82306DBF27005BA574 /* EnergieWidgetExtension */,
+				8923579D3072E7EF003FB076 /* EnergieWatch */,
+				892357A23072E7EF003FB076 /* EnergieWatch Watch App */,
+				892357BB3072E7FA003FB076 /* EnergieWatchWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		8923579C3072E7EF003FB076 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		892357A13072E7EF003FB076 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		892357BA3072E7FA003FB076 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 		89340A2D306D4B89005BA574 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				892357B03072E7F1003FB076 /* EnergieWatch.app in Resources */,
 			);
 		};
 		89340A3C306D4B8C005BA574 /* Resources */ = {
@@ -311,6 +481,16 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		8923579F3072E7EF003FB076 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		892357B83072E7FA003FB076 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		89340A2B306D4B89005BA574 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -334,6 +514,21 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		892357A63072E7EF003FB076 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 892357A23072E7EF003FB076 /* EnergieWatch Watch App */;
+			targetProxy = 892357A53072E7EF003FB076 /* PBXContainerItemProxy */;
+		};
+		892357AF3072E7F1003FB076 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8923579D3072E7EF003FB076 /* EnergieWatch */;
+			targetProxy = 892357AE3072E7F1003FB076 /* PBXContainerItemProxy */;
+		};
+		892357C83072E7FB003FB076 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 892357BB3072E7FA003FB076 /* EnergieWatchWidgetExtension */;
+			targetProxy = 892357C73072E7FB003FB076 /* PBXContainerItemProxy */;
+		};
 		89340A40306D4B8C005BA574 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 89340A2E306D4B89005BA574 /* Energie */;
@@ -352,6 +547,166 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		892357B23072E7F1003FB076 /* Debug configuration for PBXNativeTarget "EnergieWatch Watch App" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Debug;
+		};
+		892357B33072E7F1003FB076 /* Release configuration for PBXNativeTarget "EnergieWatch Watch App" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Release;
+		};
+		892357B63072E7F1003FB076 /* Debug configuration for PBXNativeTarget "EnergieWatch" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatch;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		892357B73072E7F1003FB076 /* Release configuration for PBXNativeTarget "EnergieWatch" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatch;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		892357CC3072E7FB003FB076 /* Debug configuration for PBXNativeTarget "EnergieWatchWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EnergieWatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatchWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch.watchkitapp.EnergieWatchWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Debug;
+		};
+		892357CD3072E7FB003FB076 /* Release configuration for PBXNativeTarget "EnergieWatchWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EnergieWatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatchWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch.watchkitapp.EnergieWatchWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Release;
+		};
 		89340A4E306D4B8C005BA574 /* Debug configuration for PBXProject "Energie" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -714,6 +1069,30 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		892357B13072E7F1003FB076 /* Build configuration list for PBXNativeTarget "EnergieWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				892357B23072E7F1003FB076 /* Debug configuration for PBXNativeTarget "EnergieWatch Watch App" */,
+				892357B33072E7F1003FB076 /* Release configuration for PBXNativeTarget "EnergieWatch Watch App" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		892357B53072E7F1003FB076 /* Build configuration list for PBXNativeTarget "EnergieWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				892357B63072E7F1003FB076 /* Debug configuration for PBXNativeTarget "EnergieWatch" */,
+				892357B73072E7F1003FB076 /* Release configuration for PBXNativeTarget "EnergieWatch" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		892357CB3072E7FB003FB076 /* Build configuration list for PBXNativeTarget "EnergieWatchWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				892357CC3072E7FB003FB076 /* Debug configuration for PBXNativeTarget "EnergieWatchWidgetExtension" */,
+				892357CD3072E7FB003FB076 /* Release configuration for PBXNativeTarget "EnergieWatchWidgetExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		89340A2A306D4B89005BA574 /* Build configuration list for PBXProject "Energie" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
