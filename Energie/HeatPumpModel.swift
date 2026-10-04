@@ -35,10 +35,14 @@ enum HeatPumpState: Equatable {
 /// (see Plans/Waermepumpe-Integration.md, Abschnitt 3: one model per source, own state, own
 /// poll — a failure here must never affect the PV side and vice versa).
 ///
-/// Like `SolarModel`'s first slice, this only polls once per explicit call (button/appear), not
-/// on a recurring schedule — a continuous poll loop (`pollInterval`, ported from the macOS
-/// sibling's `DashboardModel`) is a later enhancement once the overview screen (HP-3) exists to
-/// actually show the result of a background refresh.
+/// Runs a recurring foreground poll loop (`pollInterval`, ported from the macOS sibling's
+/// `DashboardModel.startPolling`/`pollOnce`) once signed in. **Foreground only**: like any plain
+/// `Task`-based loop, iOS suspends it a few seconds after the app moves to the background — it
+/// resumes (and immediately catches up with one refresh) once the app is foregrounded again, but
+/// does not wake the app up on its own. True background monitoring — so e.g. the Anlagendruck-
+/// Alarm fires even while the app isn't open — would need a widget-like extension sharing the
+/// Viessmann Keychain/App Group, analogous to Epic 5 for PV; tracked as a backlog item rather
+/// than built here.
 @Observable
 @MainActor
 final class HeatPumpModel {
@@ -55,6 +59,13 @@ final class HeatPumpModel {
     /// Bookkeeping for `HeatPumpPressureAlertTracker` between polls — not `@Observable` state,
     /// just carried forward the same way `DashboardModel.pressureAlertState` was on macOS.
     @ObservationIgnored private var pressureAlertState = HeatPumpPressureAlertTracker.State()
+
+    /// How often to poll while the app is in the foreground. Independent of the PV side
+    /// (`SolarModel`) — Enphase's own request budget forces a much slower, budget-adaptive
+    /// cadence there, but Viessmann has no known fixed limit (see ERKENNTNISSE_MACOS.md), just a
+    /// safe-cadence recommendation of 5–15 minutes.
+    var pollInterval: TimeInterval = 600
+    @ObservationIgnored private var pollTask: Task<Void, Never>?
 
     /// Fallback wait after a rate limit (HTTP 429) when the response doesn't include a
     /// `Retry-After` header. Ported from the macOS sibling project's `DashboardModel`: a wasted
@@ -87,12 +98,14 @@ final class HeatPumpModel {
     /// Deliberately keeps credentials and the resolved device selection, since those are tied to
     /// the Viessmann API client/installation, not the OAuth session.
     func signOut() {
+        stopPolling()
         settings.setTokens(nil)
         currentFeatures = []
         state = .needsSignIn
     }
 
     func saveCredentials(clientID: String) {
+        stopPolling()
         settings.setCredentials(clientID: clientID)
         // A changed Client-ID needs a fresh OAuth session, same reasoning as SolarModel's
         // saveCredentials.
@@ -100,7 +113,8 @@ final class HeatPumpModel {
         state = .needsSignIn
     }
 
-    /// Runs once when the heat-pump section first appears.
+    /// Runs once when the heat-pump section first appears, then keeps polling (see the class
+    /// doc comment on the foreground-only caveat).
     func start() async {
         guard settings.credentials.isComplete, settings.tokens != nil else {
             state = HeatPumpModel.initialState(settings: settings)
@@ -110,7 +124,25 @@ final class HeatPumpModel {
         // UNUserNotificationCenter no-ops once already determined, but the heat pump's pressure
         // alert must work even if PV isn't configured at all.
         await requestNotificationAuthorizationIfNeeded()
-        await refresh()
+        startPolling()
+    }
+
+    /// Starts (or restarts) the recurring poll loop. Safe to call repeatedly — cancels any
+    /// previous loop first, so a second call never results in two loops running at once.
+    func startPolling() {
+        stopPolling()
+        pollTask = Task { [weak self] in
+            while let self, !Task.isCancelled {
+                let delay = await self.refresh()
+                guard !Task.isCancelled else { return }
+                try? await Task.sleep(for: .seconds(delay))
+            }
+        }
+    }
+
+    func stopPolling() {
+        pollTask?.cancel()
+        pollTask = nil
     }
 
     private func requestNotificationAuthorizationIfNeeded() async {
@@ -147,15 +179,18 @@ final class HeatPumpModel {
                 codeVerifier: pkce.codeVerifier
             )
             settings.setTokens(tokens)
-            await refresh()
+            startPolling()
         } catch {
             state = .error(error.localizedDescription)
         }
     }
 
     /// Fetches all features for the resolved device and captures the efficiency snapshots
-    /// (HeatPumpEfficiencySample) derived from them.
-    func refresh() async {
+    /// (HeatPumpEfficiencySample) derived from them. Returns how long the poll loop should wait
+    /// before the next attempt — `pollInterval` normally, or the rate-limit delay when limited —
+    /// so `startPolling()`'s loop can space out requests without a fixed, possibly-too-fast timer.
+    @discardableResult
+    func refresh() async -> TimeInterval {
         state = .loading
         do {
             let client = makeClient()
@@ -170,12 +205,17 @@ final class HeatPumpModel {
             captureEfficiencySnapshots(features: features, timestamp: timestamp)
             checkPressureAlert(features: features, timestamp: timestamp)
             state = .ready
+            return pollInterval
         } catch ViessmannClientError.rateLimited(let retryAfter) {
-            state = .rateLimited(resumeAt: now().addingTimeInterval(retryAfter ?? Self.rateLimitFallbackDelay))
+            let delay = retryAfter ?? Self.rateLimitFallbackDelay
+            state = .rateLimited(resumeAt: now().addingTimeInterval(delay))
+            return delay
         } catch ViessmannClientError.unauthorized {
             signOut()
+            return pollInterval
         } catch {
             state = .error(error.localizedDescription)
+            return pollInterval
         }
     }
 
