@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum EnphaseOAuthError: Error, LocalizedError {
+enum EnphaseOAuthError: Error, LocalizedError, Equatable {
     case missingCode
     case invalidResponse
     case http(status: Int, body: String)

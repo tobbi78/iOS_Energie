@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum ViessmannOAuthError: Error, LocalizedError {
+enum ViessmannOAuthError: Error, LocalizedError, Equatable {
     case missingCode
     case invalidResponse
     case http(status: Int, body: String)

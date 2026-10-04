@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum ViessmannClientError: Error, LocalizedError {
+enum ViessmannClientError: Error, LocalizedError, Equatable {
     case invalidResponse
     case unauthorized
     case rateLimited(retryAfter: TimeInterval?)

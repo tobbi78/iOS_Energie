@@ -33,4 +33,27 @@ struct PVDisplayPreferencesTests {
         preferences.setFeedInTariffPerKWh(-1)
         #expect(preferences.feedInTariffPerKWh == PVDisplayPreferences.defaultFeedInTariffPerKWh)
     }
+
+    @Test func defaultsToAllSeries() {
+        let preferences = PVDisplayPreferences(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
+        #expect(preferences.seriesSelection == .all)
+    }
+
+    @Test func persistsAnUpdatedSeriesSelection() {
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        let preferences = PVDisplayPreferences(userDefaults: defaults)
+
+        preferences.setSeriesSelection(.production)
+        #expect(preferences.seriesSelection == .production)
+
+        let reloaded = PVDisplayPreferences(userDefaults: defaults)
+        #expect(reloaded.seriesSelection == .production)
+    }
+
+    @Test func allSeriesCasesHaveALabel() {
+        for series in PVSeriesSelection.allCases {
+            #expect(!series.label.isEmpty)
+            #expect(series.id == series.rawValue)
+        }
+    }
 }
