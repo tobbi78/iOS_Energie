@@ -29,9 +29,14 @@ protocol ViessmannSecretStoring: Sendable {
     func write(_ key: ViessmannSecretKey, value: String?)
 }
 
-/// Local (device-only, not iCloud-synchronized) Keychain-backed secret store. Same scope
-/// decision as `EnphaseKeychainStore`: cloud sync was deferred together with the rest of the
-/// CloudKit-based architecture (see BACKLOG.md).
+/// iCloud-Keychain-synchronized secret store (Epic 0, F0.3) — same reasoning as
+/// `EnphaseKeychainStore`. One known trade-off specific to Viessmann: the widget extension
+/// refreshes its own access token independently per device (see `HPWidgetDataSource`,
+/// "refresh_token-Grant-Aufruf"), and iCloud Keychain sync isn't instantaneous — two devices
+/// refreshing close together can still race, with whichever sync lands last overwriting the
+/// other's newer token. Not solved here; same class of problem already accepted for the Apple
+/// Watch design (see BACKLOG.md, "Zielplattform Apple Watch"), just between two iOS devices now
+/// instead of iPhone+Watch.
 struct ViessmannKeychainStore: ViessmannSecretStoring {
     private let service: String
 
@@ -63,25 +68,30 @@ struct ViessmannKeychainStore: ViessmannSecretStoring {
         // background timeline refresh whenever the device is locked — which is routinely the
         // case. Needed here from the start since this heat-pump widget's entire point is
         // background access (the pressure alarm must fire even while the app is closed).
+        // **Not** the "ThisDeviceOnly" variant (F0.3): incompatible with `kSecAttrSynchronizable`
+        // — see EnphaseKeychainStore.write for why.
         let attributesToUpdate: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
         ]
         let updateStatus = SecItemUpdate(query as CFDictionary, attributesToUpdate as CFDictionary)
 
         if updateStatus == errSecItemNotFound {
             var newItem = query
             newItem[kSecValueData as String] = data
-            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
             SecItemAdd(newItem as CFDictionary, nil)
         }
     }
 
+    /// See `EnphaseKeychainStore.baseQuery` — same reasoning for why
+    /// `kSecAttrSynchronizable: true` has to be consistent across read/update/add/delete.
     private func baseQuery(for key: ViessmannSecretKey) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: key.rawValue,
+            kSecAttrSynchronizable as String: true,
         ]
     }
 }

@@ -19,7 +19,8 @@ import Security
 
 /// Reads/writes the same Keychain items `ViessmannKeychainStore` does. No `kSecAttrAccessGroup`
 /// set explicitly on either side, same as `PVWidgetKeychain` — both targets share the one
-/// `keychain-access-groups` entitlement.
+/// `keychain-access-groups` entitlement. `kSecAttrSynchronizable: true` (Epic 0, F0.3) must match
+/// `ViessmannKeychainStore`'s for the same reason as `PVWidgetKeychain`.
 private enum HPWidgetKeychain {
     private static let service = "de.florian.tobias.Energie.viessmann"
 
@@ -28,6 +29,7 @@ private enum HPWidgetKeychain {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: true,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
         ]
@@ -42,19 +44,22 @@ private enum HPWidgetKeychain {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: true,
         ]
         guard let data = value.data(using: .utf8) else { return }
 
+        // Not the "ThisDeviceOnly" variant — incompatible with kSecAttrSynchronizable, see
+        // EnphaseKeychainStore.write.
         let attributesToUpdate: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
         ]
         let updateStatus = SecItemUpdate(query as CFDictionary, attributesToUpdate as CFDictionary)
 
         if updateStatus == errSecItemNotFound {
             var newItem = query
             newItem[kSecValueData as String] = data
-            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
             SecItemAdd(newItem as CFDictionary, nil)
         }
     }
