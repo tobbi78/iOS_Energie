@@ -428,6 +428,7 @@ private struct HeatPumpSettingsScreen: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var clientID = ""
+    @State private var pressureThresholdText = ""
 
     var body: some View {
         Form {
@@ -455,10 +456,44 @@ private struct HeatPumpSettingsScreen: View {
             } footer: {
                 Text("Ein Ändern der Client-ID erfordert eine erneute Anmeldung.")
             }
+
+            Section {
+                LabeledContent("Aktueller Druck", value: formattedPressure(model.currentFeatures.numericValue("heating.sensors.pressure.supply")))
+                Toggle("Alarm bei niedrigem Druck", isOn: Binding(
+                    get: { model.pressureAlertSettings.isEnabled },
+                    set: { model.pressureAlertSettings.setEnabled($0) }
+                ))
+                if model.pressureAlertSettings.isEnabled {
+                    HStack {
+                        TextField("Schwellwert", text: $pressureThresholdText)
+                            .keyboardType(.decimalPad)
+                        Text("bar")
+                            .foregroundStyle(.secondary)
+                    }
+                    Toggle("Entwarnung senden", isOn: Binding(
+                        get: { model.pressureAlertSettings.recoveryMessageEnabled },
+                        set: { model.pressureAlertSettings.setRecoveryMessageEnabled($0) }
+                    ))
+                }
+            } header: {
+                Text("Anlagendruck-Alarm")
+            } footer: {
+                Text("Benachrichtigt lokal auf diesem Gerät, wenn der Anlagendruck beim nächsten Abruf unter den Schwellwert fällt.")
+            }
         }
         .navigationTitle("Einstellungen")
         .onAppear {
             clientID = model.credentials.clientID
+            pressureThresholdText = model.pressureAlertSettings.threshold.formatted(.number.precision(.fractionLength(1...2)))
         }
+        .onChange(of: pressureThresholdText) { _, newValue in
+            guard let value = Double(newValue.replacingOccurrences(of: ",", with: ".")), value > 0 else { return }
+            model.pressureAlertSettings.setThreshold(value)
+        }
+    }
+
+    private func formattedPressure(_ bar: Double?) -> String {
+        guard let bar else { return "–" }
+        return bar.formatted(.number.precision(.fractionLength(1...2))) + " bar"
     }
 }

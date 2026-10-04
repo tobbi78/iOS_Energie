@@ -9,6 +9,7 @@ import AuthenticationServices
 import Foundation
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 enum HeatPumpError: Error, LocalizedError {
     case signInRequired
@@ -45,10 +46,15 @@ final class HeatPumpModel {
     private(set) var currentFeatures: [ViessmannFeatureDTO] = []
 
     private let settings: ViessmannSettings
+    let pressureAlertSettings: HeatPumpPressureAlertSettings
     private let oauthClient: ViessmannOAuthClient
     private let urlSession: URLSession
     private let now: @Sendable () -> Date
     private let modelContext: ModelContext
+
+    /// Bookkeeping for `HeatPumpPressureAlertTracker` between polls — not `@Observable` state,
+    /// just carried forward the same way `DashboardModel.pressureAlertState` was on macOS.
+    @ObservationIgnored private var pressureAlertState = HeatPumpPressureAlertTracker.State()
 
     /// Fallback wait after a rate limit (HTTP 429) when the response doesn't include a
     /// `Retry-After` header. Ported from the macOS sibling project's `DashboardModel`: a wasted
@@ -59,12 +65,14 @@ final class HeatPumpModel {
     init(
         settings: ViessmannSettings,
         modelContext: ModelContext,
+        pressureAlertSettings: HeatPumpPressureAlertSettings,
         oauthClient: ViessmannOAuthClient = ViessmannOAuthClient(),
         urlSession: URLSession = .shared,
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.settings = settings
         self.modelContext = modelContext
+        self.pressureAlertSettings = pressureAlertSettings
         self.oauthClient = oauthClient
         self.urlSession = urlSession
         self.now = now
@@ -98,7 +106,18 @@ final class HeatPumpModel {
             state = HeatPumpModel.initialState(settings: settings)
             return
         }
+        // Requested here too, not just in SolarModel.start() (F5.5) — permission is app-wide and
+        // UNUserNotificationCenter no-ops once already determined, but the heat pump's pressure
+        // alert must work even if PV isn't configured at all.
+        await requestNotificationAuthorizationIfNeeded()
         await refresh()
+    }
+
+    private func requestNotificationAuthorizationIfNeeded() async {
+        let center = UNUserNotificationCenter.current()
+        let notificationSettings = await center.notificationSettings()
+        guard notificationSettings.authorizationStatus == .notDetermined else { return }
+        _ = try? await center.requestAuthorization(options: [.alert, .sound])
     }
 
     private static func initialState(settings: ViessmannSettings) -> HeatPumpState {
@@ -147,7 +166,9 @@ final class HeatPumpModel {
                 deviceID: selection.deviceID
             )
             currentFeatures = features
-            captureEfficiencySnapshots(features: features, timestamp: now())
+            let timestamp = now()
+            captureEfficiencySnapshots(features: features, timestamp: timestamp)
+            checkPressureAlert(features: features, timestamp: timestamp)
             state = .ready
         } catch ViessmannClientError.rateLimited(let retryAfter) {
             state = .rateLimited(resumeAt: now().addingTimeInterval(retryAfter ?? Self.rateLimitFallbackDelay))
@@ -237,6 +258,45 @@ final class HeatPumpModel {
             property: period.sourceProperty
         )
         return (consumed, produced)
+    }
+
+    /// Checks the current supply pressure against `pressureAlertSettings` and schedules a local
+    /// notification if a drop, repeat reminder, or recovery is due. Ported from the macOS
+    /// sibling project's `DashboardModel.checkPressureAlert`, swapping the iMessage send for a
+    /// local notification (no recipient to misconfigure on iOS).
+    private func checkPressureAlert(features: [ViessmannFeatureDTO], timestamp: Date) {
+        guard pressureAlertSettings.isEnabled else { return }
+
+        let currentPressure = features.numericValue("heating.sensors.pressure.supply")
+        let (alert, newState) = HeatPumpPressureAlertTracker.evaluate(
+            currentPressure: currentPressure,
+            threshold: pressureAlertSettings.threshold,
+            now: timestamp,
+            state: pressureAlertState,
+            recoveryEnabled: pressureAlertSettings.recoveryMessageEnabled,
+            repeatInterval: pressureAlertSettings.repeatInterval
+        )
+        pressureAlertState = newState
+
+        guard let alert, let currentPressure else { return }
+        notifyPressureAlert(alert, pressure: currentPressure)
+    }
+
+    private func notifyPressureAlert(_ alert: HeatPumpPressureAlertKind, pressure: Double) {
+        let pressureText = pressure.formatted(.number.precision(.fractionLength(1...2)))
+        let content = UNMutableNotificationContent()
+        content.sound = .default
+        switch alert {
+        case .drop, .repeatReminder:
+            let thresholdText = pressureAlertSettings.threshold.formatted(.number.precision(.fractionLength(1...2)))
+            content.title = "Wärmepumpe: Anlagendruck zu niedrig"
+            content.body = "\(pressureText) bar, Schwellwert \(thresholdText) bar."
+        case .recovery:
+            content.title = "Wärmepumpe: Anlagendruck wieder normal"
+            content.body = "\(pressureText) bar."
+        }
+        let request = UNNotificationRequest(identifier: "heatPump.pressureAlert", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
     }
 
     private func makeClient() -> ViessmannClient {

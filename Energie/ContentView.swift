@@ -22,6 +22,7 @@ struct ContentView: View {
     @State private var displayPreferences = PVDisplayPreferences()
     @State private var solarModel: SolarModel?
     @State private var viessmannSettings = ViessmannSettings()
+    @State private var pressureAlertSettings = HeatPumpPressureAlertSettings()
     @State private var heatPumpModel: HeatPumpModel?
     @State private var selectedTab: AppTab = .home
 
@@ -59,7 +60,11 @@ struct ContentView: View {
         }
         .task {
             guard heatPumpModel == nil else { return }
-            let model = HeatPumpModel(settings: viessmannSettings, modelContext: modelContext)
+            let model = HeatPumpModel(
+                settings: viessmannSettings,
+                modelContext: modelContext,
+                pressureAlertSettings: pressureAlertSettings
+            )
             heatPumpModel = model
             await model.start()
         }
