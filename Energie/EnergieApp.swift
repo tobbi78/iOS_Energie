@@ -16,7 +16,25 @@ struct EnergieApp: App {
             PVYearlySample.self,
             HeatPumpEfficiencySample.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        // Epic 0 (F0.1): syncs across the user's devices via the private CloudKit container —
+        // now possible since a paid Apple Developer account is available (see BACKLOG.md,
+        // "Nicht umsetzbar ohne kostenpflichtigen Apple Developer Account"). All three model
+        // types satisfy CloudKit's constraints (F0.2): every non-optional property has a
+        // declaration-site default, no `@Attribute(.unique)`, no relationships.
+        //
+        // Falls back to local-only storage when no iCloud account is signed in
+        // (`ubiquityIdentityToken` is a lightweight, synchronous check — no network/CloudKit
+        // round-trip). Without this, SwiftData's CoreData+CloudKit mirroring setup fails hard
+        // with `CKAccountStatusNoAccount` and brings down the whole process, not just the sync —
+        // observed directly in this environment, which has no iCloud account signed in.
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = FileManager.default.ubiquityIdentityToken != nil
+            ? .private(SharedAppGroup.cloudKitContainerIdentifier)
+            : .none
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            cloudKitDatabase: cloudKitDatabase
+        )
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
