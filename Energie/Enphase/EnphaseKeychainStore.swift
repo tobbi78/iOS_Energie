@@ -57,12 +57,22 @@ struct EnphaseKeychainStore: EnphaseSecretStoring {
             return
         }
 
-        let attributesToUpdate: [String: Any] = [kSecValueData as String: data]
+        // Without an explicit kSecAttrAccessible, items default to kSecAttrAccessibleWhenUnlocked
+        // — inaccessible to background processes (like the widget extension's periodic timeline
+        // refresh) whenever the device is locked, which is routinely the case. AfterFirstUnlock
+        // keeps it readable in the background once the device has been unlocked at least once
+        // since boot; ThisDeviceOnly matches the "local-only, not synced" choice already made
+        // for these secrets elsewhere (see the type's doc comment).
+        let attributesToUpdate: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+        ]
         let updateStatus = SecItemUpdate(query as CFDictionary, attributesToUpdate as CFDictionary)
 
         if updateStatus == errSecItemNotFound {
             var newItem = query
             newItem[kSecValueData as String] = data
+            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
             SecItemAdd(newItem as CFDictionary, nil)
         }
     }

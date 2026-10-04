@@ -72,6 +72,22 @@ final class ViessmannSettings {
                 deviceID: deviceID
             )
         }
+
+        // Re-save whatever was already there so its Keychain item picks up the current
+        // accessibility attribute (see ViessmannKeychainStore.write/EnphaseSettings for why).
+        if credentials.isComplete {
+            store.write(.clientID, value: credentials.clientID)
+        }
+        if let tokens {
+            store.write(.accessToken, value: tokens.accessToken)
+            store.write(.refreshToken, value: tokens.refreshToken)
+            store.write(.tokenExpiresAt, value: String(tokens.expiresAt.timeIntervalSince1970))
+        }
+        if let deviceSelection {
+            store.write(.installationID, value: String(deviceSelection.installationID))
+            store.write(.gatewaySerial, value: deviceSelection.gatewaySerial)
+            store.write(.deviceID, value: deviceSelection.deviceID)
+        }
     }
 
     func setCredentials(clientID: String) {

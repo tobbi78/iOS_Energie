@@ -25,11 +25,14 @@ final class EnergieUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
-        XCTAssertTrue(tabBar.buttons["Start"].exists)
-        XCTAssertTrue(tabBar.buttons["PV-Anlage"].exists)
-        XCTAssertTrue(tabBar.buttons["Wärmepumpe"].exists)
+        // The floating "Liquid Glass" tab bar isn't reliably exposed to XCUITest as
+        // XCUIElementTypeTabBar (its items resolve to an undocumented accessibility type,
+        // inconsistently reported as Button/Other/Cell depending on the query path) — query the
+        // tab buttons directly on `app` instead of scoping through `app.tabBars`, which returns
+        // zero matches on this tab bar style.
+        XCTAssertTrue(app.buttons["Start"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["PV-Anlage"].exists)
+        XCTAssertTrue(app.buttons["Wärmepumpe"].exists)
         // "Start" is the default/first tab — its own content should already be visible.
         XCTAssertTrue(app.navigationBars["Start"].waitForExistence(timeout: 5))
     }
@@ -42,13 +45,13 @@ final class EnergieUITests: XCTestCase {
 
         app.staticTexts["PV-Anlage"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["PV-Anlage"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.tabBars.firstMatch.buttons["PV-Anlage"].isSelected)
+        XCTAssertTrue(app.buttons["PV-Anlage"].firstMatch.isSelected)
 
-        app.tabBars.firstMatch.buttons["Start"].tap()
+        app.buttons["Start"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Start"].waitForExistence(timeout: 5))
         app.staticTexts["Wärmepumpe"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Wärmepumpe"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.tabBars.firstMatch.buttons["Wärmepumpe"].isSelected)
+        XCTAssertTrue(app.buttons["Wärmepumpe"].firstMatch.isSelected)
     }
 
     /// Exercises `SolarView`'s three non-ready states (credentials form / sign-in prompt) when
@@ -58,7 +61,7 @@ final class EnergieUITests: XCTestCase {
     func testPVAnlageTabRendersWhicheverStateItIsInAndDetailScreensIfReady() throws {
         let app = XCUIApplication()
         app.launch()
-        app.tabBars.firstMatch.buttons["PV-Anlage"].tap()
+        app.buttons["PV-Anlage"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["PV-Anlage"].waitForExistence(timeout: 5))
 
         if app.buttons["Weiter"].waitForExistence(timeout: 3) {
@@ -93,7 +96,7 @@ final class EnergieUITests: XCTestCase {
     func testWaermepumpeTabRendersWhicheverStateItIsInAndDetailScreensIfReady() throws {
         let app = XCUIApplication()
         app.launch()
-        app.tabBars.firstMatch.buttons["Wärmepumpe"].tap()
+        app.buttons["Wärmepumpe"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Wärmepumpe"].waitForExistence(timeout: 5))
 
         if app.buttons["Weiter"].waitForExistence(timeout: 3) {
