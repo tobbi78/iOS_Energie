@@ -16,9 +16,11 @@ extension NetworkMockedTests {
 @Suite
 struct HeatPumpModelTests {
     private func makeContext() throws -> ModelContext {
+        // `cloudKitDatabase: .none` explicitly — see SolarModelTests.makeContext for why this is
+        // required, not just redundant, now that the app's entitlements declare a container.
         let container = try ModelContainer(
             for: HeatPumpEfficiencySample.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
         return ModelContext(container)
     }
@@ -81,7 +83,7 @@ struct HeatPumpModelTests {
         }
         let now = Date()
         let settings = makeSettings()
-        let container = try ModelContainer(for: HeatPumpEfficiencySample.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: HeatPumpEfficiencySample.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
         let context = ModelContext(container)
         let model = HeatPumpModel(
             settings: settings, modelContext: context,

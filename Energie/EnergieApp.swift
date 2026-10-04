@@ -27,7 +27,16 @@ struct EnergieApp: App {
         // round-trip). Without this, SwiftData's CoreData+CloudKit mirroring setup fails hard
         // with `CKAccountStatusNoAccount` and brings down the whole process, not just the sync —
         // observed directly in this environment, which has no iCloud account signed in.
-        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = FileManager.default.ubiquityIdentityToken != nil
+        //
+        // Also forced local-only under XCTest, regardless of account status, as defense in
+        // depth for this container specifically — the actual crash traced down to a different
+        // cause (see SolarModelTests.makeContext's comment): `ModelConfiguration`'s
+        // `cloudKitDatabase` defaults to `.automatic`, which auto-discovers and tries to mirror
+        // through whatever container is in the app's entitlements *regardless of
+        // `isStoredInMemoryOnly`* — so the tests' own, supposedly-local containers were affected
+        // too, independently of whether this one ever even gets constructed during a test run.
+        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = (!isRunningTests && FileManager.default.ubiquityIdentityToken != nil)
             ? .private(SharedAppGroup.cloudKitContainerIdentifier)
             : .none
         let modelConfiguration = ModelConfiguration(

@@ -16,9 +16,15 @@ extension NetworkMockedTests {
 @Suite
 struct SolarModelTests {
     private func makeContext() throws -> ModelContext {
+        // `cloudKitDatabase: .none` explicitly — its default is `.automatic`, which discovers
+        // and tries to mirror through whatever CloudKit container is in the app's entitlements
+        // (Epic 0, F0.1) regardless of `isStoredInMemoryOnly`. Without this, CloudKit's mirroring
+        // setup for this "local-only" test container has been observed to crash the whole test
+        // process when it disagrees with the real account status (F0.6 intends tests to stay
+        // fully local — this closes a gap that default behavior alone doesn't cover anymore).
         let container = try ModelContainer(
             for: PVDailySample.self, PVYearlySample.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
         return ModelContext(container)
     }
