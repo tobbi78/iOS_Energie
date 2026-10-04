@@ -20,4 +20,9 @@ enum SharedAppGroup {
     static var userDefaults: UserDefaults {
         UserDefaults(suiteName: identifier) ?? .standard
     }
+
+    /// The private CloudKit container `EnergieApp` syncs `PVDailySample`/`PVYearlySample`/
+    /// `HeatPumpEfficiencySample` through (Epic 0, F0.1) — see BACKLOG.md, "Nicht umsetzbar ohne
+    /// kostenpflichtigen Apple Developer Account" for why this was blocked until now.
+    static let cloudKitContainerIdentifier = "iCloud.de.florian.tobias.Energie"
 }
