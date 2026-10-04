@@ -49,6 +49,13 @@ Ursprünglich als Ergänzung vom 2026-09-30 hier als *zukünftige* Erweiterung v
 - **Farbgebung/Iconografie so wählen, dass sie sich für eine zweite Kategorie erweitern lässt** (z. B. PV in einer Akzentfarbe, Wärmepumpe später in einer klar unterscheidbaren zweiten Akzentfarbe), statt PV die einzige/globale Markenfarbe der App zu geben.
 - Datenseitig bleibt es beim bereits beschlossenen Muster aus [[project_pv_enphase_integration]]/F1.5-Notiz: eigenes Model pro Quelle, unabhängiger Poll-/State-Loop — UI-seitig heißt das: eigener Screen/Tab pro Quelle, keine gemeinsame "Universal-Ansicht" für beide.
 
+## Zukünftige Zielplattform: Apple Watch (2026-10-04, noch nicht geplant/umgesetzt)
+
+Die App soll künftig auch auf der Apple Watch verfügbar sein — analog zum bereits etablierten Widget-Muster (eigenständiger Abruf, kein Shared Code zwischen Targets, siehe Epic 5), vermutlich als eigenes watchOS-App-Target mit Zifferblatt-Complication für die wichtigsten PV-/Wärmepumpen-Kennzahlen. Reiner Backlog-Platzhalter, noch ohne detaillierte Architekturentscheidung:
+
+- **Offene Grundsatzfrage:** Companion-App (gekoppelt ans iPhone, nutzt dessen Internetverbindung/`WatchConnectivity`) vs. eigenständige watchOS-App (eigener Netzwerkzugriff, eigenes Keychain/App-Group-Sharing wie die Widget-Extension) — letzteres passt besser zum bisherigen "jedes Target pollt selbst"-Muster, braucht aber eine eigene Watch-spezifische Keychain-Freigabe-Verifikation (siehe die Lektion bei `fix/widget-keychain-locked-access`: im Simulator unzuverlässig, auf echtem Gerät funktionierend — für die Watch separat zu prüfen).
+- Vermutlich sinnvoll als dünne Ableitung der bestehenden Widget-Datenquellen (`PVWidgetDataSource`/`HPWidgetDataSource`), nicht als komplette Neuentwicklung — konkrete Umsetzung folgt erst, wenn dieser Punkt priorisiert wird.
+
 ## Entscheidungen (aus Rückfragen vom 2026-09-30)
 
 - **Aktualität/Hintergrund:** Zusätzlich zur App ein **Home-Screen-Widget** mit eigener Timeline-Policy (siehe F5.4, jetzt fest eingeplant statt optional). Daraus folgt eine wichtige technische Konsequenz: siehe F5.6.
