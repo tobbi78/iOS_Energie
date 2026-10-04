@@ -23,7 +23,7 @@
 
 import Foundation
 
-struct WatchSnapshot: Codable {
+struct WatchSnapshot: Codable, Equatable {
     // MARK: PV (Enphase)
     var pvProducedTodayWh: Double?
     var pvSelfSufficiencyRate: Double?

@@ -55,6 +55,10 @@ final class HeatPumpModel {
     private let urlSession: URLSession
     private let now: @Sendable () -> Date
     private let modelContext: ModelContext
+    /// Hands the latest heat-pump values off to a paired Apple Watch (see BACKLOG.md,
+    /// "Zielplattform Apple Watch"). `nil` by default so existing call sites/tests are
+    /// unaffected — `ContentView` injects the real instance.
+    private let watchSyncService: WatchSyncService?
 
     /// Bookkeeping for `HeatPumpPressureAlertTracker` between polls — not `@Observable` state,
     /// just carried forward the same way `DashboardModel.pressureAlertState` was on macOS.
@@ -79,6 +83,7 @@ final class HeatPumpModel {
         pressureAlertSettings: HeatPumpPressureAlertSettings,
         oauthClient: ViessmannOAuthClient = ViessmannOAuthClient(),
         urlSession: URLSession = .shared,
+        watchSyncService: WatchSyncService? = nil,
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.settings = settings
@@ -86,6 +91,7 @@ final class HeatPumpModel {
         self.pressureAlertSettings = pressureAlertSettings
         self.oauthClient = oauthClient
         self.urlSession = urlSession
+        self.watchSyncService = watchSyncService
         self.now = now
         state = HeatPumpModel.initialState(settings: settings)
     }
@@ -205,6 +211,12 @@ final class HeatPumpModel {
             captureEfficiencySnapshots(features: features, timestamp: timestamp)
             checkPressureAlert(features: features, timestamp: timestamp)
             state = .ready
+            watchSyncService?.updateHeatPump(WatchSyncService.HeatPumpUpdate(
+                pressureBar: features.numericValue("heating.sensors.pressure.supply"),
+                outsideTemperatureCelsius: features.numericValue("heating.sensors.temperature.outside"),
+                pressureAlertActive: pressureAlertSettings.isEnabled && pressureAlertState.isBelowThreshold,
+                fetchedAt: timestamp
+            ))
             return pollInterval
         } catch ViessmannClientError.rateLimited(let retryAfter) {
             let delay = retryAfter ?? Self.rateLimitFallbackDelay

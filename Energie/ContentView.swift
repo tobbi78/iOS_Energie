@@ -26,6 +26,7 @@ struct ContentView: View {
     @State private var pressureAlertSettings = HeatPumpPressureAlertSettings()
     @State private var heatPumpModel: HeatPumpModel?
     @State private var selectedTab: AppTab = .home
+    @State private var watchSyncService = WatchSyncService()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -65,7 +66,8 @@ struct ContentView: View {
                 settings: enphaseSettings,
                 modelContext: modelContext,
                 budgetSettings: budgetSettings,
-                budget: EnphaseRequestBudget(userDefaults: SharedAppGroup.userDefaults)
+                budget: EnphaseRequestBudget(userDefaults: SharedAppGroup.userDefaults),
+                watchSyncService: watchSyncService
             )
             solarModel = model
             // Started here, not in SolarView's own .task, so the PV data loads even if the user
@@ -77,7 +79,8 @@ struct ContentView: View {
             let model = HeatPumpModel(
                 settings: viessmannSettings,
                 modelContext: modelContext,
-                pressureAlertSettings: pressureAlertSettings
+                pressureAlertSettings: pressureAlertSettings,
+                watchSyncService: watchSyncService
             )
             heatPumpModel = model
             await model.start()
