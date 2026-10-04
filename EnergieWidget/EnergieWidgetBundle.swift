@@ -13,5 +13,6 @@ struct EnergieWidgetBundle: WidgetBundle {
     var body: some Widget {
         EnergieWidget()
         HeatPumpWidget()
+        CombinedWidget()
     }
 }
