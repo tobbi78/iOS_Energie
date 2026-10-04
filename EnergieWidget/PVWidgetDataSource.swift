@@ -78,6 +78,12 @@ enum PVWidgetDataSource {
         await budget.usedThisMonth()
     }
 
+    /// Cross-device budget reconciliation (Epic 0, F0.4) — call once per timeline refresh (see
+    /// `PVWidgetProvider.getTimeline`), not per endpoint fetched below.
+    static func syncBudgetWithCloudIfAvailable() async {
+        await budget.syncWithCloudIfAvailable()
+    }
+
     /// Last successfully fetched snapshot, shown as a fallback when a fresh fetch fails (e.g.
     /// offline, budget exhausted) so the widget degrades gracefully instead of going blank.
     static func cachedSnapshot() -> Snapshot? {

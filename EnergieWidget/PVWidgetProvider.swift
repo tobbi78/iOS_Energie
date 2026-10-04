@@ -24,6 +24,9 @@ struct PVWidgetProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PVWidgetEntry>) -> Void) {
         Task {
+            // Once per timeline refresh, not per endpoint — cross-device budget reconciliation
+            // (Epic 0, F0.4). Best-effort; does nothing when CloudKit is unavailable.
+            await PVWidgetDataSource.syncBudgetWithCloudIfAvailable()
             // Alerts (F5.5) only fire from this real, periodic refresh path — not from
             // getSnapshot(), which WidgetKit also calls for quick previews (e.g. the widget
             // gallery) where triggering a notification would be surprising/spurious.
