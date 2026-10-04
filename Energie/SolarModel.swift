@@ -188,6 +188,9 @@ final class SolarModel {
     /// Fetches today's values from Enphase and upserts the local `PVDailySample` for today.
     func refresh() async {
         state = .loading
+        // Once per refresh (not per endpoint below) — see `EnphaseRequestBudget.
+        // syncWithCloudIfAvailable` for why this has to stay coarse-grained (Epic 0, F0.4).
+        await budget.syncWithCloudIfAvailable()
         do {
             let client = try makeClient()
             let systemID = try await resolveSystemID(client: client)
