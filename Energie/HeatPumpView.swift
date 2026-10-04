@@ -50,6 +50,11 @@ struct HeatPumpView: View {
                                     Label("Effizienz & Verbrauch", systemImage: "chart.xyaxis.line")
                                 }
                                 NavigationLink {
+                                    HeatPumpCompressorsScreen(features: model.currentFeatures)
+                                } label: {
+                                    Label("Verdichter & Kältekreis", systemImage: "gearshape.2")
+                                }
+                                NavigationLink {
                                     HeatPumpSettingsScreen(model: model)
                                 } label: {
                                     Label("Einstellungen", systemImage: "gearshape")
@@ -335,6 +340,87 @@ private struct HeatPumpHotWaterScreen: View {
             .padding()
         }
         .navigationTitle("Warmwasser")
+    }
+}
+
+// MARK: - Verdichter & Kältekreis
+
+/// One card per compressor, discovered dynamically like the Heizkreise screen (via
+/// `heating.compressors`'s `enabled` property). A trailing "Kältekreis" card covers the
+/// surrounding refrigerant-circuit components (evaporator/condenser/inverter/primary+secondary
+/// circuit) that aren't per-compressor but belong in the same diagnostic section thematically.
+/// Ported from the macOS sibling project's `CompressorsView`. More technical than the other
+/// detail screens by design — this is the deferred "Diagnose"-level view from
+/// Plans/Waermepumpe-Integration.md, not an everyday-use screen.
+private struct HeatPumpCompressorsScreen: View {
+    let features: [ViessmannFeatureDTO]
+
+    private var indices: [Int] { features.enabledIndices("heating.compressors") }
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 16) {
+                if indices.isEmpty {
+                    Text("Keine Verdichter gefunden.")
+                        .foregroundStyle(.secondary)
+                        .padding()
+                } else {
+                    ForEach(indices, id: \.self) { index in
+                        HeatPumpCompressorCard(index: index, features: features)
+                    }
+                }
+                HeatPumpRefrigerantCircuitCard(features: features)
+            }
+            .padding()
+        }
+        .navigationTitle("Verdichter & Kältekreis")
+    }
+}
+
+private struct HeatPumpCompressorCard: View {
+    let index: Int
+    let features: [ViessmannFeatureDTO]
+
+    private func key(_ suffix: String = "") -> String {
+        "heating.compressors.\(index)\(suffix)"
+    }
+
+    var body: some View {
+        DetailCard(title: "Verdichter \(index + 1)") {
+            InfoRow(label: "Status", value: features.numericValue(key(), "active") == 1.0 ? "Aktiv" : "Inaktiv")
+            InfoRow(label: "Phase", value: features.stringValue(key(), "phase") ?? "–")
+            InfoRow(label: "Betriebsstunden", value: formattedMeasurement(features.numericValue(key(".statistics"), "hours"), unit: "h", fractionDigits: 0...0))
+            InfoRow(label: "Starts", value: formattedMeasurement(features.numericValue(key(".statistics"), "starts"), unit: "", fractionDigits: 0...0))
+            InfoRow(label: "Drehzahl (aktuell / Soll)", value: speed)
+            InfoRow(label: "Ansaugdruck", value: formattedMeasurement(features.numericValue(key(".sensors.pressure.inlet")), unit: "bar"))
+            InfoRow(label: "Temperatur Einlass", value: formattedMeasurement(features.numericValue(key(".sensors.temperature.inlet")), unit: "°C"))
+            InfoRow(label: "Temperatur Auslass", value: formattedMeasurement(features.numericValue(key(".sensors.temperature.outlet")), unit: "°C"))
+            InfoRow(label: "Temperatur Öl", value: formattedMeasurement(features.numericValue(key(".sensors.temperature.oil")), unit: "°C"))
+            InfoRow(label: "Temperatur Motorraum", value: formattedMeasurement(features.numericValue(key(".sensors.temperature.motorChamber")), unit: "°C"))
+        }
+    }
+
+    private var speed: String {
+        guard let current = features.numericValue(key(".speed.current")),
+              let setpoint = features.numericValue(key(".speed.setpoint")) else {
+            return "–"
+        }
+        return "\(current.formatted(.number.precision(.fractionLength(0...0)))) / \(setpoint.formatted(.number.precision(.fractionLength(0...0)))) 1/s"
+    }
+}
+
+private struct HeatPumpRefrigerantCircuitCard: View {
+    let features: [ViessmannFeatureDTO]
+
+    var body: some View {
+        DetailCard(title: "Kältekreis") {
+            InfoRow(label: "Primärkreis-Vorlauf", value: formattedMeasurement(features.numericValue("heating.primaryCircuit.sensors.temperature.supply"), unit: "°C"))
+            InfoRow(label: "Sekundärkreis-Vorlauf", value: formattedMeasurement(features.numericValue("heating.secondaryCircuit.sensors.temperature.supply"), unit: "°C"))
+            InfoRow(label: "Verdampfer-Temperatur", value: formattedMeasurement(features.numericValue("heating.evaporators.0.sensors.temperature.liquid"), unit: "°C"))
+            InfoRow(label: "Kondensator-Temperatur", value: formattedMeasurement(features.numericValue("heating.condensors.0.sensors.temperature.liquid"), unit: "°C"))
+            InfoRow(label: "Wechselrichter-Temperatur", value: formattedMeasurement(features.numericValue("heating.inverters.0.sensors.temperature.powerModule"), unit: "°C"))
+            InfoRow(label: "Abtauung", value: features.numericValue("heating.outdoor.defrosting", "active") == 1.0 ? "Aktiv" : "Inaktiv")
+        }
     }
 }
 
