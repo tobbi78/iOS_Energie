@@ -26,11 +26,13 @@ protocol EnphaseSecretStoring: Sendable {
     func write(_ key: EnphaseSecretKey, value: String?)
 }
 
-/// Local (device-only, not iCloud-synchronized) Keychain-backed secret store.
-///
-/// Intentionally local-only: cloud sync of secrets (iCloud Keychain) was planned but deferred
-/// together with the rest of the CloudKit-based architecture (see BACKLOG.md, "Nicht umsetzbar
-/// ohne kostenpflichtigen Apple Developer Account").
+/// iCloud-Keychain-synchronized secret store (Epic 0, F0.3) — one sign-in on any of the user's
+/// devices carries over to the others, instead of each device needing its own independent OAuth
+/// session. Was local-only until the paid Apple Developer account made synchronizable Keychain
+/// items possible (see BACKLOG.md, "Nicht umsetzbar ohne kostenpflichtigen Apple Developer
+/// Account"). The widget extension's own duplicated Keychain code (`PVWidgetKeychain` in
+/// `PVWidgetDataSource.swift`) must stay in sync with the `kSecAttrSynchronizable`/
+/// `kSecAttrAccessible` choices here, or it'll stop finding what this type writes.
 struct EnphaseKeychainStore: EnphaseSecretStoring {
     private let service: String
 
@@ -61,27 +63,36 @@ struct EnphaseKeychainStore: EnphaseSecretStoring {
         // — inaccessible to background processes (like the widget extension's periodic timeline
         // refresh) whenever the device is locked, which is routinely the case. AfterFirstUnlock
         // keeps it readable in the background once the device has been unlocked at least once
-        // since boot; ThisDeviceOnly matches the "local-only, not synced" choice already made
-        // for these secrets elsewhere (see the type's doc comment).
+        // since boot. **Not** the "ThisDeviceOnly" variant (F0.3): Apple's Keychain API rejects
+        // combining any "ThisDeviceOnly" accessibility with `kSecAttrSynchronizable` — the two are
+        // mutually exclusive by design, since ThisDeviceOnly explicitly means "never migrate".
         let attributesToUpdate: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
         ]
         let updateStatus = SecItemUpdate(query as CFDictionary, attributesToUpdate as CFDictionary)
 
         if updateStatus == errSecItemNotFound {
             var newItem = query
             newItem[kSecValueData as String] = data
-            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
             SecItemAdd(newItem as CFDictionary, nil)
         }
     }
 
+    /// `kSecAttrSynchronizable: true` (F0.3) makes queries search the iCloud-synced item class —
+    /// without it, `SecItemCopyMatching`/`SecItemUpdate`/`SecItemDelete` only ever see
+    /// *non*-synchronizable items, so this one flag has to be consistent across read, update, add,
+    /// and delete, which is why it lives here once instead of being repeated at each call site.
+    /// **Side effect:** a login stored before this change was non-synchronizable and becomes
+    /// invisible to this query — same one-time re-login already documented for the App Group
+    /// keychain-access-groups change (see BACKLOG.md F5.6).
     private func baseQuery(for key: EnphaseSecretKey) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: key.rawValue,
+            kSecAttrSynchronizable as String: true,
         ]
     }
 }

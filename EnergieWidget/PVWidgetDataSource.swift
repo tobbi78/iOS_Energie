@@ -18,6 +18,9 @@ import Security
 /// Reads the same Keychain item the app's `EnphaseKeychainStore` writes. No `kSecAttrAccessGroup`
 /// is set explicitly on either side — both targets declare exactly one, matching
 /// `keychain-access-groups` entitlement, which the Keychain uses as the implicit default.
+/// `kSecAttrSynchronizable: true` (Epic 0, F0.3) must match `EnphaseKeychainStore`'s — the app's
+/// items are iCloud-Keychain-synchronized now, and without this key a query only ever matches
+/// *non*-synchronizable items, so omitting it here would make the widget stop finding anything.
 private enum PVWidgetKeychain {
     private static let service = "de.florian.tobias.Energie.enphase"
 
@@ -26,6 +29,7 @@ private enum PVWidgetKeychain {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: true,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
         ]
