@@ -54,11 +54,6 @@ struct HeatPumpView: View {
                                 } label: {
                                     Label("Verdichter & Kältekreis", systemImage: "gearshape.2")
                                 }
-                                NavigationLink {
-                                    HeatPumpSettingsScreen(model: model)
-                                } label: {
-                                    Label("Einstellungen", systemImage: "gearshape")
-                                }
                             } label: {
                                 Label("Mehr", systemImage: "ellipsis.circle")
                             }
@@ -509,7 +504,9 @@ private struct HeatPumpEfficiencyTrendChart: View {
 // MARK: - Einstellungen
 
 /// Connection status/sign-out and the editable Client-ID, analogous to `PVSettingsScreen`.
-private struct HeatPumpSettingsScreen: View {
+/// Reached via the central "Einstellungen" tab (`SettingsView`), not `HeatPumpView`'s own
+/// toolbar — hence internal, not `private`.
+struct HeatPumpSettingsScreen: View {
     var model: HeatPumpModel
 
     @Environment(\.dismiss) private var dismiss
@@ -567,7 +564,7 @@ private struct HeatPumpSettingsScreen: View {
                 Text("Benachrichtigt lokal auf diesem Gerät, wenn der Anlagendruck beim nächsten Abruf unter den Schwellwert fällt.")
             }
         }
-        .navigationTitle("Einstellungen")
+        .navigationTitle("Wärmepumpe")
         .onAppear {
             clientID = model.credentials.clientID
             pressureThresholdText = model.pressureAlertSettings.threshold.formatted(.number.precision(.fractionLength(1...2)))

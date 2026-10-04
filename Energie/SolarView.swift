@@ -19,7 +19,6 @@ struct SolarView: View {
 
     var model: SolarModel
     var displayPreferences: PVDisplayPreferences
-    var budgetSettings: EnphaseBudgetSettings
 
     @State private var requestsUsedThisMonth: Int?
 
@@ -40,23 +39,14 @@ struct SolarView: View {
                             }
                         }
                         ToolbarItem(placement: .primaryAction) {
-                            Menu {
-                                NavigationLink {
-                                    PVHistoryScreen(
-                                        dailySamples: dailySamples,
-                                        yearlySamples: yearlySamples,
-                                        displayPreferences: displayPreferences
-                                    )
-                                } label: {
-                                    Label("Verlauf", systemImage: "chart.xyaxis.line")
-                                }
-                                NavigationLink {
-                                    PVSettingsScreen(model: model, displayPreferences: displayPreferences, budgetSettings: budgetSettings)
-                                } label: {
-                                    Label("Einstellungen", systemImage: "gearshape")
-                                }
+                            NavigationLink {
+                                PVHistoryScreen(
+                                    dailySamples: dailySamples,
+                                    yearlySamples: yearlySamples,
+                                    displayPreferences: displayPreferences
+                                )
                             } label: {
-                                Label("Mehr", systemImage: "ellipsis.circle")
+                                Label("Verlauf", systemImage: "chart.xyaxis.line")
                             }
                         }
                     }
@@ -130,8 +120,10 @@ private struct PVHistoryScreen: View {
 
 // MARK: - Settings submenu
 
-/// Connection status/sign-out, editable credentials, and the feed-in tariff (F6.1/F6.2).
-private struct PVSettingsScreen: View {
+/// Connection status/sign-out, editable credentials, and the feed-in tariff (F6.1/F6.2). Reached
+/// via the central "Einstellungen" tab (`SettingsView`), not `SolarView`'s own toolbar — hence
+/// internal, not `private`.
+struct PVSettingsScreen: View {
     var model: SolarModel
     var displayPreferences: PVDisplayPreferences
     var budgetSettings: EnphaseBudgetSettings
@@ -199,7 +191,7 @@ private struct PVSettingsScreen: View {
                 Text("Wird vom Live-Abruf-Budget zurückgehalten, damit der tägliche Abschluss-Durchlauf am Monatsende immer noch Anfragen übrig hat.")
             }
         }
-        .navigationTitle("Einstellungen")
+        .navigationTitle("PV-Anlage")
         .onAppear {
             let credentials = model.credentials
             clientID = credentials.clientID
