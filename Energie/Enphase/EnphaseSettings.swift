@@ -71,6 +71,28 @@ final class EnphaseSettings {
         if let operationalAtString = store.read(.operationalAt), let interval = TimeInterval(operationalAtString) {
             operationalAt = Date(timeIntervalSince1970: interval)
         }
+
+        // Re-save whatever was already there so its Keychain item picks up the current
+        // accessibility attribute (see EnphaseKeychainStore.write) — needed for secrets stored
+        // before AfterFirstUnlockThisDeviceOnly was introduced, without making the user notice
+        // and sign in again. `write` is a cheap local no-op-equivalent when the value is
+        // unchanged, so doing this on every launch is fine.
+        if credentials.isComplete {
+            store.write(.clientID, value: credentials.clientID)
+            store.write(.clientSecret, value: credentials.clientSecret)
+            store.write(.apiKey, value: credentials.apiKey)
+        }
+        if let tokens {
+            store.write(.accessToken, value: tokens.accessToken)
+            store.write(.refreshToken, value: tokens.refreshToken)
+            store.write(.tokenExpiresAt, value: String(tokens.expiresAt.timeIntervalSince1970))
+        }
+        if let systemID {
+            store.write(.systemID, value: String(systemID))
+        }
+        if let operationalAt {
+            store.write(.operationalAt, value: String(operationalAt.timeIntervalSince1970))
+        }
     }
 
     func setCredentials(clientID: String, clientSecret: String, apiKey: String) {

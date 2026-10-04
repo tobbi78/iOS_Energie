@@ -58,12 +58,21 @@ struct ViessmannKeychainStore: ViessmannSecretStoring {
             return
         }
 
-        let attributesToUpdate: [String: Any] = [kSecValueData as String: data]
+        // See EnphaseKeychainStore.write: without an explicit kSecAttrAccessible, items default
+        // to kSecAttrAccessibleWhenUnlocked and are unreadable to the widget extension's
+        // background timeline refresh whenever the device is locked — which is routinely the
+        // case. Needed here from the start since this heat-pump widget's entire point is
+        // background access (the pressure alarm must fire even while the app is closed).
+        let attributesToUpdate: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+        ]
         let updateStatus = SecItemUpdate(query as CFDictionary, attributesToUpdate as CFDictionary)
 
         if updateStatus == errSecItemNotFound {
             var newItem = query
             newItem[kSecValueData as String] = data
+            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
             SecItemAdd(newItem as CFDictionary, nil)
         }
     }
