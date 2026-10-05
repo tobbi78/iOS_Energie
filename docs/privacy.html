@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datenschutzerklärung – Energie App</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 700px; margin: 2rem auto; padding: 0 1.25rem; line-height: 1.6; color: #1c1c1e; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  a { color: #0066cc; }
+  footer { margin-top: 3rem; font-size: 0.85rem; color: #6e6e73; }
+</style>
+</head>
+<body>
+  <h1>Datenschutzerklärung – Energie App</h1>
+  <p>Stand: Oktober 2026</p>
+
+  <p>
+    "Energie" ist eine private App, die ausschließlich im Rahmen eines nicht-öffentlichen
+    TestFlight-Tests mit einem begrenzten Personenkreis (Familie/Freunde) verwendet wird.
+    Sie wird nicht im öffentlichen App Store angeboten.
+  </p>
+
+  <h2>Verantwortlicher</h2>
+  <p>
+    Kontakt für alle Fragen zum Datenschutz:<br>
+    E-Mail: <a href="mailto:hula.proxy-3c@icloud.com">hula.proxy-3c@icloud.com</a>
+  </p>
+
+  <h2>Zweck der App</h2>
+  <p>
+    Die App zeigt Photovoltaik-Daten (über die Enphase-API) und Wärmepumpen-Daten
+    (über die Viessmann-API) an, die ausschließlich aus dem eigenen Nutzerkonto der
+    jeweiligen Person stammen, die die App installiert hat.
+  </p>
+
+  <h2>Welche Daten verarbeitet werden</h2>
+  <ul>
+    <li>
+      <strong>Zugangsdaten (OAuth-Tokens):</strong> Beim Verbinden mit Enphase bzw. Viessmann
+      werden Zugriffs- und Erneuerungs-Tokens im verschlüsselten iOS-Schlüsselbund (Keychain)
+      des jeweiligen Geräts gespeichert. Diese Tokens verlassen das Gerät nicht über iCloud
+      und werden nicht an den Entwickler übertragen.
+    </li>
+    <li>
+      <strong>Energie-Messdaten:</strong> PV-Erzeugungsdaten und Wärmepumpen-Effizienzdaten
+      werden über den privaten iCloud-Account der nutzenden Person zwischen deren eigenen
+      Geräten (iPhone, Apple Watch, Widgets) synchronisiert. Diese Daten sind ausschließlich
+      im privaten iCloud-Bereich der jeweiligen Person gespeichert und für niemand anderen
+      einsehbar – auch nicht für den Entwickler.
+    </li>
+    <li>
+      <strong>Benachrichtigungen:</strong> Lokale Hinweise (z.B. Druckalarme der Wärmepumpe)
+      werden ausschließlich auf dem Gerät selbst erzeugt; dafür werden keine Daten übertragen.
+    </li>
+  </ul>
+
+  <h2>Weitergabe an Dritte</h2>
+  <p>
+    Daten werden ausschließlich mit den Diensten ausgetauscht, mit denen sich die nutzende
+    Person aktiv und freiwillig über deren eigenen Zugang verbindet:
+  </p>
+  <ul>
+    <li>Enphase Energy (PV-Anlagendaten)</li>
+    <li>Viessmann Climate Solutions (Wärmepumpendaten)</li>
+  </ul>
+  <p>
+    Für die Datenverarbeitung durch diese Anbieter gelten deren eigene Datenschutzbestimmungen.
+    Der Entwickler der App hat keinen Zugriff auf diese Konten oder Daten.
+  </p>
+  <p>
+    Es findet keine Weitergabe von Daten zu Werbezwecken statt. Die App enthält kein Tracking,
+    keine Analyse-Software von Drittanbietern und keine Werbung.
+  </p>
+
+  <h2>Speicherdauer</h2>
+  <p>
+    Daten verbleiben, solange die App installiert ist bzw. bis die nutzende Person die
+    Verbindung zu Enphase/Viessmann trennt oder die App deinstalliert. Beim Deinstallieren
+    werden lokal gespeicherte Zugangsdaten (Keychain) automatisch entfernt.
+  </p>
+
+  <h2>Rechte der betroffenen Person</h2>
+  <p>
+    Jede nutzende Person kann jederzeit Auskunft über die eigenen gespeicherten Daten
+    verlangen oder deren Löschung veranlassen (z.B. durch Trennen der Konto-Verbindung
+    in den App-Einstellungen oder Deinstallation der App). Bei Fragen genügt eine
+    Nachricht an die oben genannte Kontaktadresse.
+  </p>
+
+  <footer>
+    Energie App – privater TestFlight-Test, kein öffentliches Produkt.
+  </footer>
+</body>
+</html>
