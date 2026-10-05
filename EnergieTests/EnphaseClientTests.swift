@@ -133,6 +133,23 @@ struct EnphaseClientTests {
             try await makeClient().fetchSystems()
         }
     }
+
+    @Test func performDecodesARealWorldPlanUsageLimit429() async throws {
+        // Exact body observed from a live 429 (2026-10-05 incident, see BACKLOG.md) — no
+        // `period`/`period_end` at all, just `message`/`details`/`code`. Regression test for
+        // the mislabeling bug this uncovered (see EnphaseBudgetTests for the pure-errorDescription
+        // variants of this case).
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(
+                url: request.url!,
+                status: 429,
+                json: #"{"message":"Too Many Requests","details":"Usage limit exceeded for plan Watt","code":429}"#
+            )
+        }
+        await #expect(throws: EnphaseClientError.rateLimited(period: nil, periodEnd: nil, detail: "Usage limit exceeded for plan Watt")) {
+            try await makeClient().fetchSystems()
+        }
+    }
 }
 
 }
