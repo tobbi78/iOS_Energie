@@ -75,4 +75,37 @@ struct EnphaseBudgetTests {
     @Test func monthlyBudgetExhaustedHasADescription() {
         #expect(EnphaseClientError.monthlyBudgetExhausted.errorDescription != nil)
     }
+
+    @Test func invalidResponseHasADescription() {
+        #expect(EnphaseClientError.invalidResponse.errorDescription != nil)
+    }
+
+    @Test func httpErrorDescriptionMentionsStatusAndBody() {
+        let error = EnphaseClientError.http(status: 500, body: "boom")
+        #expect(error.errorDescription?.contains("500") == true)
+        #expect(error.errorDescription?.contains("boom") == true)
+    }
+
+    @Test func rateLimitedErrorDescriptionWithoutPeriodEndStillHasOne() {
+        let error = EnphaseClientError.rateLimited(period: "minute", periodEnd: nil)
+        #expect(error.errorDescription?.contains("Minuten") == true)
+    }
+
+    // MARK: - Cross-device reconciliation (Epic 0, F0.4)
+
+    @Test func syncWithCloudIfAvailableIsANoOpWithoutAnICloudAccount() async {
+        // This development/test environment has no iCloud account signed in
+        // (FileManager.ubiquityIdentityToken == nil), so the guard clause must return
+        // immediately without touching the local count — exercised directly here since the
+        // CloudKit round-trip itself can't be driven from a unit test (no CKContainer
+        // abstraction, same reasoning as EnergieApp's own account-status fallback, F0.1).
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        let budget = EnphaseRequestBudget(userDefaults: defaults, now: { date(2026, 9, 30) })
+        await budget.recordRequest()
+        let before = await budget.usedThisMonth()
+
+        await budget.syncWithCloudIfAvailable()
+
+        #expect(await budget.usedThisMonth() == before)
+    }
 }

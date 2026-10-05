@@ -70,6 +70,69 @@ struct EnphaseClientTests {
             try await client.fetchSystems()
         }
     }
+
+    private func makeClient() -> EnphaseClient {
+        EnphaseClient(
+            urlSession: MockURLProtocol.makeSession(),
+            throttle: EnphaseRequestThrottle(),
+            budget: EnphaseRequestBudget(userDefaults: UserDefaults(suiteName: UUID().uuidString)!),
+            apiKey: { "key" },
+            accessToken: { "token" }
+        )
+    }
+
+    // MARK: - Lifetime (daily) series (F3.2/F3.3) — thin wrappers around perform(), but still
+    // worth a direct round-trip each since they're the only call site for their respective DTOs.
+
+    @Test func fetchEnergyLifetimeDecodesResponse() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"{"start_date":"2026-01-01","production":[1,2,3]}"#)
+        }
+        let response = try await makeClient().fetchEnergyLifetime(systemID: 1)
+        #expect(response.production == [1, 2, 3])
+    }
+
+    @Test func fetchConsumptionLifetimeDecodesResponse() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"{"start_date":"2026-01-01","consumption":[4,5]}"#)
+        }
+        let response = try await makeClient().fetchConsumptionLifetime(systemID: 1)
+        #expect(response.consumption == [4, 5])
+    }
+
+    @Test func fetchImportLifetimeDecodesResponse() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"{"start_date":"2026-01-01","import":[6]}"#)
+        }
+        let response = try await makeClient().fetchImportLifetime(systemID: 1)
+        #expect(response.imported == [6])
+    }
+
+    @Test func fetchExportLifetimeDecodesResponse() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"{"start_date":"2026-01-01","export":[7]}"#)
+        }
+        let response = try await makeClient().fetchExportLifetime(systemID: 1)
+        #expect(response.exported == [7])
+    }
+
+    @Test func fetchBatteryLifetimeDecodesResponse() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"{"start_date":"2026-01-01","charge":[8],"discharge":[9]}"#)
+        }
+        let response = try await makeClient().fetchBatteryLifetime(systemID: 1)
+        #expect(response.charge == [8])
+        #expect(response.discharge == [9])
+    }
+
+    @Test func performThrowsInvalidResponseAndHTTPErrors() async throws {
+        MockURLProtocol.requestHandler = { request in
+            (HTTPURLResponse(url: request.url!, statusCode: 500, httpVersion: "HTTP/1.1", headerFields: nil)!, Data("server error".utf8))
+        }
+        await #expect(throws: EnphaseClientError.http(status: 500, body: "server error")) {
+            try await makeClient().fetchSystems()
+        }
+    }
 }
 
 }

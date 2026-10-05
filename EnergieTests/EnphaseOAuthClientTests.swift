@@ -78,6 +78,14 @@ struct EnphaseOAuthClientTests {
         let client = EnphaseOAuthClient()
         #expect(client.authorizationURL(clientID: "abc") == EnphaseEndpoints.authorizationURL(clientID: "abc"))
     }
+
+    @Test func allErrorCasesHaveADescription() {
+        #expect(EnphaseOAuthError.missingCode.errorDescription != nil)
+        #expect(EnphaseOAuthError.invalidResponse.errorDescription != nil)
+        let httpError = EnphaseOAuthError.http(status: 401, body: "invalid_grant")
+        #expect(httpError.errorDescription?.contains("401") == true)
+        #expect(httpError.errorDescription?.contains("invalid_grant") == true)
+    }
 }
 
 }

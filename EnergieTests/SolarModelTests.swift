@@ -147,6 +147,10 @@ struct SolarModelTests {
 
         #expect(await model.requestsUsedThisMonth() > 0)
     }
+
+    @Test func signInRequiredHasADescription() {
+        #expect(SolarError.signInRequired.errorDescription != nil)
+    }
 }
 
 }
