@@ -91,12 +91,13 @@ struct EnphaseBudgetTests {
         #expect(error.errorDescription?.contains("Minuten") == true)
     }
 
-    @Test func rateLimitedErrorDescriptionSurfacesEnphasesOwnDetailWhenPeriodIsUnrecognized() {
+    @Test func rateLimitedErrorDescriptionIgnoresEnphasesEnglishDetailWhenPeriodIsUnrecognized() {
         // The real shape observed from a live 429 (2026-10-05 incident, see BACKLOG.md): no
         // `period` field at all, just a plan-level usage-limit message. Must NOT be mislabeled
-        // as "Minuten" (the old, incorrect default) — show Enphase's own text instead.
+        // as "Minuten" (the old, incorrect default) — but Enphase's own text is English, so it's
+        // not shown to the user directly either; a German generic message is used instead.
         let error = EnphaseClientError.rateLimited(period: nil, periodEnd: nil, detail: "Usage limit exceeded for plan Watt")
-        #expect(error.errorDescription == "Usage limit exceeded for plan Watt")
+        #expect(error.errorDescription == "Enphase-Nutzungslimit erreicht. Bitte später erneut versuchen.")
     }
 
     @Test func rateLimitedErrorDescriptionFallsBackToAGenericMessageWithoutAnyDetail() {

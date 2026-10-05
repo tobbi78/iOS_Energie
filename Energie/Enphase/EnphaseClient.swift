@@ -25,7 +25,7 @@ enum EnphaseClientError: Error, LocalizedError, Equatable {
             return "Enphase hat eine unerwartete Antwort geschickt."
         case .http(let status, let body):
             return "Enphase-Anfrage fehlgeschlagen (HTTP \(status)): \(body)"
-        case .rateLimited(let period, let periodEnd, let detail):
+        case .rateLimited(let period, let periodEnd, _):
             // Only label it "Minuten"/"Monats" when the period is actually one of those two
             // known values — never default to "Minuten" for anything else (2026-10-05 incident:
             // a real 429 for the "Watt" plan's overall usage cap has neither field, and the old
@@ -43,7 +43,10 @@ enum EnphaseClientError: Error, LocalizedError, Equatable {
                 }
                 return "Enphase-Minuten-Limit erreicht. Bitte später erneut versuchen."
             default:
-                return detail ?? "Enphase-Anfragelimit erreicht. Bitte später erneut versuchen."
+                // Enphase's own `detail` text (e.g. "Usage limit exceeded for plan Watt") is
+                // always English — never shown to the user directly, only kept on the error
+                // case itself for diagnostics (e.g. future logging).
+                return "Enphase-Nutzungslimit erreicht. Bitte später erneut versuchen."
             }
         case .monthlyBudgetExhausted:
             return "Monatliches Abfrage-Kontingent für Enphase ist erschöpft. Weitere Abrufe sind erst im nächsten Monat wieder möglich."
