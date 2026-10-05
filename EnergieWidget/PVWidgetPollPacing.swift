@@ -53,4 +53,19 @@ enum PVWidgetPollPacing {
         let idealInterval = secondsRemainingInMonth / Double(remainingPolls)
         return max(minimumInterval, idealInterval)
     }
+
+    /// Whether a cached snapshot is still fresh enough to reuse instead of a real network fetch.
+    ///
+    /// `nextPollDelay` above only paces a *single* poller's own self-rescheduling. WidgetKit
+    /// calls `getTimeline(in:)` independently for every placed widget instance, though — two
+    /// copies of the same widget, or the standalone PV widget alongside `CombinedWidget`, each
+    /// have no idea the other exists and each compute their own "safe" delay from the same
+    /// shared usage counter. Without this floor, N placed instances would cost roughly N× the
+    /// intended Enphase request volume and exhaust the monthly budget correspondingly earlier
+    /// in the month than planned (2026-10-05 suspicion, confirmed). Reusing the cache whenever
+    /// it's younger than `minimumInterval` caps real request volume at "at most one fetch per
+    /// window", regardless of how many timelines ask for one.
+    static func shouldReuseCachedSnapshot(fetchedAt: Date, now: Date) -> Bool {
+        now.timeIntervalSince(fetchedAt) < minimumInterval
+    }
 }

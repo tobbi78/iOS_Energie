@@ -121,6 +121,27 @@
 			);
 			target = 89340B82306DBF27005BA574 /* EnergieWidgetExtension */;
 		};
+		89EB45D03073B4A900EBDC4F /* Exceptions for "EnergieWidget" folder in "Energie" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				PVWidgetPollPacing.swift,
+			);
+			target = 89340A2E306D4B89005BA574 /* Energie */;
+		};
+		89EB45D53073B5DC00EBDC4F /* Exceptions for "Energie" folder in "Energie" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				EnergieTests/PVWidgetPollPacingTests.swift,
+			);
+			target = 89340A2E306D4B89005BA574 /* Energie */;
+		};
+		89EB45D63073B5DC00EBDC4F /* Exceptions for "Energie" folder in "EnergieTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				EnergieTests/PVWidgetPollPacingTests.swift,
+			);
+			target = 89340A3D306D4B8C005BA574 /* EnergieTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -139,6 +160,10 @@
 		};
 		89340A31306D4B89005BA574 /* Energie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				89EB45D53073B5DC00EBDC4F /* Exceptions for "Energie" folder in "Energie" target */,
+				89EB45D63073B5DC00EBDC4F /* Exceptions for "Energie" folder in "EnergieTests" target */,
+			);
 			path = Energie;
 			sourceTree = "<group>";
 		};
@@ -155,6 +180,7 @@
 		89340B89306DBF27005BA574 /* EnergieWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				89EB45D03073B4A900EBDC4F /* Exceptions for "EnergieWidget" folder in "Energie" target */,
 				89340B97306DBF29005BA574 /* Exceptions for "EnergieWidget" folder in "EnergieWidgetExtension" target */,
 			);
 			path = EnergieWidget;

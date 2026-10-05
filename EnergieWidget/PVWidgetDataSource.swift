@@ -90,6 +90,13 @@ enum PVWidgetDataSource {
     }
 
     static func fetchLatestSnapshot() async -> Result<Snapshot, FetchError> {
+        // Deduplicates independent polls from multiple placed widget instances/kinds (e.g. this
+        // widget alongside CombinedWidget, or two copies of the same widget) — see
+        // PVWidgetPollPacing.shouldReuseCachedSnapshot's doc comment.
+        if let cached = cachedSnapshot(), PVWidgetPollPacing.shouldReuseCachedSnapshot(fetchedAt: cached.fetchedAt, now: Date()) {
+            return .success(cached)
+        }
+
         guard let accessToken = PVWidgetKeychain.readString(account: "accessToken"),
               let apiKey = PVWidgetKeychain.readString(account: "apiKey") else {
             return .failure(.notSignedIn)
