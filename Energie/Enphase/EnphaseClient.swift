@@ -10,9 +10,11 @@ import Foundation
 enum EnphaseClientError: Error, LocalizedError, Equatable {
     case invalidResponse
     case http(status: Int, body: String)
-    /// HTTP 429 with a decodable body (F4.3) — more specific than `.http` because it carries
-    /// when the limit resets, so callers/UI can say more than just "try again".
-    case rateLimited(period: String?, periodEnd: Date?)
+    /// HTTP 429 (F4.3). `period`/`periodEnd` are only ever populated if Enphase's response body
+    /// actually contains them — **not observed in practice** (see `detail` below). `detail` is
+    /// Enphase's own human-readable text, used whenever we can't confidently label which window
+    /// (minute/month/plan-level) was hit, instead of guessing.
+    case rateLimited(period: String?, periodEnd: Date?, detail: String?)
     /// The monthly request budget (F4.2) is used up — thrown by `perform(url:)` *before* any
     /// network access, not a response from Enphase.
     case monthlyBudgetExhausted
@@ -23,26 +25,47 @@ enum EnphaseClientError: Error, LocalizedError, Equatable {
             return "Enphase hat eine unerwartete Antwort geschickt."
         case .http(let status, let body):
             return "Enphase-Anfrage fehlgeschlagen (HTTP \(status)): \(body)"
-        case .rateLimited(let period, let periodEnd):
-            let periodLabel = period == "month" ? "Monats" : "Minuten"
-            if let periodEnd {
-                return "Enphase-\(periodLabel)-Limit erreicht. Nächster Versuch ab \(periodEnd.formatted(date: .omitted, time: .shortened))."
+        case .rateLimited(let period, let periodEnd, let detail):
+            // Only label it "Minuten"/"Monats" when the period is actually one of those two
+            // known values — never default to "Minuten" for anything else (2026-10-05 incident:
+            // a real 429 for the "Watt" plan's overall usage cap has neither field, and the old
+            // code mislabeled it as a transient per-minute limit instead of showing Enphase's
+            // own, far more informative message).
+            switch period {
+            case "month":
+                if let periodEnd {
+                    return "Enphase-Monats-Limit erreicht. Nächster Versuch ab \(periodEnd.formatted(date: .omitted, time: .shortened))."
+                }
+                return "Enphase-Monats-Limit erreicht. Bitte später erneut versuchen."
+            case "minute":
+                if let periodEnd {
+                    return "Enphase-Minuten-Limit erreicht. Nächster Versuch ab \(periodEnd.formatted(date: .omitted, time: .shortened))."
+                }
+                return "Enphase-Minuten-Limit erreicht. Bitte später erneut versuchen."
+            default:
+                return detail ?? "Enphase-Anfragelimit erreicht. Bitte später erneut versuchen."
             }
-            return "Enphase-\(periodLabel)-Limit erreicht. Bitte später erneut versuchen."
         case .monthlyBudgetExhausted:
             return "Monatliches Abfrage-Kontingent für Enphase ist erschöpft. Weitere Abrufe sind erst im nächsten Monat wieder möglich."
         }
     }
 }
 
-/// Body Enphase sends with HTTP 429 (see ENPHASE_API_WERTE.md): `period` is "minute" or "month".
+/// Body Enphase sends with HTTP 429. `period`/`period_end` are what `ENPHASE_API_WERTE.md`
+/// originally assumed (never actually observed); `message`/`details` are what a real 429 for
+/// the "Watt" plan's overall usage cap actually contains (confirmed 2026-10-05, see
+/// BACKLOG.md). Both shapes are optional here so either one decodes successfully.
 private struct EnphaseRateLimitErrorBody: Decodable {
     let period: String?
     let periodEnd: Int?
+    let message: String?
+    let details: String?
 
     enum CodingKeys: String, CodingKey {
         case period
         case periodEnd = "period_end"
+        case message
+        case details
     }
 }
 
@@ -124,18 +147,11 @@ struct EnphaseClient {
             throw EnphaseClientError.invalidResponse
         }
         if httpResponse.statusCode == 429 {
-            // TEMPORARY DIAGNOSTIC (2026-10-05) — not meant to stay in the repo. Prints the raw
-            // 429 response so we can see exactly what Enphase is sending back (period, body,
-            // Retry-After header, which endpoint) instead of guessing from our own error text.
-            print("""
-            ⚠️ Enphase 429 for \(url.path)
-              headers: \(httpResponse.allHeaderFields)
-              body: \(String(data: data, encoding: .utf8) ?? "<non-UTF8>")
-            """)
             if let rateLimit = try? JSONDecoder().decode(EnphaseRateLimitErrorBody.self, from: data) {
                 throw EnphaseClientError.rateLimited(
                     period: rateLimit.period,
-                    periodEnd: rateLimit.periodEnd.map { Date(timeIntervalSince1970: TimeInterval($0)) }
+                    periodEnd: rateLimit.periodEnd.map { Date(timeIntervalSince1970: TimeInterval($0)) },
+                    detail: rateLimit.details ?? rateLimit.message
                 )
             }
             throw EnphaseClientError.http(status: 429, body: String(data: data, encoding: .utf8) ?? "")
