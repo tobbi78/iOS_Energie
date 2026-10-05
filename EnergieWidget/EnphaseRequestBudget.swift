@@ -69,9 +69,25 @@ actor EnphaseRequestBudget {
     /// is unavailable (no iCloud account, offline, container unreachable); local-only counting
     /// keeps working exactly as before in that case, same fallback principle as `EnergieApp`'s
     /// CloudKit persistence (F0.1).
+    ///
+    /// **Bounded by a safety timeout (2026-10-05 incident):** on a real device, calling this
+    /// from the widget's `getTimeline()` caused the extension to stop refreshing — and therefore
+    /// stop making *any* Enphase requests at all — entirely, apparently because a slow/retrying
+    /// CloudKit round-trip blew WidgetKit's tight per-refresh execution budget. The widget no
+    /// longer calls this at all (see `PVWidgetProvider.getTimeline`'s comment); this timeout is
+    /// defense in depth for the app side, which still calls it from `SolarModel.refresh()`.
     func syncWithCloudIfAvailable() async {
         guard FileManager.default.ubiquityIdentityToken != nil else { return }
 
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await self.performCloudSync() }
+            group.addTask { try? await Task.sleep(nanoseconds: 5_000_000_000) }
+            _ = await group.next()
+            group.cancelAll()
+        }
+    }
+
+    private func performCloudSync() async {
         let currentMonth = monthIdentifier(for: now())
         let localCount = usedThisMonth()
         let database = CKContainer(identifier: Self.cloudKitContainerIdentifier).privateCloudDatabase

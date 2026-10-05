@@ -24,9 +24,16 @@ struct PVWidgetProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PVWidgetEntry>) -> Void) {
         Task {
-            // Once per timeline refresh, not per endpoint — cross-device budget reconciliation
-            // (Epic 0, F0.4). Best-effort; does nothing when CloudKit is unavailable.
-            await PVWidgetDataSource.syncBudgetWithCloudIfAvailable()
+            // Deliberately NOT calling EnphaseRequestBudget.syncWithCloudIfAvailable() (Epic 0,
+            // F0.4) here, even though the app side does — WidgetKit gives each timeline refresh a
+            // tight execution budget, and a slow/misbehaving CloudKit round-trip (real network
+            // retries, or a CKContainer(identifier:) crash if the extension's provisioning ever
+            // lags behind its entitlements) can make the extension blow that budget or crash
+            // outright. Either way the practical effect is the same: no further timeline refresh
+            // ever gets scheduled again, so the widget goes permanently stale and stops making
+            // *any* Enphase requests, not just CloudKit ones. The app's own periodic sync (every
+            // time it's opened) already reconciles the same shared counter — the widget doesn't
+            // need to risk its scarce background time doing it too.
             // Alerts (F5.5) only fire from this real, periodic refresh path — not from
             // getSnapshot(), which WidgetKit also calls for quick previews (e.g. the widget
             // gallery) where triggering a notification would be surprising/spurious.
