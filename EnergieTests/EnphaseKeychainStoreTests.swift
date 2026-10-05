@@ -58,4 +58,17 @@ struct EnphaseKeychainStoreTests {
         store.write(.systemID, value: nil)
         #expect(store.read(.systemID) == nil)
     }
+
+    // F9.3 mitigation (2026-10-05 security review): tokens must stay device-local, credentials
+    // and non-secret metadata keep syncing via iCloud Keychain.
+    @Test func onlyTokensAreNonSynchronizable() {
+        #expect(EnphaseSecretKey.clientID.isSynchronizable)
+        #expect(EnphaseSecretKey.clientSecret.isSynchronizable)
+        #expect(EnphaseSecretKey.apiKey.isSynchronizable)
+        #expect(EnphaseSecretKey.systemID.isSynchronizable)
+        #expect(EnphaseSecretKey.operationalAt.isSynchronizable)
+        #expect(!EnphaseSecretKey.accessToken.isSynchronizable)
+        #expect(!EnphaseSecretKey.refreshToken.isSynchronizable)
+        #expect(!EnphaseSecretKey.tokenExpiresAt.isSynchronizable)
+    }
 }

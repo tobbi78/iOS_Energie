@@ -21,6 +21,18 @@ enum ViessmannSecretKey: String, CaseIterable {
     case installationID
     case gatewaySerial
     case deviceID
+
+    /// Whether this item syncs across the user's devices via iCloud Keychain, or stays
+    /// device-local — see `EnphaseSecretKey.isSynchronizable` (F9.3 mitigation) for the full
+    /// reasoning, which applies identically here.
+    var isSynchronizable: Bool {
+        switch self {
+        case .clientID, .installationID, .gatewaySerial, .deviceID:
+            return true
+        case .accessToken, .refreshToken, .tokenExpiresAt:
+            return false
+        }
+    }
 }
 
 /// Storage abstraction for Viessmann secrets, injectable so tests never touch the real Keychain.
@@ -29,14 +41,13 @@ protocol ViessmannSecretStoring: Sendable {
     func write(_ key: ViessmannSecretKey, value: String?)
 }
 
-/// iCloud-Keychain-synchronized secret store (Epic 0, F0.3) — same reasoning as
-/// `EnphaseKeychainStore`. One known trade-off specific to Viessmann: the widget extension
-/// refreshes its own access token independently per device (see `HPWidgetDataSource`,
-/// "refresh_token-Grant-Aufruf"), and iCloud Keychain sync isn't instantaneous — two devices
-/// refreshing close together can still race, with whichever sync lands last overwriting the
-/// other's newer token. Not solved here; same class of problem already accepted for the Apple
-/// Watch design (see BACKLOG.md, "Zielplattform Apple Watch"), just between two iOS devices now
-/// instead of iPhone+Watch.
+/// Partially iCloud-Keychain-synchronized secret store (Epic 0, F0.3; narrowed by F9.3) — same
+/// reasoning as `EnphaseKeychainStore`. Tokens being device-local now (F9.3) also resolves a
+/// trade-off that used to be specific to Viessmann: the widget extension refreshes its own
+/// access token independently per device (see `HPWidgetDataSource`, "refresh_token-Grant-
+/// Aufruf"), which previously could race against iCloud's own (non-instantaneous) sync of the
+/// same token item between two devices refreshing close together, with whichever sync landed
+/// last overwriting the other's newer token — moot now that token items never sync at all.
 struct ViessmannKeychainStore: ViessmannSecretStoring {
     private let service: String
 
@@ -67,31 +78,36 @@ struct ViessmannKeychainStore: ViessmannSecretStoring {
         // to kSecAttrAccessibleWhenUnlocked and are unreadable to the widget extension's
         // background timeline refresh whenever the device is locked — which is routinely the
         // case. Needed here from the start since this heat-pump widget's entire point is
-        // background access (the pressure alarm must fire even while the app is closed).
-        // **Not** the "ThisDeviceOnly" variant (F0.3): incompatible with `kSecAttrSynchronizable`
-        // — see EnphaseKeychainStore.write for why.
+        // background access (the pressure alarm must fire even while the app is closed). The
+        // "ThisDeviceOnly" variant is used for device-local keys (F9.3) instead, which keeps the
+        // same background-availability characteristics while opting out of iCloud sync — see
+        // EnphaseKeychainStore.write for why it can't be combined with `kSecAttrSynchronizable: true`.
+        let accessible = key.isSynchronizable
+            ? kSecAttrAccessibleAfterFirstUnlock
+            : kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         let attributesToUpdate: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+            kSecAttrAccessible as String: accessible,
         ]
         let updateStatus = SecItemUpdate(query as CFDictionary, attributesToUpdate as CFDictionary)
 
         if updateStatus == errSecItemNotFound {
             var newItem = query
             newItem[kSecValueData as String] = data
-            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+            newItem[kSecAttrAccessible as String] = accessible
             SecItemAdd(newItem as CFDictionary, nil)
         }
     }
 
     /// See `EnphaseKeychainStore.baseQuery` — same reasoning for why
-    /// `kSecAttrSynchronizable: true` has to be consistent across read/update/add/delete.
+    /// `kSecAttrSynchronizable` (per-key via `ViessmannSecretKey.isSynchronizable`) has to be
+    /// consistent across read/update/add/delete.
     private func baseQuery(for key: ViessmannSecretKey) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: key.rawValue,
-            kSecAttrSynchronizable as String: true,
+            kSecAttrSynchronizable as String: key.isSynchronizable,
         ]
     }
 }
