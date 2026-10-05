@@ -15,7 +15,7 @@ struct ViessmannEndpointsTests {
     }
 
     @Test func authorizationURLContainsPKCEParameters() {
-        let url = ViessmannEndpoints.authorizationURL(clientID: "client-1", codeChallenge: "challenge-xyz")
+        let url = ViessmannEndpoints.authorizationURL(clientID: "client-1", codeChallenge: "challenge-xyz", state: "state-xyz")
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
         let items = Dictionary(uniqueKeysWithValues: components.queryItems!.map { ($0.name, $0.value) })
         #expect(items["client_id"] == "client-1")
@@ -24,6 +24,7 @@ struct ViessmannEndpointsTests {
         #expect(items["code_challenge"] == "challenge-xyz")
         #expect(items["code_challenge_method"] == "S256")
         #expect(items["scope"] == ViessmannEndpoints.scope)
+        #expect(items["state"] == "state-xyz")
     }
 
     @Test func tokenExchangeBodyContainsCodeVerifierAndCode() {

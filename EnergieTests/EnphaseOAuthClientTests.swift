@@ -17,9 +17,17 @@ struct EnphaseOAuthClientTests {
 
     @Test func completeSignInThrowsWithoutCodeInCallback() async {
         let client = EnphaseOAuthClient(urlSession: MockURLProtocol.makeSession())
-        let callbackURL = URL(string: "de.florian.tobias.energie://enphase-oauth-callback")!
+        let callbackURL = URL(string: "de.florian.tobias.energie://enphase-oauth-callback?state=state-1")!
         await #expect(throws: EnphaseOAuthError.missingCode) {
-            try await client.completeSignIn(callbackURL: callbackURL, credentials: credentials)
+            try await client.completeSignIn(callbackURL: callbackURL, credentials: credentials, state: "state-1")
+        }
+    }
+
+    @Test func completeSignInThrowsOnStateMismatch() async {
+        let client = EnphaseOAuthClient(urlSession: MockURLProtocol.makeSession())
+        let callbackURL = URL(string: "de.florian.tobias.energie://enphase-oauth-callback?code=auth-code-1&state=wrong-state")!
+        await #expect(throws: EnphaseOAuthError.stateMismatch) {
+            try await client.completeSignIn(callbackURL: callbackURL, credentials: credentials, state: "expected-state")
         }
     }
 
@@ -34,9 +42,9 @@ struct EnphaseOAuthClientTests {
         }
         let now = Date(timeIntervalSince1970: 1_000_000)
         let client = EnphaseOAuthClient(urlSession: MockURLProtocol.makeSession(), now: { now })
-        let callbackURL = URL(string: "de.florian.tobias.energie://enphase-oauth-callback?code=auth-code-1")!
+        let callbackURL = URL(string: "de.florian.tobias.energie://enphase-oauth-callback?code=auth-code-1&state=state-1")!
 
-        let tokens = try await client.completeSignIn(callbackURL: callbackURL, credentials: credentials)
+        let tokens = try await client.completeSignIn(callbackURL: callbackURL, credentials: credentials, state: "state-1")
 
         #expect(tokens.accessToken == "at-1")
         #expect(tokens.refreshToken == "rt-1")
@@ -50,10 +58,10 @@ struct EnphaseOAuthClientTests {
             MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: #"{"error":"invalid_grant"}"#)
         }
         let client = EnphaseOAuthClient(urlSession: MockURLProtocol.makeSession())
-        let callbackURL = URL(string: "de.florian.tobias.energie://enphase-oauth-callback?code=bad-code")!
+        let callbackURL = URL(string: "de.florian.tobias.energie://enphase-oauth-callback?code=bad-code&state=state-1")!
 
         await #expect(throws: (any Error).self) {
-            try await client.completeSignIn(callbackURL: callbackURL, credentials: credentials)
+            try await client.completeSignIn(callbackURL: callbackURL, credentials: credentials, state: "state-1")
         }
     }
 
@@ -76,11 +84,12 @@ struct EnphaseOAuthClientTests {
 
     @Test func authorizationURLDelegatesToEndpoints() {
         let client = EnphaseOAuthClient()
-        #expect(client.authorizationURL(clientID: "abc") == EnphaseEndpoints.authorizationURL(clientID: "abc"))
+        #expect(client.authorizationURL(clientID: "abc", state: "state-1") == EnphaseEndpoints.authorizationURL(clientID: "abc", state: "state-1"))
     }
 
     @Test func allErrorCasesHaveADescription() {
         #expect(EnphaseOAuthError.missingCode.errorDescription != nil)
+        #expect(EnphaseOAuthError.stateMismatch.errorDescription != nil)
         #expect(EnphaseOAuthError.invalidResponse.errorDescription != nil)
         let httpError = EnphaseOAuthError.http(status: 401, body: "invalid_grant")
         #expect(httpError.errorDescription?.contains("401") == true)

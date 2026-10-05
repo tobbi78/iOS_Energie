@@ -9,6 +9,7 @@ import Foundation
 
 enum EnphaseOAuthError: Error, LocalizedError, Equatable {
     case missingCode
+    case stateMismatch
     case invalidResponse
     case http(status: Int, body: String)
 
@@ -16,6 +17,8 @@ enum EnphaseOAuthError: Error, LocalizedError, Equatable {
         switch self {
         case .missingCode:
             return "Die Callback-URL enthielt keinen Autorisierungscode."
+        case .stateMismatch:
+            return "Die Anmeldung wurde abgebrochen, da die Callback-URL nicht zur gestarteten Anmeldung passte."
         case .invalidResponse:
             return "Enphase hat eine unerwartete Antwort auf die Anmeldung geschickt."
         case .http(let status, let body):
@@ -47,14 +50,18 @@ struct EnphaseOAuthClient {
     var urlSession: URLSession = .shared
     var now: @Sendable () -> Date = Date.init
 
-    func authorizationURL(clientID: String) -> URL {
-        EnphaseEndpoints.authorizationURL(clientID: clientID)
+    func authorizationURL(clientID: String, state: String) -> URL {
+        EnphaseEndpoints.authorizationURL(clientID: clientID, state: state)
     }
 
-    /// Extracts the authorization code from the callback URL and exchanges it for tokens.
-    func completeSignIn(callbackURL: URL, credentials: EnphaseCredentials) async throws -> EnphaseTokens {
-        guard let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
-            .queryItems?.first(where: { $0.name == "code" })?.value else {
+    /// Verifies the callback URL's `state` matches the one sent with the authorization request
+    /// (CSRF protection, RFC 6749 §10.12) before extracting the code and exchanging it for tokens.
+    func completeSignIn(callbackURL: URL, credentials: EnphaseCredentials, state: String) async throws -> EnphaseTokens {
+        let queryItems = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems
+        guard queryItems?.first(where: { $0.name == "state" })?.value == state else {
+            throw EnphaseOAuthError.stateMismatch
+        }
+        guard let code = queryItems?.first(where: { $0.name == "code" })?.value else {
             throw EnphaseOAuthError.missingCode
         }
 
