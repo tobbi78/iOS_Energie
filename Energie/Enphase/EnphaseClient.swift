@@ -124,6 +124,14 @@ struct EnphaseClient {
             throw EnphaseClientError.invalidResponse
         }
         if httpResponse.statusCode == 429 {
+            // TEMPORARY DIAGNOSTIC (2026-10-05) — not meant to stay in the repo. Prints the raw
+            // 429 response so we can see exactly what Enphase is sending back (period, body,
+            // Retry-After header, which endpoint) instead of guessing from our own error text.
+            print("""
+            ⚠️ Enphase 429 for \(url.path)
+              headers: \(httpResponse.allHeaderFields)
+              body: \(String(data: data, encoding: .utf8) ?? "<non-UTF8>")
+            """)
             if let rateLimit = try? JSONDecoder().decode(EnphaseRateLimitErrorBody.self, from: data) {
                 throw EnphaseClientError.rateLimited(
                     period: rateLimit.period,
