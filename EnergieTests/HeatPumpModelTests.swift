@@ -193,6 +193,10 @@ struct HeatPumpModelTests {
         #expect(model.state == .needsSignIn)
         #expect(model.credentials.clientID == "new-client-id")
     }
+
+    @Test func signInRequiredHasADescription() {
+        #expect(HeatPumpError.signInRequired.errorDescription != nil)
+    }
 }
 
 }

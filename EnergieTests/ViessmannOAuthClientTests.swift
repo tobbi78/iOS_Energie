@@ -103,6 +103,14 @@ struct ViessmannOAuthClientTests {
             try await client.refresh(tokens: oldTokens, clientID: "client-1")
         }
     }
+
+    @Test func allErrorCasesHaveADescription() {
+        #expect(ViessmannOAuthError.missingCode.errorDescription != nil)
+        #expect(ViessmannOAuthError.invalidResponse.errorDescription != nil)
+        let httpError = ViessmannOAuthError.http(status: 400, body: "invalid_grant")
+        #expect(httpError.errorDescription?.contains("400") == true)
+        #expect(httpError.errorDescription?.contains("invalid_grant") == true)
+    }
 }
 
 }

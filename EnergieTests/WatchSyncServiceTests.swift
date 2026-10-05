@@ -127,4 +127,14 @@ struct WatchSyncServiceTests {
 
         #expect(session.sentContexts.count == 1)
     }
+
+    @Test func sessionDidBecomeInactiveAndDeactivateDoNotCrash() {
+        // Required WCSessionDelegate conformance methods — fixed signatures (the real WCSession
+        // type, not the injectable WatchConnectivitySession) mean there's nothing to assert
+        // beyond "doesn't crash", same as e.g. HeatPumpModelTests'
+        // refreshDoesNotCrashWhenPressureAlertIsDisabled.
+        let service = WatchSyncService(session: FakeWatchConnectivitySession())
+        service.sessionDidBecomeInactive(WCSession.default)
+        service.sessionDidDeactivate(WCSession.default)
+    }
 }
