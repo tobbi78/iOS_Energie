@@ -219,13 +219,7 @@ final class SolarModel {
             predicate: #Predicate { $0.date == startOfDay }
         )
         if let existing = try? modelContext.fetch(descriptor).first {
-            existing.producedWh = sample.producedWh
-            existing.consumedWh = sample.consumedWh
-            existing.importedWh = sample.importedWh
-            existing.exportedWh = sample.exportedWh
-            existing.batterySocPercent = sample.batterySocPercent
-            existing.batteryChargedWh = sample.batteryChargedWh
-            existing.batteryDischargedWh = sample.batteryDischargedWh
+            existing.update(from: sample)
         } else {
             modelContext.insert(sample)
         }
@@ -372,24 +366,9 @@ final class SolarModel {
                 let total = PVPeriodAggregation.total(of: rowsInYear, from: yearStart, to: yearEnd, isRunning: false)
 
                 if let existingYear = existingYearlySamples.first(where: { calendar.isDate($0.yearStart, equalTo: yearStart, toGranularity: .year) }) {
-                    existingYear.producedWh += total.producedWh
-                    existingYear.consumedWh += total.consumedWh
-                    existingYear.importedWh += total.importedWh
-                    existingYear.exportedWh += total.exportedWh
-                    existingYear.batteryChargedWh += total.batteryChargedWh
-                    existingYear.batteryDischargedWh += total.batteryDischargedWh
+                    existingYear.accumulate(total)
                 } else {
-                    modelContext.insert(
-                        PVYearlySample(
-                            yearStart: yearStart,
-                            producedWh: total.producedWh,
-                            consumedWh: total.consumedWh,
-                            importedWh: total.importedWh,
-                            exportedWh: total.exportedWh,
-                            batteryChargedWh: total.batteryChargedWh,
-                            batteryDischargedWh: total.batteryDischargedWh
-                        )
-                    )
+                    modelContext.insert(PVYearlySample(yearStart: yearStart, total: total))
                 }
 
                 for row in rowsInYear {

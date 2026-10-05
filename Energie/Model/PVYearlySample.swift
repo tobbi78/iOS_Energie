@@ -39,4 +39,30 @@ final class PVYearlySample {
         self.batteryChargedWh = batteryChargedWh
         self.batteryDischargedWh = batteryDischargedWh
     }
+
+    /// Creates a new yearly archive by copying every metric from an aggregated `PVPeriodTotal` —
+    /// used by `SolarModel.pruneOldDailySamplesIfNeeded()` when a given year has no existing
+    /// archive yet, so a future new metric only needs to be added in one place.
+    convenience init(yearStart: Date, total: PVPeriodTotal) {
+        self.init(
+            yearStart: yearStart,
+            producedWh: total.producedWh,
+            consumedWh: total.consumedWh,
+            importedWh: total.importedWh,
+            exportedWh: total.exportedWh,
+            batteryChargedWh: total.batteryChargedWh,
+            batteryDischargedWh: total.batteryDischargedWh
+        )
+    }
+
+    /// Adds every metric from `total` onto `self` — used by the same pruning pass to fold
+    /// another year's worth of pruned daily rows into an already-existing yearly archive.
+    func accumulate(_ total: PVPeriodTotal) {
+        producedWh += total.producedWh
+        consumedWh += total.consumedWh
+        importedWh += total.importedWh
+        exportedWh += total.exportedWh
+        batteryChargedWh += total.batteryChargedWh
+        batteryDischargedWh += total.batteryDischargedWh
+    }
 }

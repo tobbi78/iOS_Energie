@@ -60,4 +60,18 @@ final class PVDailySample {
     func estimatedFeedInRevenue(tariffPerKWh: Double) -> Double {
         exportedWh / 1000 * tariffPerKWh
     }
+
+    /// Copies every live-polled metric from `other` onto `self` — used by
+    /// `SolarModel.upsertToday(_:)` when today's row already exists, so a future new metric only
+    /// needs to be added in one place instead of at every call site. `date` and `isFinal` are
+    /// deliberately excluded: upserting today's row never changes either.
+    func update(from other: PVDailySample) {
+        producedWh = other.producedWh
+        consumedWh = other.consumedWh
+        importedWh = other.importedWh
+        exportedWh = other.exportedWh
+        batterySocPercent = other.batterySocPercent
+        batteryChargedWh = other.batteryChargedWh
+        batteryDischargedWh = other.batteryDischargedWh
+    }
 }
