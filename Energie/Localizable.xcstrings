@@ -1,0 +1,714 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "€/kWh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "€/kWh"
+          }
+        }
+      }
+    },
+    "Abmelden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Sign Out"
+          }
+        }
+      }
+    },
+    "Aktualisieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Refresh"
+          }
+        }
+      }
+    },
+    "Aktueller Druck" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Current Pressure"
+          }
+        }
+      }
+    },
+    "Alarm bei niedrigem Druck" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Low Pressure Alarm"
+          }
+        }
+      }
+    },
+    "Anlage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "System"
+          }
+        }
+      }
+    },
+    "Anlagendruck-Alarm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "System Pressure Alarm"
+          }
+        }
+      }
+    },
+    "Anmelden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Sign In"
+          }
+        }
+      }
+    },
+    "API-Key" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "API Key"
+          }
+        }
+      }
+    },
+    "Aus deiner Developer-App im Enphase-Portal." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "From your developer app in the Enphase portal."
+          }
+        }
+      }
+    },
+    "bar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "bar"
+          }
+        }
+      }
+    },
+    "Benachrichtigt lokal auf diesem Gerät, wenn der Anlagendruck beim nächsten Abruf unter den Schwellwert fällt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Notifies you locally on this device if the system pressure drops below the threshold on the next fetch."
+          }
+        }
+      }
+    },
+    "Client-ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Client ID"
+          }
+        }
+      }
+    },
+    "Client-Secret" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Client Secret"
+          }
+        }
+      }
+    },
+    "Die Client-ID aus dem Viessmann Developer Portal." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "The client ID from the Viessmann Developer Portal."
+          }
+        }
+      }
+    },
+    "Effizienz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Efficiency"
+          }
+        }
+      }
+    },
+    "Effizienz & Verbrauch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Efficiency & Consumption"
+          }
+        }
+      }
+    },
+    "Ein Ändern der Client-ID erfordert eine erneute Anmeldung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Changing the client ID requires signing in again."
+          }
+        }
+      }
+    },
+    "Ein Ändern der Zugangsdaten erfordert eine erneute Anmeldung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Changing the credentials requires signing in again."
+          }
+        }
+      }
+    },
+    "Einspeisevergütung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Feed-in tariff"
+          }
+        }
+      }
+    },
+    "Einstellungen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "Enphase-Abfragen diesen Monat: %lld / %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enphase-Abfragen diesen Monat: %1$lld / %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Enphase queries this month: %1$lld / %2$lld"
+          }
+        }
+      }
+    },
+    "Enphase-Zugangsdaten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Enphase credentials"
+          }
+        }
+      }
+    },
+    "Entwarnung senden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Send All-Clear Notification"
+          }
+        }
+      }
+    },
+    "Erneut versuchen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Try Again"
+          }
+        }
+      }
+    },
+    "Gerät" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Device"
+          }
+        }
+      }
+    },
+    "Heizkreise" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Heating Circuits"
+          }
+        }
+      }
+    },
+    "Installation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Installation"
+          }
+        }
+      }
+    },
+    "Jetzt erneut versuchen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Retry Now"
+          }
+        }
+      }
+    },
+    "Keine Heizkreise gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "No heating circuits found."
+          }
+        }
+      }
+    },
+    "Keine Verdichter gefunden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "No compressors found."
+          }
+        }
+      }
+    },
+    "kWh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "kWh"
+          }
+        }
+      }
+    },
+    "Lade Anlagendaten…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Loading system data…"
+          }
+        }
+      }
+    },
+    "Lade Wärmepumpendaten…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Loading heat pump data…"
+          }
+        }
+      }
+    },
+    "Ladezustand aktuell nicht verfügbar." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Charge level currently unavailable."
+          }
+        }
+      }
+    },
+    "Mehr" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
+    "Melde dich einmalig an, um die Werte deiner PV-Anlage abzurufen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Sign in once to fetch the data from your PV system."
+          }
+        }
+      }
+    },
+    "Melde dich einmalig an, um die Werte deiner Wärmepumpe abzurufen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Sign in once to fetch the data from your heat pump."
+          }
+        }
+      }
+    },
+    "Mit Enphase verbinden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Connect to Enphase"
+          }
+        }
+      }
+    },
+    "Mit Viessmann verbinden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Connect to Viessmann"
+          }
+        }
+      }
+    },
+    "Monatsbudget-Reserve" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Monthly budget reserve"
+          }
+        }
+      }
+    },
+    "Nächster Versuch ab %@ möglich." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Next attempt possible from %@."
+          }
+        }
+      }
+    },
+    "Noch keine Daten für diesen Zeitraum." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "No data yet for this period."
+          }
+        }
+      }
+    },
+    "Noch keine Werte — der erste Schnappschuss entsteht beim nächsten Abruf." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "No values yet — the first snapshot is taken on the next fetch."
+          }
+        }
+      }
+    },
+    "PV-Anlage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "PV system"
+          }
+        }
+      }
+    },
+    "Reihe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Series"
+          }
+        }
+      }
+    },
+    "Reserve: %lld Anfragen" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Reserve: %lld Anfrage"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Reserve: %lld Anfragen"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Reserve: %lld Anfragen"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Reserve: %lld request"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Reserve: %lld requests"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Reserve: %lld requests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Richtwert ohne Abrechnungsanspruch für die geschätzte Vergütung bei der Einspeisung-Kachel." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Reference value with no billing claim, used for the estimated compensation on the feed-in tile."
+          }
+        }
+      }
+    },
+    "Schwellwert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Threshold"
+          }
+        }
+      }
+    },
+    "Speicherzustand" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Battery Status"
+          }
+        }
+      }
+    },
+    "Start" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Home"
+          }
+        }
+      }
+    },
+    "Tarif" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Tariff"
+          }
+        }
+      }
+    },
+    "Verbindung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Connection"
+          }
+        }
+      }
+    },
+    "Verdichter & Kältekreis" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Compressor & Refrigerant Circuit"
+          }
+        }
+      }
+    },
+    "Verlauf" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "History"
+          }
+        }
+      }
+    },
+    "Viessmann-Anfragelimit erreicht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Viessmann request limit reached"
+          }
+        }
+      }
+    },
+    "Viessmann-Zugangsdaten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Viessmann credentials"
+          }
+        }
+      }
+    },
+    "Wärmepumpe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Heat pump"
+          }
+        }
+      }
+    },
+    "Warmwasser" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Domestic Hot Water"
+          }
+        }
+      }
+    },
+    "Weiter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "Wertreihe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Data series"
+          }
+        }
+      }
+    },
+    "Wird vom Live-Abruf-Budget zurückgehalten, damit der tägliche Abschluss-Durchlauf am Monatsende immer noch Anfragen übrig hat." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Held back from the live polling budget so the daily closing run still has requests left at the end of the month."
+          }
+        }
+      }
+    },
+    "Zeitpunkt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Time"
+          }
+        }
+      }
+    },
+    "Zeitraum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Period"
+          }
+        }
+      }
+    },
+    "Zugangsdaten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Credentials"
+          }
+        }
+      }
+    },
+    "Zugangsdaten speichern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Save credentials"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.3"
+}

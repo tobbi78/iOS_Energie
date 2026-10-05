@@ -1,0 +1,86 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "%@ bar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%@ bar"
+          }
+        }
+      }
+    },
+    "Außen %@°C" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Outside %@°C"
+          }
+        }
+      }
+    },
+    "Autarkie %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Self-sufficiency %@"
+          }
+        }
+      }
+    },
+    "Energie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Energy"
+          }
+        }
+      }
+    },
+    "Noch keine Daten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "No data yet"
+          }
+        }
+      }
+    },
+    "PV-Anlage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "PV system"
+          }
+        }
+      }
+    },
+    "Stand %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Updated %@"
+          }
+        }
+      }
+    },
+    "Wärmepumpe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Heat pump"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.3"
+}
