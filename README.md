@@ -52,8 +52,9 @@ Unit- und UI-Tests laufen über die jeweiligen Xcode-Schemes (`EnergieTests`, `E
 
 - `BACKLOG.md` — Anforderungen, Umsetzungsstand je Feature-Branch, Architekturentscheidungen
 - `Plans/Waermepumpe-Integration.md` — Architekturplan der Wärmepumpen-Integration
-- `ENPHASE_API_WERTE.md` / `VIESSMANN_API_WERTE.md` — API-Referenz der jeweiligen Anbieter
-- `ERKENNTNISSE_MACOS.md` — Erfahrungsbericht aus dem macOS-Schwesterprojekt, Basis vieler Engineering-Entscheidungen hier
+- `Dokumentation/ENPHASE_API_WERTE.md` / `Dokumentation/VIESSMANN_API_WERTE.md` — API-Referenz der jeweiligen Anbieter
+- `Dokumentation/ENPHASE_INTEGRATION_SPEC.md` — Architekturentwurf der PV-Integration
+- `Dokumentation/ERKENNTNISSE_MACOS.md` — Erfahrungsbericht aus dem macOS-Schwesterprojekt, Basis vieler Engineering-Entscheidungen hier
 
 ## Branch-Workflow
 
