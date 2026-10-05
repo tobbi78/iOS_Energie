@@ -150,6 +150,13 @@
 				WatchSnapshot.swift,
 			);
 			target = 892357BB3072E7FA003FB076 /* EnergieWatchWidgetExtension */;
+        };
+		89EB45D03073B4A900EBDC4F /* Exceptions for "EnergieWidget" folder in "Energie" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				PVWidgetPollPacing.swift,
+			);
+			target = 89340A2E306D4B89005BA574 /* Energie */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -190,6 +197,7 @@
 		89340B89306DBF27005BA574 /* EnergieWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				89EB45D03073B4A900EBDC4F /* Exceptions for "EnergieWidget" folder in "Energie" target */,
 				89340B97306DBF29005BA574 /* Exceptions for "EnergieWidget" folder in "EnergieWidgetExtension" target */,
 			);
 			path = EnergieWidget;
