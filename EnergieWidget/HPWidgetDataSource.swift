@@ -19,17 +19,29 @@ import Security
 
 /// Reads/writes the same Keychain items `ViessmannKeychainStore` does. No `kSecAttrAccessGroup`
 /// set explicitly on either side, same as `PVWidgetKeychain` — both targets share the one
-/// `keychain-access-groups` entitlement. `kSecAttrSynchronizable: true` (Epic 0, F0.3) must match
-/// `ViessmannKeychainStore`'s for the same reason as `PVWidgetKeychain`.
+/// `keychain-access-groups` entitlement. `kSecAttrSynchronizable` per account name must match
+/// `ViessmannSecretKey.isSynchronizable`'s per-key choice (F0.3/F9.3 mitigation), for the same
+/// reason as `PVWidgetKeychain`.
 private enum HPWidgetKeychain {
     private static let service = "de.florian.tobias.Energie.viessmann"
+
+    /// Mirrors `ViessmannSecretKey.isSynchronizable` by account name, since this duplicate has no
+    /// access to that enum (different target/module, see this file's header comment).
+    private static func isSynchronizable(account: String) -> Bool {
+        switch account {
+        case "accessToken", "refreshToken", "tokenExpiresAt":
+            return false
+        default:
+            return true
+        }
+    }
 
     static func readString(account: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: true,
+            kSecAttrSynchronizable as String: isSynchronizable(account: account),
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
         ]
@@ -40,26 +52,30 @@ private enum HPWidgetKeychain {
     }
 
     static func writeString(account: String, value: String) {
+        let synchronizable = isSynchronizable(account: account)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: true,
+            kSecAttrSynchronizable as String: synchronizable,
         ]
         guard let data = value.data(using: .utf8) else { return }
 
-        // Not the "ThisDeviceOnly" variant — incompatible with kSecAttrSynchronizable, see
-        // EnphaseKeychainStore.write.
+        // "ThisDeviceOnly" for device-local keys (F9.3) — incompatible with
+        // kSecAttrSynchronizable: true, see EnphaseKeychainStore.write.
+        let accessible = synchronizable
+            ? kSecAttrAccessibleAfterFirstUnlock
+            : kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         let attributesToUpdate: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+            kSecAttrAccessible as String: accessible,
         ]
         let updateStatus = SecItemUpdate(query as CFDictionary, attributesToUpdate as CFDictionary)
 
         if updateStatus == errSecItemNotFound {
             var newItem = query
             newItem[kSecValueData as String] = data
-            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+            newItem[kSecAttrAccessible as String] = accessible
             SecItemAdd(newItem as CFDictionary, nil)
         }
     }

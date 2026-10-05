@@ -18,18 +18,29 @@ import Security
 /// Reads the same Keychain item the app's `EnphaseKeychainStore` writes. No `kSecAttrAccessGroup`
 /// is set explicitly on either side — both targets declare exactly one, matching
 /// `keychain-access-groups` entitlement, which the Keychain uses as the implicit default.
-/// `kSecAttrSynchronizable: true` (Epic 0, F0.3) must match `EnphaseKeychainStore`'s — the app's
-/// items are iCloud-Keychain-synchronized now, and without this key a query only ever matches
-/// *non*-synchronizable items, so omitting it here would make the widget stop finding anything.
+/// `kSecAttrSynchronizable` per account name must match `EnphaseSecretKey.isSynchronizable`'s
+/// per-key choice (F0.3/F9.3 mitigation) — a query only ever matches the synchronizable class it
+/// asks for, so a mismatch here would make the widget stop finding what the app wrote.
 private enum PVWidgetKeychain {
     private static let service = "de.florian.tobias.Energie.enphase"
+
+    /// Mirrors `EnphaseSecretKey.isSynchronizable` by account name, since this duplicate has no
+    /// access to that enum (different target/module, see this file's header comment).
+    private static func isSynchronizable(account: String) -> Bool {
+        switch account {
+        case "accessToken", "refreshToken", "tokenExpiresAt":
+            return false
+        default:
+            return true
+        }
+    }
 
     static func readString(account: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: true,
+            kSecAttrSynchronizable as String: isSynchronizable(account: account),
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
         ]

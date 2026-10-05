@@ -58,4 +58,16 @@ struct ViessmannKeychainStoreTests {
         store.write(.installationID, value: nil)
         #expect(store.read(.installationID) == nil)
     }
+
+    // F9.3 mitigation (2026-10-05 security review): tokens must stay device-local, credentials
+    // and non-secret metadata keep syncing via iCloud Keychain.
+    @Test func onlyTokensAreNonSynchronizable() {
+        #expect(ViessmannSecretKey.clientID.isSynchronizable)
+        #expect(ViessmannSecretKey.installationID.isSynchronizable)
+        #expect(ViessmannSecretKey.gatewaySerial.isSynchronizable)
+        #expect(ViessmannSecretKey.deviceID.isSynchronizable)
+        #expect(!ViessmannSecretKey.accessToken.isSynchronizable)
+        #expect(!ViessmannSecretKey.refreshToken.isSynchronizable)
+        #expect(!ViessmannSecretKey.tokenExpiresAt.isSynchronizable)
+    }
 }
