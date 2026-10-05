@@ -54,6 +54,8 @@ enum PVWidgetDataSource {
     private static let throttle = EnphaseRequestThrottle()
     private static let baseURL = URL(string: "https://api.enphaseenergy.com")!
     private static let cacheKey = "PVWidgetDataSource.lastSnapshot"
+    /// Reused across requests instead of allocating a fresh `JSONDecoder()` for every one.
+    private static let decoder = JSONDecoder()
 
     struct Snapshot: Codable {
         let producedWh: Double
@@ -86,7 +88,7 @@ enum PVWidgetDataSource {
     /// offline, budget exhausted) so the widget degrades gracefully instead of going blank.
     static func cachedSnapshot() -> Snapshot? {
         guard let data = sharedDefaults.data(forKey: cacheKey) else { return nil }
-        return try? JSONDecoder().decode(Snapshot.self, from: data)
+        return try? decoder.decode(Snapshot.self, from: data)
     }
 
     static func fetchLatestSnapshot() async -> Result<Snapshot, FetchError> {
@@ -198,6 +200,6 @@ enum PVWidgetDataSource {
         guard (200..<300).contains(httpResponse.statusCode) else {
             throw FetchError.http(httpResponse.statusCode)
         }
-        return try JSONDecoder().decode(T.self, from: data)
+        return try decoder.decode(T.self, from: data)
     }
 }

@@ -88,7 +88,7 @@ enum HPWidgetDataSource {
 
     static func cachedSnapshot() -> Snapshot? {
         guard let data = sharedDefaults.data(forKey: cacheKey) else { return nil }
-        return try? JSONDecoder().decode(Snapshot.self, from: data)
+        return try? JSONDecoder.viessmann.decode(Snapshot.self, from: data)
     }
 
     static func fetchLatestSnapshot() async -> Result<Snapshot, FetchError> {
@@ -173,7 +173,7 @@ enum HPWidgetDataSource {
         guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
             throw FetchError.refreshFailed
         }
-        let decoded = try JSONDecoder().decode(TokenResponse.self, from: data)
+        let decoded = try JSONDecoder.viessmann.decode(TokenResponse.self, from: data)
         guard let newRefreshToken = decoded.refreshToken ?? Optional(refreshToken) else {
             throw FetchError.refreshFailed
         }

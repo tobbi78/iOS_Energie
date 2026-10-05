@@ -10,6 +10,14 @@ import Foundation
 /// Decoding types for the Enphase Monitoring API v4 responses used by `EnphaseClient`.
 /// Field meanings/units: see ENPHASE_API_WERTE.md.
 
+extension JSONDecoder {
+    /// Reused across requests instead of allocating a fresh `JSONDecoder()` for every one —
+    /// mirrors `JSONDecoder.viessmann` (ViessmannDTO.swift). No custom strategy needed: none of
+    /// the Enphase response types decode `Date` directly (Unix-second fields are plain `Int`,
+    /// converted to `Date` by hand where needed, e.g. `EnphaseSystemDTO.operationalAt`).
+    static let enphase = JSONDecoder()
+}
+
 struct EnphaseSystemsResponse: Decodable {
     let systems: [EnphaseSystemDTO]
 }

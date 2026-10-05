@@ -150,7 +150,7 @@ struct EnphaseClient {
             throw EnphaseClientError.invalidResponse
         }
         if httpResponse.statusCode == 429 {
-            if let rateLimit = try? JSONDecoder().decode(EnphaseRateLimitErrorBody.self, from: data) {
+            if let rateLimit = try? JSONDecoder.enphase.decode(EnphaseRateLimitErrorBody.self, from: data) {
                 throw EnphaseClientError.rateLimited(
                     period: rateLimit.period,
                     periodEnd: rateLimit.periodEnd.map { Date(timeIntervalSince1970: TimeInterval($0)) },
@@ -162,6 +162,6 @@ struct EnphaseClient {
         guard (200..<300).contains(httpResponse.statusCode) else {
             throw EnphaseClientError.http(status: httpResponse.statusCode, body: String(data: data, encoding: .utf8) ?? "")
         }
-        return try JSONDecoder().decode(T.self, from: data)
+        return try JSONDecoder.enphase.decode(T.self, from: data)
     }
 }
