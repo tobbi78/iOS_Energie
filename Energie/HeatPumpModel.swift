@@ -129,7 +129,7 @@ final class HeatPumpModel {
         // Requested here too, not just in SolarModel.start() (F5.5) — permission is app-wide and
         // UNUserNotificationCenter no-ops once already determined, but the heat pump's pressure
         // alert must work even if PV isn't configured at all.
-        await requestNotificationAuthorizationIfNeeded()
+        await NotificationAuthorization.requestIfNeeded()
         startPolling()
     }
 
@@ -149,13 +149,6 @@ final class HeatPumpModel {
     func stopPolling() {
         pollTask?.cancel()
         pollTask = nil
-    }
-
-    private func requestNotificationAuthorizationIfNeeded() async {
-        let center = UNUserNotificationCenter.current()
-        let notificationSettings = await center.notificationSettings()
-        guard notificationSettings.authorizationStatus == .notDetermined else { return }
-        _ = try? await center.requestAuthorization(options: [.alert, .sound])
     }
 
     private static func initialState(settings: ViessmannSettings) -> HeatPumpState {
