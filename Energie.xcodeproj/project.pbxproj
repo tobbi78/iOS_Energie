@@ -150,7 +150,7 @@
 				WatchSnapshot.swift,
 			);
 			target = 892357BB3072E7FA003FB076 /* EnergieWatchWidgetExtension */;
-        };
+		};
 		89EB45D03073B4A900EBDC4F /* Exceptions for "EnergieWidget" folder in "Energie" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
