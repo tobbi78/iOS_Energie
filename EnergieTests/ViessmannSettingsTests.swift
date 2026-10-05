@@ -81,4 +81,60 @@ struct ViessmannSettingsTests {
         #expect(settings.deviceSelection == nil)
         #expect(store.read(.installationID) == nil)
     }
+
+    // F9.6 security review (2026-10-05): the widget extension refreshes tokens independently in
+    // its own process and writes to the same Keychain item — these guard against either side
+    // overwriting the other's newer result.
+
+    @Test func reloadTokensFromStorePicksUpAnExternallyWrittenChange() {
+        let store = InMemoryViessmannSecretStore(seed: [
+            .accessToken: "a1", .refreshToken: "r1", .tokenExpiresAt: "1700000000",
+        ])
+        let settings = ViessmannSettings(store: store)
+        #expect(settings.tokens?.accessToken == "a1")
+
+        // Simulate the widget extension writing fresher tokens directly to the shared Keychain.
+        store.write(.accessToken, value: "a2")
+        store.write(.refreshToken, value: "r2")
+        store.write(.tokenExpiresAt, value: "1800000000")
+
+        let reloaded = settings.reloadTokensFromStore()
+        #expect(reloaded?.accessToken == "a2")
+        #expect(settings.tokens?.accessToken == "a2")
+    }
+
+    @Test func adoptRefreshedTokensPersistsWhenRefreshTokenUnchanged() {
+        let store = InMemoryViessmannSecretStore(seed: [
+            .accessToken: "a1", .refreshToken: "r1", .tokenExpiresAt: "1700000000",
+        ])
+        let settings = ViessmannSettings(store: store)
+        let refreshed = ViessmannTokens(accessToken: "a2", refreshToken: "r2", expiresAt: Date(timeIntervalSince1970: 1_800_000_000))
+
+        let result = settings.adoptRefreshedTokens(refreshed, previousRefreshToken: "r1")
+
+        #expect(result.accessToken == "a2")
+        #expect(settings.tokens?.accessToken == "a2")
+        #expect(store.read(.accessToken) == "a2")
+    }
+
+    @Test func adoptRefreshedTokensDiscardsOwnResultWhenRefreshTokenAlreadyRotated() {
+        let store = InMemoryViessmannSecretStore(seed: [
+            .accessToken: "a1", .refreshToken: "r1", .tokenExpiresAt: "1700000000",
+        ])
+        let settings = ViessmannSettings(store: store)
+
+        // Simulate the widget extension having already refreshed (and rotated the refresh
+        // token) concurrently, between this call's token read and its write-back attempt.
+        store.write(.accessToken, value: "widget-a2")
+        store.write(.refreshToken, value: "widget-r2")
+        store.write(.tokenExpiresAt, value: "1800000000")
+
+        let ownRefreshResult = ViessmannTokens(accessToken: "own-a2", refreshToken: "own-r2", expiresAt: Date(timeIntervalSince1970: 1_900_000_000))
+        let result = settings.adoptRefreshedTokens(ownRefreshResult, previousRefreshToken: "r1")
+
+        // Adopts the widget's result instead of overwriting it with its own.
+        #expect(result.accessToken == "widget-a2")
+        #expect(settings.tokens?.accessToken == "widget-a2")
+        #expect(store.read(.accessToken) == "widget-a2")
+    }
 }

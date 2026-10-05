@@ -21,8 +21,10 @@ enum EnphaseOAuthError: Error, LocalizedError, Equatable {
             return "Die Anmeldung wurde abgebrochen, da die Callback-URL nicht zur gestarteten Anmeldung passte."
         case .invalidResponse:
             return "Enphase hat eine unerwartete Antwort auf die Anmeldung geschickt."
-        case .http(let status, let body):
-            return "Enphase-Anmeldung fehlgeschlagen (HTTP \(status)): \(body)"
+        case .http(let status, _):
+            // `body` kept on the error case for diagnostics (F9.4 security review, 2026-10-05)
+            // but never shown to the user — see EnphaseClientError.http for the same reasoning.
+            return "Enphase-Anmeldung fehlgeschlagen (HTTP \(status))."
         }
     }
 }

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSAppTransportSecurity</key>
+	<array>
+		<dict>
+			<key>NSPinnedDomains</key>
+			<dict>
+				<key>api.enphaseenergy.com</key>
+				<dict>
+					<key>NSIncludesSubdomains</key>
+					<false/>
+					<key>NSPinnedCAIdentities</key>
+					<array>
+						<dict>
+							<key>SPKI-SHA256-BASE64</key>
+							<string>Wec45nQiFwKvHtuHxSAMGkt19k+uPSw9JlEkxhvYPHk=</string>
+						</dict>
+						<dict>
+							<key>SPKI-SHA256-BASE64</key>
+							<string>i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=</string>
+						</dict>
+					</array>
+				</dict>
+				<key>api.viessmann-climatesolutions.com</key>
+				<dict>
+					<key>NSIncludesSubdomains</key>
+					<false/>
+					<key>NSPinnedCAIdentities</key>
+					<array>
+						<dict>
+							<key>SPKI-SHA256-BASE64</key>
+							<string>E3tYcwo9CiqATmKtpMLW5V+pzIq+ZoDmpXSiJlXGmTo=</string>
+						</dict>
+						<dict>
+							<key>SPKI-SHA256-BASE64</key>
+							<string>i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=</string>
+						</dict>
+					</array>
+				</dict>
+				<key>iam.viessmann-climatesolutions.com</key>
+				<dict>
+					<key>NSIncludesSubdomains</key>
+					<false/>
+					<key>NSPinnedCAIdentities</key>
+					<array>
+						<dict>
+							<key>SPKI-SHA256-BASE64</key>
+							<string>92oK29/qv5N8xocT/H9kxxVqihg3OD2rlooJW9f7L3Y=</string>
+						</dict>
+						<dict>
+							<key>SPKI-SHA256-BASE64</key>
+							<string>aB3EgsKWyEAsbrsg5oMJo7yEZSOuNLmEqE7ml6MxLbc=</string>
+						</dict>
+						<dict>
+							<key>SPKI-SHA256-BASE64</key>
+							<string>qiYwp7YXsE0KKUureoyqpQFubb5gSDeoOoVxn6tmfrU=</string>
+						</dict>
+					</array>
+				</dict>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

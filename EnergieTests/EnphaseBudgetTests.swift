@@ -80,10 +80,12 @@ struct EnphaseBudgetTests {
         #expect(EnphaseClientError.invalidResponse.errorDescription != nil)
     }
 
-    @Test func httpErrorDescriptionMentionsStatusAndBody() {
+    // F9.4 security review (2026-10-05): the raw response body must never reach the UI, only
+    // the status code.
+    @Test func httpErrorDescriptionMentionsStatusButNotBody() {
         let error = EnphaseClientError.http(status: 500, body: "boom")
         #expect(error.errorDescription?.contains("500") == true)
-        #expect(error.errorDescription?.contains("boom") == true)
+        #expect(error.errorDescription?.contains("boom") == false)
     }
 
     @Test func rateLimitedErrorDescriptionWithoutPeriodEndStillHasOne() {

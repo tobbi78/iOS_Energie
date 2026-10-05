@@ -356,8 +356,17 @@ final class HeatPumpModel {
         guard tokens.isExpired(now: now()) else {
             return tokens.accessToken
         }
-        let refreshed = try await oauthClient.refresh(tokens: tokens, clientID: settings.credentials.clientID)
-        settings.setTokens(refreshed)
-        return refreshed.accessToken
+        do {
+            let refreshed = try await oauthClient.refresh(tokens: tokens, clientID: settings.credentials.clientID)
+            return settings.adoptRefreshedTokens(refreshed, previousRefreshToken: tokens.refreshToken).accessToken
+        } catch {
+            // The refresh token may already be stale if the widget extension refreshed
+            // concurrently and rotated it first (F9.6 security review, 2026-10-05) — before
+            // failing, check whether it already wrote fresher tokens we can use instead.
+            if let reloaded = settings.reloadTokensFromStore(), !reloaded.isExpired(now: now()) {
+                return reloaded.accessToken
+            }
+            throw error
+        }
     }
 }

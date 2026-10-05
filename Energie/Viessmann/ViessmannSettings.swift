@@ -50,17 +50,7 @@ final class ViessmannSettings {
     init(store: ViessmannSecretStoring = ViessmannKeychainStore()) {
         self.store = store
         credentials = ViessmannCredentials(clientID: store.read(.clientID) ?? "")
-
-        if let accessToken = store.read(.accessToken),
-           let refreshToken = store.read(.refreshToken),
-           let expiresAtString = store.read(.tokenExpiresAt),
-           let expiresAtInterval = TimeInterval(expiresAtString) {
-            tokens = ViessmannTokens(
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-                expiresAt: Date(timeIntervalSince1970: expiresAtInterval)
-            )
-        }
+        tokens = Self.readTokens(from: store)
 
         if let installationIDString = store.read(.installationID),
            let installationID = Int(installationIDString),
@@ -107,5 +97,43 @@ final class ViessmannSettings {
         store.write(.installationID, value: selection.map { String($0.installationID) })
         store.write(.gatewaySerial, value: selection?.gatewaySerial)
         store.write(.deviceID, value: selection?.deviceID)
+    }
+
+    /// Re-reads tokens directly from the Keychain, bypassing the in-memory cache, and updates
+    /// the cache to match. Used to pick up a fresher token pair written concurrently by the
+    /// widget extension's own independent refresh (F9.6 security review, 2026-10-05) — a plain
+    /// cross-process Keychain read, not a network call.
+    @discardableResult
+    func reloadTokensFromStore() -> ViessmannTokens? {
+        tokens = Self.readTokens(from: store)
+        return tokens
+    }
+
+    /// Persists refreshed tokens, but only if the Keychain's refresh token still matches the one
+    /// this refresh was based on (F9.6). The widget extension refreshes independently in its own
+    /// process and writes back to the same Keychain item — if it already rotated the refresh
+    /// token while this refresh was in flight, naively overwriting its result here would silently
+    /// discard a token pair it (or Viessmann's server) may already be relying on. Adopting its
+    /// result instead keeps both sides converged on one consistent pair.
+    func adoptRefreshedTokens(_ newTokens: ViessmannTokens, previousRefreshToken: String) -> ViessmannTokens {
+        guard store.read(.refreshToken) == previousRefreshToken else {
+            return reloadTokensFromStore() ?? newTokens
+        }
+        setTokens(newTokens)
+        return newTokens
+    }
+
+    private static func readTokens(from store: ViessmannSecretStoring) -> ViessmannTokens? {
+        guard let accessToken = store.read(.accessToken),
+              let refreshToken = store.read(.refreshToken),
+              let expiresAtString = store.read(.tokenExpiresAt),
+              let expiresAtInterval = TimeInterval(expiresAtString) else {
+            return nil
+        }
+        return ViessmannTokens(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            expiresAt: Date(timeIntervalSince1970: expiresAtInterval)
+        )
     }
 }
