@@ -25,12 +25,13 @@ enum EnphaseEndpoints {
         "\(callbackScheme)://\(callbackHost)"
     }
 
-    static func authorizationURL(clientID: String) -> URL {
+    static func authorizationURL(clientID: String, state: String) -> URL {
         var components = URLComponents(url: baseURL.appendingPathComponent("oauth/authorize"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
             URLQueryItem(name: "response_type", value: "code"),
             URLQueryItem(name: "client_id", value: clientID),
             URLQueryItem(name: "redirect_uri", value: redirectURI),
+            URLQueryItem(name: "state", value: state),
         ]
         return components.url!
     }

@@ -190,6 +190,17 @@ Keine Features, sondern Arbeitsweisen, die sich in der Vorlage bewährt haben un
 - **Testansatz:** Swift Testing, `URLProtocol`-Stub für Netzwerk, In-Memory-`ModelContainer`, temporäre `UserDefaults`-Instanz, injizierte Uhr — kein Test berührt echte API/Tokens/Datenbank. Die App erkennt einen laufenden Testlauf und startet dann kein Polling und öffnet nicht die echte Datenbank. Zielwert: Testabdeckung der Fachlogik ≥ 80 %.
 - **Ein Dokument pro größerem Feature** mit Stand/Entscheidungen vor bzw. während der Umsetzung (wie dieses Backlog) — hat sich bewährt, um Architekturentscheidungen vor der Umsetzung festzuhalten.
 
+## Epic 9 — Sicherheit (Security-Review 2026-10-05)
+
+Ergebnis einer vollständigen Sicherheitsdurchsicht der App (Keychain-Stores, OAuth/PKCE-Flows, Netzwerk-Clients, Entitlements, Widget-Datenquellen, Watch-Sync) am 2026-10-05, ohne akuten Anlass. Keine kritischen Funde (kein Logging von Secrets, keine Hardcoded-Secrets, kein ATS-Bypass, korrekte `SecureField`-Nutzung bei allen Zugangsdaten-Feldern) — die folgenden Punkte sind Härtungen, keine akuten Lecks.
+
+- **F9.1 ✅ Umgesetzt (2026-10-05).** Kein `state`-Parameter in den OAuth-Flows (CSRF-Schutz). Neues `OAuthState.generate()` (32 Zufallsbytes, base64url, gleiche Bauart wie `ViessmannPKCE.makeCodeVerifier`) erzeugt pro Anmeldeversuch einen Wert, der jetzt in `EnphaseEndpoints.authorizationURL`/`ViessmannEndpoints.authorizationURL` als `state`-Query-Parameter mitgeschickt und in `EnphaseOAuthClient.completeSignIn`/`ViessmannOAuthClient.completeSignIn` gegen den Callback zurückgeprüft wird (neuer Fehlerfall `.stateMismatch` bei Abweichung). `SolarModel.signIn`/`HeatPumpModel.signIn` erzeugen den Wert pro Aufruf und reichen ihn durch. 4 neue/angepasste Tests (Soll-Wert in der URL, unterschiedliche Werte pro Aufruf, Mismatch-Fehlerfall).
+- **F9.2 Enphase-Flow ohne PKCE, Client-Secret auf dem Gerät.** Durch die Enphase-API vorgegeben (kein PKCE-Support) — das Client-Secret muss dauerhaft im Keychain liegen, damit Token-Refresh im Hintergrund/Widget funktioniert. Nicht im eigenen Code lösbar, nur als akzeptiertes API-Design-Risiko dokumentiert.
+- **F9.3 Alle Secrets/Tokens sind iCloud-Keychain-synchronisiert.** `kSecAttrSynchronizable: true` kombiniert mit `kSecAttrAccessibleAfterFirstUnlock` (nicht `…ThisDeviceOnly`, siehe F0.3) bedeutet: Ein kompromittierter iCloud-Account genügt, um Enphase-Client-Secret/API-Key sowie beide Refresh-Tokens auf allen Geräten abzugreifen, nicht nur bei einem gestohlenen Einzelgerät. Bewusster Trade-off seit F0.3 (Komfort/Cross-Device-Login) — Mitigationsansatz offen, siehe "Offene Rückfragen an den Nutzer".
+- **F9.4 Rohe HTTP-Fehlertexte in der UI.** `EnphaseClientError.http`/`ViessmannClientError.http` (und Widget-Pendants) geben den rohen Response-Body der Fehlerantwort ungefiltert an die UI weiter. Geringes Risiko (nur dem Account-Inhaber sichtbar), aber ungefilterter Fremd-Content.
+- **F9.5 Kein Certificate Pinning** gegen `api.enphaseenergy.com`/`*.viessmann-climatesolutions.com`. Für eine Consumer-App meist akzeptabel (Standard-ATS/TLS-Validierung), aber kein Schutz gegen ein vertrauenswürdiges, aber bösartiges MDM-/Proxy-Zertifikat auf dem Gerät.
+- **F9.6 Kein Schutz vor veralteten Refresh-Token-Ständen durch parallele Schreiber.** Bei Viessmann schreiben App, Widget und (laut F0.3-Kommentar) ein möglicher iCloud-Sync-Race unabhängig auf denselben Keychain-Eintrag — ein überschriebener, aber noch gültiger älterer Token könnte in einem alten iCloud-Snapshot verbleiben. Primär Robustheits-, aber auch ein Sicherheitsthema.
+
 ## Bewusst zurückgestellt / außerhalb des Scopes
 
 - **Cloud-Synchronisation (Epic 0) und geräteübergreifender Datenzugriff** (inkl. der geplanten macOS-App) — zurückgestellt, da kein bezahlter Apple Developer Account vorhanden ist; siehe Kapitel "Nicht umsetzbar ohne kostenpflichtigen Apple Developer Account". App speichert bis auf Weiteres rein lokal pro Gerät.
@@ -210,7 +221,7 @@ Keine Features, sondern Arbeitsweisen, die sich in der Vorlage bewährt haben un
 
 ## Offene Rückfragen an den Nutzer
 
-Alle bisherigen Rückfragen sind geklärt (siehe "Entscheidungen" oben und "Zusammenarbeits-Konventionen" unten).
+- **F9.3 Mitigation für iCloud-Keychain-Sync:** Wie soll das Risiko aus F9.3 (kompromittierter iCloud-Account gibt Zugriff auf Secrets/Tokens aller Geräte) adressiert werden — Sync beibehalten und nur dokumentieren, Sync nur für Client-Secret/API-Key/Client-ID zurück auf `ThisDeviceOnly` (Tokens bleiben synchronisiert), Sync nur für die Tokens zurück auf `ThisDeviceOnly` (Credentials bleiben synchronisiert), oder vollständiger Rückbau auf `ThisDeviceOnly` für alles (hebt F0.3 wieder auf)? Entscheidung steht noch aus.
 
 ## Noch zu verifizieren (unabhängig von einer reinen Rückfrage)
 

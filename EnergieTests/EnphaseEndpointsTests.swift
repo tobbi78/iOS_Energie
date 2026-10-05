@@ -15,12 +15,13 @@ struct EnphaseEndpointsTests {
     }
 
     @Test func authorizationURLContainsClientIDAndRedirectURI() {
-        let url = EnphaseEndpoints.authorizationURL(clientID: "abc123")
+        let url = EnphaseEndpoints.authorizationURL(clientID: "abc123", state: "state-xyz")
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
         let items = Dictionary(uniqueKeysWithValues: components.queryItems!.map { ($0.name, $0.value) })
         #expect(items["response_type"] == "code")
         #expect(items["client_id"] == "abc123")
         #expect(items["redirect_uri"] == EnphaseEndpoints.redirectURI)
+        #expect(items["state"] == "state-xyz")
     }
 
     @Test func tokenExchangeURLContainsCodeAndGrantType() {

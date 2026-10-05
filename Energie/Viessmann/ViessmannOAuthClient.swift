@@ -9,6 +9,7 @@ import Foundation
 
 enum ViessmannOAuthError: Error, LocalizedError, Equatable {
     case missingCode
+    case stateMismatch
     case invalidResponse
     case http(status: Int, body: String)
 
@@ -16,6 +17,8 @@ enum ViessmannOAuthError: Error, LocalizedError, Equatable {
         switch self {
         case .missingCode:
             return "Die Callback-URL enthielt keinen Autorisierungscode."
+        case .stateMismatch:
+            return "Die Anmeldung wurde abgebrochen, da die Callback-URL nicht zur gestarteten Anmeldung passte."
         case .invalidResponse:
             return "Viessmann hat eine unerwartete Antwort auf die Anmeldung geschickt."
         case .http(let status, let body):
@@ -49,18 +52,24 @@ struct ViessmannOAuthClient {
     var urlSession: URLSession = .shared
     var now: @Sendable () -> Date = Date.init
 
-    /// Generates a fresh PKCE pair and the matching authorization URL. The caller must hold on
-    /// to `pkce.codeVerifier` until `completeSignIn` to complete the proof.
-    func makeAuthorizationRequest(clientID: String) -> (url: URL, pkce: ViessmannPKCE) {
+    /// Generates a fresh PKCE pair, a random `state` value (CSRF protection, RFC 6749 §10.12)
+    /// and the matching authorization URL. The caller must hold on to `pkce.codeVerifier` and
+    /// `state` until `completeSignIn` to complete the proof.
+    func makeAuthorizationRequest(clientID: String) -> (url: URL, pkce: ViessmannPKCE, state: String) {
         let pkce = ViessmannPKCE()
-        let url = ViessmannEndpoints.authorizationURL(clientID: clientID, codeChallenge: pkce.codeChallenge)
-        return (url, pkce)
+        let state = OAuthState.generate()
+        let url = ViessmannEndpoints.authorizationURL(clientID: clientID, codeChallenge: pkce.codeChallenge, state: state)
+        return (url, pkce, state)
     }
 
-    /// Extracts the authorization code from the callback URL and exchanges it for tokens.
-    func completeSignIn(callbackURL: URL, clientID: String, codeVerifier: String) async throws -> ViessmannTokens {
-        guard let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
-            .queryItems?.first(where: { $0.name == "code" })?.value else {
+    /// Verifies the callback URL's `state` matches the one sent with the authorization request
+    /// before extracting the code and exchanging it for tokens.
+    func completeSignIn(callbackURL: URL, clientID: String, codeVerifier: String, state: String) async throws -> ViessmannTokens {
+        let queryItems = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems
+        guard queryItems?.first(where: { $0.name == "state" })?.value == state else {
+            throw ViessmannOAuthError.stateMismatch
+        }
+        guard let code = queryItems?.first(where: { $0.name == "code" })?.value else {
             throw ViessmannOAuthError.missingCode
         }
 

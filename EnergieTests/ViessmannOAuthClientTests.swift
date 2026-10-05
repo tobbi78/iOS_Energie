@@ -15,16 +15,32 @@ extension NetworkMockedTests {
 struct ViessmannOAuthClientTests {
     @Test func makeAuthorizationRequestReturnsMatchingURLAndVerifier() {
         let client = ViessmannOAuthClient()
-        let (url, pkce) = client.makeAuthorizationRequest(clientID: "client-1")
-        #expect(url == ViessmannEndpoints.authorizationURL(clientID: "client-1", codeChallenge: pkce.codeChallenge))
+        let (url, pkce, state) = client.makeAuthorizationRequest(clientID: "client-1")
+        #expect(url == ViessmannEndpoints.authorizationURL(clientID: "client-1", codeChallenge: pkce.codeChallenge, state: state))
         #expect(pkce.codeVerifier.count >= 43)
+        #expect(state.count >= 43)
+    }
+
+    @Test func makeAuthorizationRequestGeneratesADifferentStateEachTime() {
+        let client = ViessmannOAuthClient()
+        let (_, _, state1) = client.makeAuthorizationRequest(clientID: "client-1")
+        let (_, _, state2) = client.makeAuthorizationRequest(clientID: "client-1")
+        #expect(state1 != state2)
     }
 
     @Test func completeSignInThrowsWithoutCodeInCallback() async {
         let client = ViessmannOAuthClient(urlSession: MockURLProtocol.makeSession())
-        let callbackURL = URL(string: "de.florian.tobias.energie://viessmann-oauth-callback")!
+        let callbackURL = URL(string: "de.florian.tobias.energie://viessmann-oauth-callback?state=state-1")!
         await #expect(throws: ViessmannOAuthError.missingCode) {
-            try await client.completeSignIn(callbackURL: callbackURL, clientID: "client-1", codeVerifier: "verifier")
+            try await client.completeSignIn(callbackURL: callbackURL, clientID: "client-1", codeVerifier: "verifier", state: "state-1")
+        }
+    }
+
+    @Test func completeSignInThrowsOnStateMismatch() async {
+        let client = ViessmannOAuthClient(urlSession: MockURLProtocol.makeSession())
+        let callbackURL = URL(string: "de.florian.tobias.energie://viessmann-oauth-callback?code=auth-code&state=wrong-state")!
+        await #expect(throws: ViessmannOAuthError.stateMismatch) {
+            try await client.completeSignIn(callbackURL: callbackURL, clientID: "client-1", codeVerifier: "verifier", state: "expected-state")
         }
     }
 
@@ -41,9 +57,9 @@ struct ViessmannOAuthClientTests {
         }
         let now = Date(timeIntervalSince1970: 1_000_000)
         let client = ViessmannOAuthClient(urlSession: MockURLProtocol.makeSession(), now: { now })
-        let callbackURL = URL(string: "de.florian.tobias.energie://viessmann-oauth-callback?code=auth-code")!
+        let callbackURL = URL(string: "de.florian.tobias.energie://viessmann-oauth-callback?code=auth-code&state=state-1")!
 
-        let tokens = try await client.completeSignIn(callbackURL: callbackURL, clientID: "client-1", codeVerifier: "verifier-1")
+        let tokens = try await client.completeSignIn(callbackURL: callbackURL, clientID: "client-1", codeVerifier: "verifier-1", state: "state-1")
 
         #expect(tokens.accessToken == "at-1")
         #expect(tokens.refreshToken == "rt-1")
@@ -58,10 +74,10 @@ struct ViessmannOAuthClientTests {
             MockURLProtocol.jsonResponse(url: request.url!, json: #"{"access_token":"at-1","expires_in":3600}"#)
         }
         let client = ViessmannOAuthClient(urlSession: MockURLProtocol.makeSession())
-        let callbackURL = URL(string: "de.florian.tobias.energie://viessmann-oauth-callback?code=auth-code")!
+        let callbackURL = URL(string: "de.florian.tobias.energie://viessmann-oauth-callback?code=auth-code&state=state-1")!
 
         await #expect(throws: ViessmannOAuthError.invalidResponse) {
-            try await client.completeSignIn(callbackURL: callbackURL, clientID: "client-1", codeVerifier: "verifier-1")
+            try await client.completeSignIn(callbackURL: callbackURL, clientID: "client-1", codeVerifier: "verifier-1", state: "state-1")
         }
     }
 
@@ -106,6 +122,7 @@ struct ViessmannOAuthClientTests {
 
     @Test func allErrorCasesHaveADescription() {
         #expect(ViessmannOAuthError.missingCode.errorDescription != nil)
+        #expect(ViessmannOAuthError.stateMismatch.errorDescription != nil)
         #expect(ViessmannOAuthError.invalidResponse.errorDescription != nil)
         let httpError = ViessmannOAuthError.http(status: 400, body: "invalid_grant")
         #expect(httpError.errorDescription?.contains("400") == true)

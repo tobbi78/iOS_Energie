@@ -41,7 +41,7 @@ enum ViessmannEndpoints {
     /// token, so the ~10-minute poll loop doesn't need to re-prompt the user.
     static let scope = "IoT User offline_access"
 
-    static func authorizationURL(clientID: String, codeChallenge: String) -> URL {
+    static func authorizationURL(clientID: String, codeChallenge: String, state: String) -> URL {
         var components = URLComponents(url: authorizationURL, resolvingAgainstBaseURL: false)!
         components.queryItems = [
             URLQueryItem(name: "client_id", value: clientID),
@@ -50,6 +50,7 @@ enum ViessmannEndpoints {
             URLQueryItem(name: "code_challenge", value: codeChallenge),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
             URLQueryItem(name: "scope", value: scope),
+            URLQueryItem(name: "state", value: state),
         ]
         return components.url!
     }

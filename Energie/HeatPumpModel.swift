@@ -167,7 +167,7 @@ final class HeatPumpModel {
 
         state = .loading
         do {
-            let (authorizationURL, pkce) = oauthClient.makeAuthorizationRequest(clientID: settings.credentials.clientID)
+            let (authorizationURL, pkce, oauthState) = oauthClient.makeAuthorizationRequest(clientID: settings.credentials.clientID)
             let callbackURL = try await webAuthenticationSession.authenticate(
                 using: authorizationURL,
                 callbackURLScheme: ViessmannEndpoints.callbackScheme
@@ -175,7 +175,8 @@ final class HeatPumpModel {
             let tokens = try await oauthClient.completeSignIn(
                 callbackURL: callbackURL,
                 clientID: settings.credentials.clientID,
-                codeVerifier: pkce.codeVerifier
+                codeVerifier: pkce.codeVerifier,
+                state: oauthState
             )
             settings.setTokens(tokens)
             startPolling()

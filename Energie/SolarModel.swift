@@ -159,12 +159,13 @@ final class SolarModel {
 
         state = .loading
         do {
-            let authorizationURL = oauthClient.authorizationURL(clientID: settings.credentials.clientID)
+            let oauthState = OAuthState.generate()
+            let authorizationURL = oauthClient.authorizationURL(clientID: settings.credentials.clientID, state: oauthState)
             let callbackURL = try await webAuthenticationSession.authenticate(
                 using: authorizationURL,
                 callbackURLScheme: EnphaseEndpoints.callbackScheme
             )
-            let tokens = try await oauthClient.completeSignIn(callbackURL: callbackURL, credentials: settings.credentials)
+            let tokens = try await oauthClient.completeSignIn(callbackURL: callbackURL, credentials: settings.credentials, state: oauthState)
             settings.setTokens(tokens)
             await refresh()
         } catch {
