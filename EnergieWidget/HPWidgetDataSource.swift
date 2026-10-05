@@ -130,12 +130,32 @@ enum HPWidgetDataSource {
         if isExpired {
             do {
                 let refreshed = try await refreshAccessToken(refreshToken: refreshToken, clientID: clientID)
-                accessToken = refreshed.accessToken
-                HPWidgetKeychain.writeString(account: "accessToken", value: refreshed.accessToken)
-                HPWidgetKeychain.writeString(account: "refreshToken", value: refreshed.refreshToken)
-                HPWidgetKeychain.writeString(account: "tokenExpiresAt", value: String(refreshed.expiresAt.timeIntervalSince1970))
+                // The app may have refreshed concurrently and already rotated the refresh token
+                // (F9.6 security review, 2026-10-05) — only persist this result if it's still
+                // the one we started from, otherwise adopt whatever the app already wrote
+                // instead of overwriting its (possibly newer) tokens.
+                if HPWidgetKeychain.readString(account: "refreshToken") == refreshToken {
+                    accessToken = refreshed.accessToken
+                    HPWidgetKeychain.writeString(account: "accessToken", value: refreshed.accessToken)
+                    HPWidgetKeychain.writeString(account: "refreshToken", value: refreshed.refreshToken)
+                    HPWidgetKeychain.writeString(account: "tokenExpiresAt", value: String(refreshed.expiresAt.timeIntervalSince1970))
+                } else if let latestAccessToken = HPWidgetKeychain.readString(account: "accessToken") {
+                    accessToken = latestAccessToken
+                } else {
+                    accessToken = refreshed.accessToken
+                }
             } catch {
-                return .failure(.refreshFailed)
+                // The refresh token we read may already be stale if the app rotated it first
+                // (F9.6) — before giving up, check whether a still-valid access token is already
+                // waiting in the Keychain rather than failing outright.
+                if let latestExpiresAtString = HPWidgetKeychain.readString(account: "tokenExpiresAt"),
+                   let latestExpiresAtInterval = TimeInterval(latestExpiresAtString),
+                   Date() < Date(timeIntervalSince1970: latestExpiresAtInterval).addingTimeInterval(-60),
+                   let latestAccessToken = HPWidgetKeychain.readString(account: "accessToken") {
+                    accessToken = latestAccessToken
+                } else {
+                    return .failure(.refreshFailed)
+                }
             }
         }
 

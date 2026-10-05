@@ -91,9 +91,10 @@ struct EnphaseOAuthClientTests {
         #expect(EnphaseOAuthError.missingCode.errorDescription != nil)
         #expect(EnphaseOAuthError.stateMismatch.errorDescription != nil)
         #expect(EnphaseOAuthError.invalidResponse.errorDescription != nil)
+        // F9.4 security review (2026-10-05): the raw response body must never reach the UI.
         let httpError = EnphaseOAuthError.http(status: 401, body: "invalid_grant")
         #expect(httpError.errorDescription?.contains("401") == true)
-        #expect(httpError.errorDescription?.contains("invalid_grant") == true)
+        #expect(httpError.errorDescription?.contains("invalid_grant") == false)
     }
 }
 

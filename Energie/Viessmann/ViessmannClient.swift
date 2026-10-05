@@ -27,8 +27,11 @@ enum ViessmannClientError: Error, LocalizedError, Equatable {
                 return "Viessmann-Anfragelimit erreicht. Nächster Versuch in \(Int(retryAfter))s."
             }
             return "Viessmann-Anfragelimit erreicht. Bitte später erneut versuchen."
-        case .http(let status, let body):
-            return "Viessmann-Anfrage fehlgeschlagen (HTTP \(status)): \(body)"
+        case .http(let status, _):
+            // `body` is Viessmann's raw response text — kept on the error case for diagnostics
+            // (F9.4 security review, 2026-10-05) but never shown to the user, who has no way to
+            // judge whether it's safe/meaningful to display.
+            return "Viessmann-Anfrage fehlgeschlagen (HTTP \(status))."
         case .noInstallationFound:
             return "Es wurde keine Viessmann-Installation für dieses Konto gefunden."
         case .noGatewayFound:

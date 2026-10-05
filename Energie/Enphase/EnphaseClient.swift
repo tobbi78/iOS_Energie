@@ -23,8 +23,12 @@ enum EnphaseClientError: Error, LocalizedError, Equatable {
         switch self {
         case .invalidResponse:
             return "Enphase hat eine unerwartete Antwort geschickt."
-        case .http(let status, let body):
-            return "Enphase-Anfrage fehlgeschlagen (HTTP \(status)): \(body)"
+        case .http(let status, _):
+            // `body` is Enphase's raw response text — kept on the error case for diagnostics
+            // (F9.4 security review, 2026-10-05) but never shown to the user, who has no way to
+            // judge whether it's safe/meaningful to display, same reasoning as `rateLimited`'s
+            // `detail` below.
+            return "Enphase-Anfrage fehlgeschlagen (HTTP \(status))."
         case .rateLimited(let period, let periodEnd, _):
             // Only label it "Minuten"/"Monats" when the period is actually one of those two
             // known values — never default to "Minuten" for anything else (2026-10-05 incident:

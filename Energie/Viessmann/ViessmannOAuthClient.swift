@@ -21,8 +21,10 @@ enum ViessmannOAuthError: Error, LocalizedError, Equatable {
             return "Die Anmeldung wurde abgebrochen, da die Callback-URL nicht zur gestarteten Anmeldung passte."
         case .invalidResponse:
             return "Viessmann hat eine unerwartete Antwort auf die Anmeldung geschickt."
-        case .http(let status, let body):
-            return "Viessmann-Anmeldung fehlgeschlagen (HTTP \(status)): \(body)"
+        case .http(let status, _):
+            // `body` kept on the error case for diagnostics (F9.4 security review, 2026-10-05)
+            // but never shown to the user — see ViessmannClientError.http for the same reasoning.
+            return "Viessmann-Anmeldung fehlgeschlagen (HTTP \(status))."
         }
     }
 }
