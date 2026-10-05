@@ -1,0 +1,66 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "Anlagendruck und Außentemperatur, mit Hintergrund-Druckalarm." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "System pressure and outdoor temperature, with background pressure alerts."
+          }
+        }
+      }
+    },
+    "Produktion und Autarkiegrad von heute." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Production and self-sufficiency rate for today."
+          }
+        }
+      }
+    },
+    "Produktion, Autarkiegrad, Anlagendruck und Außentemperatur in einer Kachel." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Production, self-sufficiency rate, system pressure, and outdoor temperature in a single tile."
+          }
+        }
+      }
+    },
+    "PV & Wärmepumpe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "PV & Heat pump"
+          }
+        }
+      }
+    },
+    "PV-Anlage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "PV system"
+          }
+        }
+      }
+    },
+    "Wärmepumpe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Heat pump"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.3"
+}
