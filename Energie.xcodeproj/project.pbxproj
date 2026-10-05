@@ -121,6 +121,36 @@
 			);
 			target = 89340B82306DBF27005BA574 /* EnergieWidgetExtension */;
 		};
+		89EB44C43073B09F00EBDC4F /* Exceptions for "Energie" folder in "EnergieWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Enphase/EnphaseRequestBudget.swift,
+				Enphase/EnphaseRequestThrottle.swift,
+				HeatPumpPressureAlert.swift,
+				Viessmann/ViessmannDTO.swift,
+				Viessmann/ViessmannEndpoints.swift,
+				Viessmann/ViessmannFeatureLookup.swift,
+			);
+			target = 89340B82306DBF27005BA574 /* EnergieWidgetExtension */;
+		};
+		89EB44CB3073B0EF00EBDC4F /* Exceptions for "Energie" folder in "EnergieWatch Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SharedAppGroup.swift,
+				UI/AccentColors.swift,
+				WatchSnapshot.swift,
+			);
+			target = 892357A23072E7EF003FB076 /* EnergieWatch Watch App */;
+		};
+		89EB44CD3073B10800EBDC4F /* Exceptions for "Energie" folder in "EnergieWatchWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SharedAppGroup.swift,
+				UI/AccentColors.swift,
+				WatchSnapshot.swift,
+			);
+			target = 892357BB3072E7FA003FB076 /* EnergieWatchWidgetExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -139,6 +169,11 @@
 		};
 		89340A31306D4B89005BA574 /* Energie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				89EB44C43073B09F00EBDC4F /* Exceptions for "Energie" folder in "EnergieWidgetExtension" target */,
+				89EB44CB3073B0EF00EBDC4F /* Exceptions for "Energie" folder in "EnergieWatch Watch App" target */,
+				89EB44CD3073B10800EBDC4F /* Exceptions for "Energie" folder in "EnergieWatchWidgetExtension" target */,
+			);
 			path = Energie;
 			sourceTree = "<group>";
 		};

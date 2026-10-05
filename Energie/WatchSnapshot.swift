@@ -10,10 +10,8 @@
 //  independent on-watch poller, to avoid Viessmann refresh-token rotation conflicts and extra
 //  Enphase budget consumption): they only ever display the most recently received snapshot.
 //
-//  No shared code between targets is possible with the available project tooling (same
-//  constraint already documented in `SharedAppGroup.swift`), so this file is intentionally
-//  duplicated byte-identically into `EnergieWatch Watch App` and `EnergieWatchWidget`. Keep all
-//  three copies in sync by hand.
+//  Shared with `EnergieWatch Watch App` and `EnergieWatchWidget` via multi-target membership
+//  (File Inspector), not a separate copy per target.
 //
 //  Each side (PV/heat pump) stays independently optional — same "a failure on one side must
 //  never affect the other" principle as the rest of the app (see BACKLOG.md's
