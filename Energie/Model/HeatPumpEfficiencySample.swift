@@ -8,6 +8,8 @@
 import Foundation
 import SwiftData
 
+extension EnergieSchemaV1 {
+
 /// One periodic energy snapshot (electrical consumption + thermal production, and the derived
 /// efficiency ratio) for the heat pump. `.day`/`.week` rows are upserted on every poll
 /// (overwritten until the day ends); `.month`/`.year` rows are written once, at the first poll
@@ -35,4 +37,6 @@ final class HeatPumpEfficiencySample {
     var efficiency: Double {
         consumedKWh > 0 ? producedKWh / consumedKWh : 0
     }
+}
+
 }

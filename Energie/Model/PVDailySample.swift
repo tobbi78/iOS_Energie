@@ -8,12 +8,13 @@
 import Foundation
 import SwiftData
 
+extension EnergieSchemaV1 {
+
 /// One row per calendar day of PV data, upserted on every poll (see BACKLOG.md Epic 3).
 ///
-/// Storage is local-only for now (plain SwiftData, no CloudKit) — see BACKLOG.md, "Nicht
-/// umsetzbar ohne kostenpflichtigen Apple Developer Account". All properties have defaults at
-/// their declaration, not just in `init`, so that a future CloudKit/lightweight migration never
-/// hits the trap documented in BACKLOG.md F8.2.
+/// Synced via CloudKit (Epic 0) and versioned through `EnergieSchemaV1` (F8.1). All properties
+/// have defaults at their declaration, not just in `init`, so that CloudKit/lightweight
+/// migration never hits the trap documented in BACKLOG.md F8.2.
 @Model
 final class PVDailySample {
     var date: Date = Date.distantPast
@@ -74,4 +75,6 @@ final class PVDailySample {
         batteryChargedWh = other.batteryChargedWh
         batteryDischargedWh = other.batteryDischargedWh
     }
+}
+
 }
