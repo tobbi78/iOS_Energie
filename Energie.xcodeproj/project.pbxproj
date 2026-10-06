@@ -8,13 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		892357A43072E7EF003FB076 /* EnergieWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 892357A33072E7EF003FB076 /* EnergieWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		892357B03072E7F1003FB076 /* EnergieWatch.app in Resources */ = {isa = PBXBuildFile; fileRef = 8923579E3072E7EF003FB076 /* EnergieWatch.app */; };
 		892357BD3072E7FA003FB076 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89340B85306DBF27005BA574 /* WidgetKit.framework */; };
 		892357BE3072E7FA003FB076 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89340B87306DBF27005BA574 /* SwiftUI.framework */; };
 		892357C93072E7FB003FB076 /* EnergieWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 892357BC3072E7FA003FB076 /* EnergieWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		89340B86306DBF27005BA574 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89340B85306DBF27005BA574 /* WidgetKit.framework */; };
 		89340B88306DBF27005BA574 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89340B87306DBF27005BA574 /* SwiftUI.framework */; };
 		89340B93306DBF29005BA574 /* EnergieWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 89340B83306DBF27005BA574 /* EnergieWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		89CBE2FF30753E9C008B8C94 /* EnergieWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 892357A33072E7EF003FB076 /* EnergieWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,6 +60,41 @@
 			remoteGlobalIDString = 89340B82306DBF27005BA574;
 			remoteInfo = EnergieWidgetExtension;
 		};
+		89CBE2F930753E50008B8C94 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8923579D3072E7EF003FB076;
+			remoteInfo = EnergieWatch;
+		};
+		89CBE2FB30753E5F008B8C94 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8923579D3072E7EF003FB076;
+			remoteInfo = EnergieWatch;
+		};
+		89CBE2FD30753E81008B8C94 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8923579D3072E7EF003FB076;
+			remoteInfo = EnergieWatch;
+		};
+		89CBE30330753EC3008B8C94 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8923579D3072E7EF003FB076;
+			remoteInfo = EnergieWatch;
+		};
+		89CBE30530753F4C008B8C94 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89340A27306D4B89005BA574 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8923579D3072E7EF003FB076;
+			remoteInfo = EnergieWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -89,6 +124,15 @@
 				89340B93306DBF29005BA574 /* EnergieWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
+		};
+		89CBE30230753E9C008B8C94 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolder = Product;
+			files = (
+				89CBE2FF30753E9C008B8C94 /* EnergieWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -358,12 +402,18 @@
 				89340A2C306D4B89005BA574 /* Frameworks */,
 				89340A2D306D4B89005BA574 /* Resources */,
 				89340B94306DBF29005BA574 /* Embed Foundation Extensions */,
+				89CBE30230753E9C008B8C94 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				89340B92306DBF29005BA574 /* PBXTargetDependency */,
 				892357AF3072E7F1003FB076 /* PBXTargetDependency */,
+				89CBE2FA30753E50008B8C94 /* PBXTargetDependency */,
+				89CBE2FC30753E5F008B8C94 /* PBXTargetDependency */,
+				89CBE2FE30753E81008B8C94 /* PBXTargetDependency */,
+				89CBE30430753EC3008B8C94 /* PBXTargetDependency */,
+				89CBE30630753F4C008B8C94 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				89340A31306D4B89005BA574 /* Energie */,
@@ -513,7 +563,6 @@
 		89340A2D306D4B89005BA574 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
-				892357B03072E7F1003FB076 /* EnergieWatch.app in Resources */,
 			);
 		};
 		89340A3C306D4B8C005BA574 /* Resources */ = {
@@ -597,6 +646,31 @@
 			target = 89340B82306DBF27005BA574 /* EnergieWidgetExtension */;
 			targetProxy = 89340B91306DBF29005BA574 /* PBXContainerItemProxy */;
 		};
+		89CBE2FA30753E50008B8C94 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8923579D3072E7EF003FB076 /* EnergieWatch */;
+			targetProxy = 89CBE2F930753E50008B8C94 /* PBXContainerItemProxy */;
+		};
+		89CBE2FC30753E5F008B8C94 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8923579D3072E7EF003FB076 /* EnergieWatch */;
+			targetProxy = 89CBE2FB30753E5F008B8C94 /* PBXContainerItemProxy */;
+		};
+		89CBE2FE30753E81008B8C94 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8923579D3072E7EF003FB076 /* EnergieWatch */;
+			targetProxy = 89CBE2FD30753E81008B8C94 /* PBXContainerItemProxy */;
+		};
+		89CBE30430753EC3008B8C94 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8923579D3072E7EF003FB076 /* EnergieWatch */;
+			targetProxy = 89CBE30330753EC3008B8C94 /* PBXContainerItemProxy */;
+		};
+		89CBE30630753F4C008B8C94 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8923579D3072E7EF003FB076 /* EnergieWatch */;
+			targetProxy = 89CBE30530753F4C008B8C94 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -613,13 +687,13 @@
 				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatch;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKWatchOnly = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.florian.tobias.Energie;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = watchos;
@@ -648,13 +722,13 @@
 				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatch;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKWatchOnly = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.florian.tobias.Energie;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = watchos;
@@ -676,10 +750,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				INFOPLIST_FILE = EnergieWatch/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatch;
 				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -692,10 +768,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 7D43CFVE5P;
+				INFOPLIST_FILE = EnergieWatch/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = EnergieWatch;
 				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -722,7 +800,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch.watchkitapp.EnergieWatchWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.watchkitapp.EnergieWatchWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = watchos;
@@ -757,7 +835,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.EnergieWatch.watchkitapp.EnergieWatchWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = de.florian.tobias.Energie.watchkitapp.EnergieWatchWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = watchos;
@@ -912,7 +990,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -950,7 +1028,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
