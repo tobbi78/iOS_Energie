@@ -176,14 +176,23 @@ struct HeatPumpModelTests {
         MockURLProtocol.requestHandler = { request in
             MockURLProtocol.jsonResponse(url: request.url!, json: Self.featuresJSON())
         }
-        let model = try makeModel(settings: makeSettings())
+        let settings = makeSettings()
+        let context = try makeContext()
+        let model = HeatPumpModel(
+            settings: settings,
+            modelContext: context,
+            pressureAlertSettings: makePressureAlertSettings(),
+            urlSession: MockURLProtocol.makeSession()
+        )
         await model.refresh()
         #expect(!model.currentFeatures.isEmpty)
+        #expect(try !context.fetch(FetchDescriptor<HeatPumpEfficiencySample>()).isEmpty)
 
         model.signOut()
 
         #expect(model.state == .needsSignIn)
         #expect(model.currentFeatures.isEmpty)
+        #expect(try context.fetch(FetchDescriptor<HeatPumpEfficiencySample>()).isEmpty)
     }
 
     @Test func saveCredentialsResetsTokensAndRequiresSignInAgain() throws {

@@ -32,6 +32,14 @@ struct SettingsView: View {
                         SettingsRow(title: "Wärmepumpe", icon: "heater.vertical.fill", tint: .heatPumpAccent)
                     }
                 }
+
+                Section {
+                    NavigationLink {
+                        PrivacyPolicyView()
+                    } label: {
+                        SettingsRow(title: "Datenschutzerklärung", icon: "hand.raised.fill", tint: .gray)
+                    }
+                }
             }
             .navigationTitle("Einstellungen")
         }

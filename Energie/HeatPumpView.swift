@@ -512,6 +512,7 @@ struct HeatPumpSettingsScreen: View {
     @Environment(\.dismiss) private var dismiss
     @State private var clientID = ""
     @State private var pressureThresholdText = ""
+    @State private var showsSignOutConfirmation = false
 
     var body: some View {
         Form {
@@ -521,8 +522,7 @@ struct HeatPumpSettingsScreen: View {
                     LabeledContent("Gerät", value: deviceSelection.deviceID)
                 }
                 Button("Abmelden", role: .destructive) {
-                    model.signOut()
-                    dismiss()
+                    showsSignOutConfirmation = true
                 }
             }
 
@@ -572,6 +572,18 @@ struct HeatPumpSettingsScreen: View {
         .onChange(of: pressureThresholdText) { _, newValue in
             guard let value = Double(newValue.replacingOccurrences(of: ",", with: ".")), value > 0 else { return }
             model.pressureAlertSettings.setThreshold(value)
+        }
+        .confirmationDialog(
+            "Abmelden und Verlauf löschen?",
+            isPresented: $showsSignOutConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Abmelden", role: .destructive) {
+                model.signOut()
+                dismiss()
+            }
+        } message: {
+            Text("Dabei wird auch die auf diesem Gerät (und in iCloud) gespeicherte Effizienz-Verlaufshistorie unwiderruflich gelöscht.")
         }
     }
 

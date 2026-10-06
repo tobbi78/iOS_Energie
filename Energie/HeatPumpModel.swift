@@ -100,12 +100,18 @@ final class HeatPumpModel {
     var credentials: ViessmannCredentials { settings.credentials }
     var deviceSelection: ViessmannDeviceSelection? { settings.deviceSelection }
 
-    /// Clears the current session so the next appearance shows the sign-in prompt again.
-    /// Deliberately keeps credentials and the resolved device selection, since those are tied to
-    /// the Viessmann API client/installation, not the OAuth session.
+    /// Clears the current session and deletes all locally stored efficiency history, matching
+    /// the deletion mechanism the privacy policy promises ("Trennen der Konto-Verbindung" — see
+    /// docs/privacy.html, "Rechte der betroffenen Person"). Deliberately keeps credentials and
+    /// the resolved device selection, since those are tied to the Viessmann API
+    /// client/installation, not the OAuth session.
     func signOut() {
         stopPolling()
         settings.setTokens(nil)
+        // Fetch-then-delete rather than the batch `delete(model:)` API: that batch delete only
+        // reaches rows already flushed to the store, missing a just-inserted (not yet
+        // autosaved) snapshot from the most recent poll.
+        (try? modelContext.fetch(FetchDescriptor<HeatPumpEfficiencySample>()))?.forEach(modelContext.delete)
         currentFeatures = []
         state = .needsSignIn
     }

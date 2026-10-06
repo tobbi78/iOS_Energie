@@ -119,15 +119,27 @@ struct SolarModelTests {
     @Test func signOutClearsTokensAndTodayButKeepsCredentials() async throws {
         MockURLProtocol.requestHandler = Self.successHandler()
         let settings = makeSettings()
-        let model = try makeModel(settings: settings)
+        let context = try makeContext()
+        let model = SolarModel(
+            settings: settings,
+            modelContext: context,
+            budgetSettings: EnphaseBudgetSettings(userDefaults: UserDefaults(suiteName: UUID().uuidString)!),
+            throttle: EnphaseRequestThrottle(),
+            budget: EnphaseRequestBudget(userDefaults: UserDefaults(suiteName: UUID().uuidString)!),
+            urlSession: MockURLProtocol.makeSession(),
+            userDefaults: UserDefaults(suiteName: UUID().uuidString)!
+        )
         await model.refresh()
         #expect(model.today != nil)
+        #expect(try !context.fetch(FetchDescriptor<PVDailySample>()).isEmpty)
 
         model.signOut()
 
         #expect(model.state == .needsSignIn)
         #expect(model.today == nil)
         #expect(model.credentials.isComplete)
+        #expect(try context.fetch(FetchDescriptor<PVDailySample>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<PVYearlySample>()).isEmpty)
     }
 
     @Test func saveCredentialsResetsTokensAndRequiresSignInAgain() throws {
