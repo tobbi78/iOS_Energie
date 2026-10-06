@@ -27,6 +27,8 @@ struct ContentView: View {
     @State private var heatPumpModel: HeatPumpModel?
     @State private var selectedTab: AppTab = .home
     @State private var watchSyncService = WatchSyncService()
+    /// Drives the `LaunchView` overlay (F10.1) — see the `.task` below for the dismiss timing.
+    @State private var showsLaunchScreen = true
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -84,6 +86,35 @@ struct ContentView: View {
             )
             heatPumpModel = model
             await model.start()
+        }
+        .overlay {
+            if showsLaunchScreen {
+                LaunchView()
+                    .transition(.opacity.combined(with: .scale(scale: 1.05)))
+            }
+        }
+        .task {
+            // Mindestdauer gegen Flackern bei schnellem Start/Cache-Hit, dann warten, bis
+            // mindestens eine der beiden Quellen ihren ersten State-Übergang hinter sich hat
+            // (nicht mehr `.loading`) — Quellen ohne gespeicherte Zugangsdaten sind das sofort.
+            // Obergrenze, damit eine hängende Netzwerkanfrage den Start nie blockiert; die Tabs
+            // zeigen in dem Fall weiterhin ihre eigenen Ladezustände.
+            let minimumDuration: Duration = .milliseconds(700)
+            let maximumDuration: Duration = .milliseconds(2500)
+            let pollInterval: Duration = .milliseconds(100)
+            let start = ContinuousClock.now
+
+            try? await Task.sleep(for: minimumDuration)
+            while ContinuousClock.now - start < maximumDuration {
+                let solarDone = solarModel.map { $0.state != .loading } ?? false
+                let heatPumpDone = heatPumpModel.map { $0.state != .loading } ?? false
+                if solarDone || heatPumpDone { break }
+                try? await Task.sleep(for: pollInterval)
+            }
+
+            withAnimation(.easeInOut(duration: 0.45)) {
+                showsLaunchScreen = false
+            }
         }
     }
 }
