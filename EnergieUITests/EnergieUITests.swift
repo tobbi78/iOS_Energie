@@ -20,10 +20,34 @@ final class EnergieUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// Launches the app and waits out the `LaunchView` overlay (F10.1) before handing back
+    /// control — otherwise taps meant for the tab bar/content below can land on the overlay
+    /// instead, since it sits on top of the `TabView` for up to ~2.5s after launch.
     @MainActor
-    func testAppLaunchesOnStartTabWithAllFourTabsPresent() throws {
+    @discardableResult
+    private func launchApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launch()
+        XCTAssertTrue(app.otherElements["launchScreen"].waitForNonExistence(timeout: 5))
+        return app
+    }
+
+    /// Can't assert that `launchScreen` is actually *visible* at some point — `XCUIApplication.
+    /// launch()` itself blocks until the app reports idle, which in practice already takes
+    /// longer than the overlay's own ~3s (2.5s loading wait + 0.45s fade) worst case, so by the
+    /// time this test gets control back the overlay is reliably already gone. What *is* a
+    /// meaningful, non-racy postcondition: it never blocks reaching the real "Start" tab.
+    @MainActor
+    func testLaunchScreenAppearsAndDismissesIntoStartTab() throws {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.otherElements["launchScreen"].waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Start"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testAppLaunchesOnStartTabWithAllFourTabsPresent() throws {
+        let app = launchApp()
 
         // The floating "Liquid Glass" tab bar isn't reliably exposed to XCUITest as
         // XCUIElementTypeTabBar (its items resolve to an undocumented accessibility type,
@@ -40,8 +64,7 @@ final class EnergieUITests: XCTestCase {
 
     @MainActor
     func testHomeSectionHeadersNavigateToTheirTabs() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         XCTAssertTrue(app.navigationBars["Start"].waitForExistence(timeout: 5))
 
         app.staticTexts["PV-Anlage"].firstMatch.tap()
@@ -61,8 +84,7 @@ final class EnergieUITests: XCTestCase {
     /// `PVSettingsScreen` is exercised separately via the "Einstellungen" tab, not here.
     @MainActor
     func testPVAnlageTabRendersWhicheverStateItIsInAndDetailScreensIfReady() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         app.buttons["PV-Anlage"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["PV-Anlage"].waitForExistence(timeout: 5))
 
@@ -91,8 +113,7 @@ final class EnergieUITests: XCTestCase {
     /// not here.
     @MainActor
     func testWaermepumpeTabRendersWhicheverStateItIsInAndDetailScreensIfReady() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         app.buttons["Wärmepumpe"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Wärmepumpe"].waitForExistence(timeout: 5))
 
@@ -123,8 +144,7 @@ final class EnergieUITests: XCTestCase {
     /// settings now live, replacing the former per-tab "Mehr" > "Einstellungen" entries.
     @MainActor
     func testEinstellungenTabNavigatesToBothSettingsScreens() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         XCTAssertTrue(app.buttons["Einstellungen"].firstMatch.waitForExistence(timeout: 5))
         app.buttons["Einstellungen"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Einstellungen"].waitForExistence(timeout: 5))

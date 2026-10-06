@@ -235,6 +235,16 @@
         }
       }
     },
+    "Energie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Energy"
+          }
+        }
+      }
+    },
     "Energie App – privater TestFlight-Test, kein öffentliches Produkt." : {
 
     },
