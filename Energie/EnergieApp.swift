@@ -11,11 +11,10 @@ import SwiftData
 @main
 struct EnergieApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            PVDailySample.self,
-            PVYearlySample.self,
-            HeatPumpEfficiencySample.self,
-        ])
+        // F8.1: versioned schema + migration plan instead of a flat `Schema([...])`, so future
+        // model changes migrate the store instead of breaking it (see `EnergieMigrationPlan` for
+        // the checklist, incl. CloudKit's additive-only constraint).
+        let schema = EnergieMigrationPlan.currentSchema
         // Epic 0 (F0.1): syncs across the user's devices via the private CloudKit container —
         // now possible since a paid Apple Developer account is available (see BACKLOG.md,
         // "Nicht umsetzbar ohne kostenpflichtigen Apple Developer Account"). All three model
@@ -46,7 +45,11 @@ struct EnergieApp: App {
         )
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            return try ModelContainer(
+                for: schema,
+                migrationPlan: EnergieMigrationPlan.self,
+                configurations: [modelConfiguration]
+            )
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }

@@ -67,7 +67,7 @@ Im Unterschied zu Enphase braucht die Wärmepumpen-Seite voraussichtlich **deutl
 - **Settings/Secrets**: `ViessmannSettings` + `ViessmannKeychainStore`, analog zu `EnphaseSettings`/`EnphaseKeychainStore`, aber schlanker (nur Client-ID statt Client-ID/Secret/API-Key), zusätzlich Installation-/Gateway-/Geräte-ID nach der expliziten Geräteauswahl.
 - **Kein eigener `EnphaseRequestBudget`/`EnphaseRequestThrottle`-Gegenpart nötig**, da kein festes monatliches Kontingent bekannt ist (siehe Abschnitt 3) — ein einfacher Intervall-Poll reicht.
 
-Für SwiftData-Änderungen gilt die bereits in `ERKENNTNISSE_MACOS.md` dokumentierte Falle: neue nicht-optionale `@Model`-Properties brauchen ihren Default direkt an der Deklaration, sonst bricht die Lightweight-Migration. Das bestehende Backlog-Item F8.1 (echter `VersionedSchema`/`SchemaMigrationPlan`) sollte idealerweise **vor** oder **mit** der ersten Wärmepumpen-Schemaänderung angegangen werden, statt es weiter aufzuschieben.
+Für SwiftData-Änderungen gilt die bereits in `ERKENNTNISSE_MACOS.md` dokumentierte Falle: neue nicht-optionale `@Model`-Properties brauchen ihren Default direkt an der Deklaration, sonst bricht die Lightweight-Migration. Das bestehende Backlog-Item F8.1 (echter `VersionedSchema`/`SchemaMigrationPlan`) sollte idealerweise **vor** oder **mit** der ersten Wärmepumpen-Schemaänderung angegangen werden, statt es weiter aufzuschieben. **Update 2026-10-06:** F8.1 ist umgesetzt (`EnergieSchemaV1`/`EnergieMigrationPlan` in `Model/EnergieSchema.swift`) — eine Wärmepumpen-Schemaänderung legt dort `EnergieSchemaV2` an.
 
 ## 6. Nötige Vorarbeiten (Refactoring, bevor die Wärmepumpen-UI entsteht)
 

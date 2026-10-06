@@ -8,6 +8,8 @@
 import Foundation
 import SwiftData
 
+extension EnergieSchemaV1 {
+
 /// Yearly totals that daily rows older than a year get folded into (F3.6, "Datenaufbewahrung/
 /// Pruning" in BACKLOG.md) — keeps the local database from growing without bound while still
 /// showing a full yearly history in the charts. All properties have defaults at their
@@ -65,4 +67,6 @@ final class PVYearlySample {
         batteryChargedWh += total.batteryChargedWh
         batteryDischargedWh += total.batteryDischargedWh
     }
+}
+
 }
