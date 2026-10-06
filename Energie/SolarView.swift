@@ -133,6 +133,7 @@ struct PVSettingsScreen: View {
     @State private var clientSecret = ""
     @State private var apiKey = ""
     @State private var tariffText = ""
+    @State private var showsSignOutConfirmation = false
 
     var body: some View {
         Form {
@@ -141,8 +142,7 @@ struct PVSettingsScreen: View {
                     LabeledContent("Anlage", value: "\(systemID)")
                 }
                 Button("Abmelden", role: .destructive) {
-                    model.signOut()
-                    dismiss()
+                    showsSignOutConfirmation = true
                 }
             }
 
@@ -202,6 +202,18 @@ struct PVSettingsScreen: View {
         .onChange(of: tariffText) { _, newValue in
             guard let value = Double(newValue.replacingOccurrences(of: ",", with: ".")), value > 0 else { return }
             displayPreferences.setFeedInTariffPerKWh(value)
+        }
+        .confirmationDialog(
+            "Abmelden und Verlauf löschen?",
+            isPresented: $showsSignOutConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Abmelden", role: .destructive) {
+                model.signOut()
+                dismiss()
+            }
+        } message: {
+            Text("Dabei wird auch die auf diesem Gerät (und in iCloud) gespeicherte PV-Verlaufshistorie unwiderruflich gelöscht.")
         }
     }
 }

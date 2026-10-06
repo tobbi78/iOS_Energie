@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
+    "„Energie“ ist eine private App, die ausschließlich im Rahmen eines nicht-öffentlichen TestFlight-Tests mit einem begrenzten Personenkreis (Familie/Freunde) verwendet wird. Sie wird nicht im öffentlichen App Store angeboten." : {
+
+    },
     "€/kWh" : {
       "localizations" : {
         "en" : {
@@ -20,6 +23,9 @@
           }
         }
       }
+    },
+    "Abmelden und Verlauf löschen?" : {
+
     },
     "Aktualisieren" : {
       "localizations" : {
@@ -141,6 +147,24 @@
         }
       }
     },
+    "Dabei wird auch die auf diesem Gerät (und in iCloud) gespeicherte Effizienz-Verlaufshistorie unwiderruflich gelöscht." : {
+
+    },
+    "Dabei wird auch die auf diesem Gerät (und in iCloud) gespeicherte PV-Verlaufshistorie unwiderruflich gelöscht." : {
+
+    },
+    "Daten verbleiben, solange die App installiert ist bzw. bis die nutzende Person die Verbindung zu Enphase/Viessmann trennt oder die App deinstalliert. Beim Deinstallieren werden lokal gespeicherte Zugangsdaten (Keychain) automatisch entfernt." : {
+
+    },
+    "Daten werden ausschließlich mit den Diensten ausgetauscht, mit denen sich die nutzende Person aktiv und freiwillig über deren eigenen Zugang verbindet:" : {
+
+    },
+    "Datenschutzerklärung" : {
+
+    },
+    "Die App zeigt Photovoltaik-Daten (über die Enphase-API) und Wärmepumpen-Daten (über die Viessmann-API) an, die ausschließlich aus dem eigenen Nutzerkonto der jeweiligen Person stammen, die die App installiert hat." : {
+
+    },
     "Die Client-ID aus dem Viessmann Developer Portal." : {
       "localizations" : {
         "en" : {
@@ -211,6 +235,12 @@
         }
       }
     },
+    "Energie App – privater TestFlight-Test, kein öffentliches Produkt." : {
+
+    },
+    "Enphase Energy (PV-Anlagendaten)" : {
+
+    },
     "Enphase-Abfragen diesen Monat: %lld / %lld" : {
       "localizations" : {
         "de" : {
@@ -257,6 +287,9 @@
         }
       }
     },
+    "Für die Datenverarbeitung durch diese Anbieter gelten deren eigene Datenschutzbestimmungen. Der Entwickler der App hat keinen Zugriff auf diese Konten oder Daten. Es findet keine Weitergabe von Daten zu Werbezwecken statt. Die App enthält kein Tracking, keine Analyse-Software von Drittanbietern und keine Werbung." : {
+
+    },
     "Gerät" : {
       "localizations" : {
         "en" : {
@@ -277,6 +310,9 @@
         }
       }
     },
+    "hula.proxy-3c@icloud.com" : {
+
+    },
     "Installation" : {
       "localizations" : {
         "en" : {
@@ -286,6 +322,9 @@
           }
         }
       }
+    },
+    "Jede nutzende Person kann jederzeit Auskunft über die eigenen gespeicherten Daten verlangen oder deren Löschung veranlassen – zum Beispiel durch Trennen der Konto-Verbindung in den App-Einstellungen (löscht dabei auch die lokal und in iCloud gespeicherte Verlaufshistorie) oder durch Deinstallation der App. Bei Fragen genügt eine Nachricht an die oben genannte Kontaktadresse." : {
+
     },
     "Jetzt erneut versuchen" : {
       "localizations" : {
@@ -316,6 +355,9 @@
           }
         }
       }
+    },
+    "Kontakt" : {
+
     },
     "kWh" : {
       "localizations" : {
@@ -457,6 +499,9 @@
         }
       }
     },
+    "Rechte der betroffenen Person" : {
+
+    },
     "Reihe" : {
       "localizations" : {
         "en" : {
@@ -539,6 +584,9 @@
         }
       }
     },
+    "Speicherdauer" : {
+
+    },
     "Speicherzustand" : {
       "localizations" : {
         "en" : {
@@ -548,6 +596,9 @@
           }
         }
       }
+    },
+    "Stand: Oktober 2026" : {
+
     },
     "Start" : {
       "localizations" : {
@@ -568,6 +619,9 @@
           }
         }
       }
+    },
+    "Verantwortlicher" : {
+
     },
     "Verbindung" : {
       "localizations" : {
@@ -598,6 +652,9 @@
           }
         }
       }
+    },
+    "Viessmann Climate Solutions (Wärmepumpendaten)" : {
+
     },
     "Viessmann-Anfragelimit erreicht" : {
       "localizations" : {
@@ -648,6 +705,12 @@
           }
         }
       }
+    },
+    "Weitergabe an Dritte" : {
+
+    },
+    "Welche Daten verarbeitet werden" : {
+
     },
     "Wertreihe" : {
       "localizations" : {
@@ -708,6 +771,9 @@
           }
         }
       }
+    },
+    "Zweck der App" : {
+
     }
   },
   "version" : "1.3"

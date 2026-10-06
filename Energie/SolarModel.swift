@@ -102,11 +102,18 @@ final class SolarModel {
     var credentials: EnphaseCredentials { settings.credentials }
     var systemID: Int? { settings.systemID }
 
-    /// Clears the current session so the next appearance shows the sign-in prompt again.
-    /// Deliberately keeps credentials/system info, since those are tied to the Enphase
-    /// developer app/installation, not the OAuth session.
+    /// Clears the current session and deletes all locally stored PV history, matching the
+    /// deletion mechanism the privacy policy promises ("Trennen der Konto-Verbindung" — see
+    /// docs/privacy.html, "Rechte der betroffenen Person"). Deliberately keeps
+    /// credentials/system info, since those are tied to the Enphase developer app/installation,
+    /// not the OAuth session.
     func signOut() {
         settings.setTokens(nil)
+        // Fetch-then-delete rather than the batch `delete(model:)` API: that batch delete only
+        // reaches rows already flushed to the store, missing the row from today's just-inserted
+        // (not yet autosaved) sample.
+        (try? modelContext.fetch(FetchDescriptor<PVDailySample>()))?.forEach(modelContext.delete)
+        (try? modelContext.fetch(FetchDescriptor<PVYearlySample>()))?.forEach(modelContext.delete)
         today = nil
         state = .needsSignIn
     }
