@@ -32,11 +32,15 @@ final class EnergieUITests: XCTestCase {
         return app
     }
 
+    /// Can't assert that `launchScreen` is actually *visible* at some point — `XCUIApplication.
+    /// launch()` itself blocks until the app reports idle, which in practice already takes
+    /// longer than the overlay's own ~3s (2.5s loading wait + 0.45s fade) worst case, so by the
+    /// time this test gets control back the overlay is reliably already gone. What *is* a
+    /// meaningful, non-racy postcondition: it never blocks reaching the real "Start" tab.
     @MainActor
     func testLaunchScreenAppearsAndDismissesIntoStartTab() throws {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.otherElements["launchScreen"].exists)
         XCTAssertTrue(app.otherElements["launchScreen"].waitForNonExistence(timeout: 5))
         XCTAssertTrue(app.navigationBars["Start"].waitForExistence(timeout: 5))
     }
