@@ -70,10 +70,10 @@ struct LaunchView: View {
             titleVisible = true
             return
         }
-        withAnimation(.spring(duration: 0.5)) {
+        withAnimation(.spring(duration: 0.18)) {
             iconsVisible = true
         }
-        withAnimation(.easeOut(duration: 0.4).delay(0.15)) {
+        withAnimation(.easeOut(duration: 0.15).delay(0.03)) {
             titleVisible = true
         }
         isPulsing = true

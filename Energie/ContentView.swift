@@ -99,8 +99,8 @@ struct ContentView: View {
             // (nicht mehr `.loading`) — Quellen ohne gespeicherte Zugangsdaten sind das sofort.
             // Obergrenze, damit eine hängende Netzwerkanfrage den Start nie blockiert; die Tabs
             // zeigen in dem Fall weiterhin ihre eigenen Ladezustände.
-            let minimumDuration: Duration = .milliseconds(700)
-            let maximumDuration: Duration = .milliseconds(2500)
+            let minimumDuration: Duration = .milliseconds(1200)
+            let maximumDuration: Duration = .milliseconds(3000)
             let pollInterval: Duration = .milliseconds(100)
             let start = ContinuousClock.now
 
