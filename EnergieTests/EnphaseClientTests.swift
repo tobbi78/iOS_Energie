@@ -53,6 +53,27 @@ struct EnphaseClientTests {
         }
     }
 
+    @Test func performThrowsBudgetExhaustedWithASmallerConfiguredMonthlyLimit() async throws {
+        let budget = EnphaseRequestBudget(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
+        for _ in 0..<180 { await budget.recordRequest() }
+
+        let client = EnphaseClient(
+            urlSession: MockURLProtocol.makeSession(),
+            throttle: EnphaseRequestThrottle(),
+            budget: budget,
+            apiKey: { "key" },
+            accessToken: { "token" },
+            reserve: { 20 },
+            monthlyLimit: { 200 }
+        )
+
+        // Threshold with a configured limit of 200 and reserve 20 is 180 — 180 already-used
+        // requests exhaust it, even though the default 1000/month limit would still allow more.
+        await #expect(throws: EnphaseClientError.monthlyBudgetExhausted) {
+            try await client.fetchSystems()
+        }
+    }
+
     @Test func performUsesDefaultReserveWhenNoneProvided() async throws {
         let budget = EnphaseRequestBudget(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
         for _ in 0..<985 { await budget.recordRequest() }

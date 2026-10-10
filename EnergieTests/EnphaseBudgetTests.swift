@@ -46,22 +46,36 @@ struct EnphaseBudgetTests {
         let defaults = UserDefaults(suiteName: UUID().uuidString)!
         let budget = EnphaseRequestBudget(userDefaults: defaults, now: { date(2026, 9, 30) })
 
-        for _ in 0..<(EnphaseRequestBudget.monthlyLimit - 20) {
+        for _ in 0..<(EnphaseRequestBudget.defaultMonthlyLimit - 20) {
             await budget.recordRequest()
         }
 
-        #expect(await budget.isExhausted(reserve: 20))
+        #expect(await budget.isExhausted(monthlyLimit: EnphaseRequestBudget.defaultMonthlyLimit, reserve: 20))
     }
 
     @Test func isNotExhaustedBelowTheReserveThreshold() async {
         let defaults = UserDefaults(suiteName: UUID().uuidString)!
         let budget = EnphaseRequestBudget(userDefaults: defaults, now: { date(2026, 9, 30) })
 
-        for _ in 0..<(EnphaseRequestBudget.monthlyLimit - 21) {
+        for _ in 0..<(EnphaseRequestBudget.defaultMonthlyLimit - 21) {
             await budget.recordRequest()
         }
 
-        #expect(!(await budget.isExhausted(reserve: 20)))
+        #expect(!(await budget.isExhausted(monthlyLimit: EnphaseRequestBudget.defaultMonthlyLimit, reserve: 20)))
+    }
+
+    // F6.4: the limit itself is now configurable (e.g. a smaller booked Enphase plan) — must be
+    // respected independently of the 1000 default.
+    @Test func isExhaustedRespectsALowerConfiguredLimit() async {
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        let budget = EnphaseRequestBudget(userDefaults: defaults, now: { date(2026, 9, 30) })
+
+        for _ in 0..<180 {
+            await budget.recordRequest()
+        }
+
+        #expect(await budget.isExhausted(monthlyLimit: 200, reserve: 20))
+        #expect(!(await budget.isExhausted(monthlyLimit: 300, reserve: 20)))
     }
 
     // MARK: - Error messages (F4.3)
