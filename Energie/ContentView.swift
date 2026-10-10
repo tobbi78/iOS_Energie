@@ -62,6 +62,8 @@ struct ContentView: View {
                 }
             }
         }
+        // Lets the staggered KPI cards (F10.3) hold back until the launch overlay is gone.
+        .environment(\.isLaunchScreenVisible, showsLaunchScreen)
         .task {
             guard solarModel == nil else { return }
             let model = SolarModel(
