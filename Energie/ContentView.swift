@@ -37,7 +37,7 @@ struct ContentView: View {
             }
             Tab("PV-Anlage", systemImage: "sun.max.fill", value: .pv) {
                 if let solarModel {
-                    SolarView(model: solarModel, displayPreferences: displayPreferences)
+                    SolarView(model: solarModel, displayPreferences: displayPreferences, budgetSettings: budgetSettings)
                 } else {
                     ProgressView()
                 }

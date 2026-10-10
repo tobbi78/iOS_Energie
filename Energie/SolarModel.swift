@@ -393,13 +393,15 @@ final class SolarModel {
         // which may run off the main actor and cannot access `settings`/`budgetSettings` directly.
         let apiKey = settings.credentials.apiKey
         let reserve = budgetSettings.monthlyReserve
+        let monthlyLimit = budgetSettings.monthlyLimit
         return EnphaseClient(
             urlSession: urlSession,
             throttle: throttle,
             budget: budget,
             apiKey: { apiKey },
             accessToken: { [self] in try await self.validAccessToken() },
-            reserve: { reserve }
+            reserve: { reserve },
+            monthlyLimit: { monthlyLimit }
         )
     }
 
