@@ -38,92 +38,117 @@ struct HomeView: View {
         }
     }
 
+    // F10.2: Der Wechsel zwischen "Lädt…"/Fehlertext und den Kennzahlenkarten läuft über
+    // `.animation(_:value:)` auf den (bereits `Equatable`) Model-State statt über
+    // `withAnimation` in `SolarModel`/`HeatPumpModel` — bleibt so auf die HomeView beschränkt,
+    // ohne die Models oder `SolarView`/`HeatPumpView` zu berühren. `.transition(.opacity)` ist
+    // an jedem Zweig explizit gesetzt, damit die Absicht klar ist (auch wenn Opacity bereits der
+    // Standard wäre). Die gestaffelte Einblendung der Karten (F10.3, `staggeredAppear`) läuft
+    // unabhängig weiter.
     @ViewBuilder
     private var pvContent: some View {
-        if let solarModel {
-            switch solarModel.state {
-            case .ready:
-                if let today = solarModel.today {
-                    HomeKPIGrid {
-                        MetricCard(
-                            title: "Produktion",
-                            value: formattedKWh(today.producedWh),
-                            icon: "sun.max.fill",
-                            tint: .pvAccent
-                        )
-                        .staggeredAppear(index: 0)
-                        MetricCard(
-                            title: "Autarkiegrad",
-                            value: today.selfSufficiencyRate.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? "–",
-                            icon: "leaf.fill",
-                            tint: .green
-                        )
-                        .staggeredAppear(index: 1)
-                        if let soc = today.batterySocPercent {
+        Group {
+            if let solarModel {
+                switch solarModel.state {
+                case .ready:
+                    if let today = solarModel.today {
+                        HomeKPIGrid {
                             MetricCard(
-                                title: "Batterie",
-                                value: soc.formatted(.number.precision(.fractionLength(0))) + " %",
-                                icon: "battery.100percent",
-                                tint: .purple
+                                title: "Produktion",
+                                value: formattedKWh(today.producedWh),
+                                icon: "sun.max.fill",
+                                tint: .pvAccent
                             )
-                            .staggeredAppear(index: 2)
+                            .staggeredAppear(index: 0)
+                            MetricCard(
+                                title: "Autarkiegrad",
+                                value: today.selfSufficiencyRate.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? "–",
+                                icon: "leaf.fill",
+                                tint: .green
+                            )
+                            .staggeredAppear(index: 1)
+                            if let soc = today.batterySocPercent {
+                                MetricCard(
+                                    title: "Batterie",
+                                    value: soc.formatted(.number.precision(.fractionLength(0))) + " %",
+                                    icon: "battery.100percent",
+                                    tint: .purple
+                                )
+                                .staggeredAppear(index: 2)
+                            }
                         }
+                        .transition(.opacity)
+                    } else {
+                        HomeStatusRow(text: "Lädt…")
+                            .transition(.opacity)
                     }
-                } else {
+                case .needsCredentials, .needsSignIn:
+                    HomeStatusRow(text: "Nicht angemeldet — tippe hier, um dich anzumelden.")
+                        .transition(.opacity)
+                case .loading:
                     HomeStatusRow(text: "Lädt…")
+                        .transition(.opacity)
+                case .error(let message):
+                    HomeStatusRow(text: message)
+                        .transition(.opacity)
                 }
-            case .needsCredentials, .needsSignIn:
-                HomeStatusRow(text: "Nicht angemeldet — tippe hier, um dich anzumelden.")
-            case .loading:
+            } else {
                 HomeStatusRow(text: "Lädt…")
-            case .error(let message):
-                HomeStatusRow(text: message)
+                    .transition(.opacity)
             }
-        } else {
-            HomeStatusRow(text: "Lädt…")
         }
+        .animation(.easeInOut(duration: 0.25), value: solarModel?.state)
     }
 
     @ViewBuilder
     private var heatPumpContent: some View {
-        if let heatPumpModel {
-            switch heatPumpModel.state {
-            case .ready:
-                HomeKPIGrid {
-                    MetricCard(
-                        title: "Außentemperatur",
-                        value: formattedTemperature(heatPumpModel.currentFeatures.numericValue("heating.sensors.temperature.outside")),
-                        icon: "thermometer.sun",
-                        tint: .blue
-                    )
-                    .staggeredAppear(index: 0)
-                    MetricCard(
-                        title: "Warmwasser",
-                        value: formattedTemperature(heatPumpModel.currentFeatures.numericValue("heating.dhw.sensors.temperature.hotWaterStorage")),
-                        icon: "drop.fill",
-                        tint: .orange
-                    )
-                    .staggeredAppear(index: 1)
-                    MetricCard(
-                        title: "Effizienz heute",
-                        value: formattedEfficiency(HeatPumpEfficiencyDataSource.liveEfficiency(features: heatPumpModel.currentFeatures, period: .day)),
-                        icon: "leaf.fill",
-                        tint: .green
-                    )
-                    .staggeredAppear(index: 2)
+        Group {
+            if let heatPumpModel {
+                switch heatPumpModel.state {
+                case .ready:
+                    HomeKPIGrid {
+                        MetricCard(
+                            title: "Außentemperatur",
+                            value: formattedTemperature(heatPumpModel.currentFeatures.numericValue("heating.sensors.temperature.outside")),
+                            icon: "thermometer.sun",
+                            tint: .blue
+                        )
+                        .staggeredAppear(index: 0)
+                        MetricCard(
+                            title: "Warmwasser",
+                            value: formattedTemperature(heatPumpModel.currentFeatures.numericValue("heating.dhw.sensors.temperature.hotWaterStorage")),
+                            icon: "drop.fill",
+                            tint: .orange
+                        )
+                        .staggeredAppear(index: 1)
+                        MetricCard(
+                            title: "Effizienz heute",
+                            value: formattedEfficiency(HeatPumpEfficiencyDataSource.liveEfficiency(features: heatPumpModel.currentFeatures, period: .day)),
+                            icon: "leaf.fill",
+                            tint: .green
+                        )
+                        .staggeredAppear(index: 2)
+                    }
+                    .transition(.opacity)
+                case .needsCredentials, .needsSignIn:
+                    HomeStatusRow(text: "Nicht angemeldet — tippe hier, um dich anzumelden.")
+                        .transition(.opacity)
+                case .loading:
+                    HomeStatusRow(text: "Lädt…")
+                        .transition(.opacity)
+                case .rateLimited(let resumeAt):
+                    HomeStatusRow(text: "Anfragelimit erreicht, nächster Versuch ab \(resumeAt.formatted(date: .omitted, time: .shortened)).")
+                        .transition(.opacity)
+                case .error(let message):
+                    HomeStatusRow(text: message)
+                        .transition(.opacity)
                 }
-            case .needsCredentials, .needsSignIn:
-                HomeStatusRow(text: "Nicht angemeldet — tippe hier, um dich anzumelden.")
-            case .loading:
+            } else {
                 HomeStatusRow(text: "Lädt…")
-            case .rateLimited(let resumeAt):
-                HomeStatusRow(text: "Anfragelimit erreicht, nächster Versuch ab \(resumeAt.formatted(date: .omitted, time: .shortened)).")
-            case .error(let message):
-                HomeStatusRow(text: message)
+                    .transition(.opacity)
             }
-        } else {
-            HomeStatusRow(text: "Lädt…")
         }
+        .animation(.easeInOut(duration: 0.25), value: heatPumpModel?.state)
     }
 
     private func formattedKWh(_ wh: Double) -> String {
