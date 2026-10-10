@@ -201,24 +201,28 @@ private struct HeatPumpMetricsView: View {
                 icon: "thermometer.sun",
                 tint: .blue
             )
+            .staggeredAppear(index: 0)
             MetricCard(
                 title: "Warmwasser",
                 value: formattedTemperature(features.numericValue("heating.dhw.sensors.temperature.hotWaterStorage")),
                 icon: "drop.fill",
                 tint: .orange
             )
+            .staggeredAppear(index: 1)
             MetricCard(
                 title: "Elektrische Leistung",
                 value: formattedPower(features.numericValue("heating.power.consumption.current")),
                 icon: "bolt.fill",
                 tint: .yellow
             )
+            .staggeredAppear(index: 2)
             MetricCard(
                 title: "Wärmeleistung",
                 value: formattedPower(features.numericValue("heating.heat.production.current")),
                 icon: "flame.fill",
                 tint: .heatPumpAccent
             )
+            .staggeredAppear(index: 3)
             MetricCard(
                 title: "Effizienz heute",
                 value: formattedEfficiency(HeatPumpEfficiencyDataSource.liveEfficiency(features: features, period: .day)),
@@ -226,6 +230,7 @@ private struct HeatPumpMetricsView: View {
                 icon: "leaf.fill",
                 tint: .green
             )
+            .staggeredAppear(index: 4)
         }
         .padding()
     }

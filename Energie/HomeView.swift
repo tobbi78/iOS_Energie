@@ -51,12 +51,14 @@ struct HomeView: View {
                             icon: "sun.max.fill",
                             tint: .pvAccent
                         )
+                        .staggeredAppear(index: 0)
                         MetricCard(
                             title: "Autarkiegrad",
                             value: today.selfSufficiencyRate.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? "–",
                             icon: "leaf.fill",
                             tint: .green
                         )
+                        .staggeredAppear(index: 1)
                         if let soc = today.batterySocPercent {
                             MetricCard(
                                 title: "Batterie",
@@ -64,6 +66,7 @@ struct HomeView: View {
                                 icon: "battery.100percent",
                                 tint: .purple
                             )
+                            .staggeredAppear(index: 2)
                         }
                     }
                 } else {
@@ -93,18 +96,21 @@ struct HomeView: View {
                         icon: "thermometer.sun",
                         tint: .blue
                     )
+                    .staggeredAppear(index: 0)
                     MetricCard(
                         title: "Warmwasser",
                         value: formattedTemperature(heatPumpModel.currentFeatures.numericValue("heating.dhw.sensors.temperature.hotWaterStorage")),
                         icon: "drop.fill",
                         tint: .orange
                     )
+                    .staggeredAppear(index: 1)
                     MetricCard(
                         title: "Effizienz heute",
                         value: formattedEfficiency(HeatPumpEfficiencyDataSource.liveEfficiency(features: heatPumpModel.currentFeatures, period: .day)),
                         icon: "leaf.fill",
                         tint: .green
                     )
+                    .staggeredAppear(index: 2)
                 }
             case .needsCredentials, .needsSignIn:
                 HomeStatusRow(text: "Nicht angemeldet — tippe hier, um dich anzumelden.")

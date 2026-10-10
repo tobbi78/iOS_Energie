@@ -325,18 +325,21 @@ private struct MetricsView: View {
                 icon: "leaf.fill",
                 tint: .green
             )
+            .staggeredAppear(index: 0)
             MetricCard(
                 title: "Produktion",
                 value: formattedKWh(sample.producedWh),
                 icon: "sun.max.fill",
                 tint: .pvAccent
             )
+            .staggeredAppear(index: 1)
             MetricCard(
                 title: "Verbrauch",
                 value: formattedKWh(sample.consumedWh),
                 icon: "house.fill",
                 tint: .blue
             )
+            .staggeredAppear(index: 2)
             MetricCard(
                 title: "Einspeisung",
                 value: formattedKWh(sample.exportedWh),
@@ -344,10 +347,12 @@ private struct MetricsView: View {
                 icon: "bolt.horizontal.fill",
                 tint: .teal
             )
+            .staggeredAppear(index: 3)
         }
         .padding()
 
         BatteryCard(sample: sample)
+            .staggeredAppear(index: 4)
             .padding(.horizontal)
             .padding(.bottom)
     }
