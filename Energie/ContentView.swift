@@ -29,25 +29,38 @@ struct ContentView: View {
     @State private var watchSyncService = WatchSyncService()
     /// Drives the `LaunchView` overlay (F10.1) — see the `.task` below for the dismiss timing.
     @State private var showsLaunchScreen = true
+    /// Echoes already-delivered local notifications (F5.5) back as a tab-icon bounce (F10.8) —
+    /// see the `.task`/`.onChange(of: scenePhase)` below for when it's refreshed.
+    @State private var notificationEcho = NotificationEcho()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab("Start", systemImage: "house.fill", value: .home) {
                 HomeView(solarModel: solarModel, heatPumpModel: heatPumpModel, selectedTab: $selectedTab)
             }
-            Tab("PV-Anlage", systemImage: "sun.max.fill", value: .pv) {
+            Tab(value: .pv) {
                 if let solarModel {
                     SolarView(model: solarModel, displayPreferences: displayPreferences, budgetSettings: budgetSettings)
                 } else {
                     ProgressView()
                 }
+            } label: {
+                // F10.8: bounces once per newly-observed PV notification (Anlagenausfall/Budget/
+                // Speicherstand, F5.5), echoing it back inside the app.
+                Label("PV-Anlage", systemImage: "sun.max.fill")
+                    .symbolEffect(.bounce, value: notificationEcho.pvTrigger)
             }
-            Tab("Wärmepumpe", systemImage: "heater.vertical.fill", value: .heatPump) {
+            Tab(value: .heatPump) {
                 if let heatPumpModel {
                     HeatPumpView(model: heatPumpModel)
                 } else {
                     ProgressView()
                 }
+            } label: {
+                // F10.8: same as the PV tab, for the heat pump's pressure alert (F5.5).
+                Label("Wärmepumpe", systemImage: "heater.vertical.fill")
+                    .symbolEffect(.bounce, value: notificationEcho.heatPumpTrigger)
             }
             Tab("Einstellungen", systemImage: "gearshape.fill", value: .settings) {
                 if let solarModel, let heatPumpModel {
@@ -117,6 +130,15 @@ struct ContentView: View {
             withAnimation(.easeInOut(duration: 0.45)) {
                 showsLaunchScreen = false
             }
+            // Cold launch: scenePhase is already `.active` by the time the overlay goes away, so
+            // the `onChange` below never fires for this transition — refresh explicitly instead.
+            await notificationEcho.refresh()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Reopening the app from the background: skip while the launch overlay is still up
+            // (F10.3's reasoning) and let the `.task` above handle the cold-launch case.
+            guard newPhase == .active, !showsLaunchScreen else { return }
+            Task { await notificationEcho.refresh() }
         }
     }
 }
