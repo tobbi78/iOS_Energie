@@ -208,7 +208,12 @@ final class SolarModel {
             )
 
             upsertToday(sample)
-            today = sample
+            // Wrapped in `withAnimation` so `MetricCard`'s `.contentTransition(.numericText())`
+            // actually has an animated transaction to interpolate across (F10.4) — a plain
+            // assignment updates the KPI text instantly, with no transition at all.
+            withAnimation(.default) {
+                today = sample
+            }
             state = .ready
             watchSyncService?.updatePV(WatchSyncService.PVUpdate(
                 producedTodayWh: sample.producedWh,

@@ -206,7 +206,12 @@ final class HeatPumpModel {
                 gatewaySerial: selection.gatewaySerial,
                 deviceID: selection.deviceID
             )
-            currentFeatures = features
+            // Wrapped in `withAnimation` so `MetricCard`'s `.contentTransition(.numericText())`
+            // actually has an animated transaction to interpolate across (F10.4) — a plain
+            // assignment updates the KPI text instantly, with no transition at all.
+            withAnimation(.default) {
+                currentFeatures = features
+            }
             let timestamp = now()
             captureEfficiencySnapshots(features: features, timestamp: timestamp)
             checkPressureAlert(features: features, timestamp: timestamp)
