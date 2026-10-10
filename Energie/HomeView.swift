@@ -22,12 +22,16 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     HomeSection(title: "PV-Anlage", icon: "sun.max.fill", tint: .pvAccent) {
-                        selectedTab = .pv
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            selectedTab = .pv
+                        }
                     } content: {
                         pvContent
                     }
                     HomeSection(title: "Wärmepumpe", icon: "heater.vertical.fill", tint: .heatPumpAccent) {
-                        selectedTab = .heatPump
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            selectedTab = .heatPump
+                        }
                     } content: {
                         heatPumpContent
                     }
@@ -188,9 +192,24 @@ private struct HomeSection<Content: View>: View {
                         .foregroundStyle(.tertiary)
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressableHeaderButtonStyle())
             content
         }
+    }
+}
+
+/// Press feedback for the `HomeSection` headers (F10.5): a slight shrink plus fade while held,
+/// so tapping into "PV-Anlage"/"Wärmepumpe" doesn't feel like tapping dead text. With "Bewegung
+/// reduzieren" active, only the fade plays — no scale.
+private struct PressableHeaderButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .contentShape(Rectangle())
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
+            .opacity(configuration.isPressed ? 0.75 : 1)
+            .animation(.spring(duration: 0.2), value: configuration.isPressed)
     }
 }
 
