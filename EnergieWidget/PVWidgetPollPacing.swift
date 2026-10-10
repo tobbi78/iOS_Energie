@@ -10,7 +10,8 @@
 //
 //  One widget poll costs `requestsPerPoll` requests (summary + consumption + import + battery,
 //  see PVWidgetDataSource). At a naive fixed 30-minute cadence that's ~5,760 requests/month —
-//  nearly 6x the 1000/month limit. This paces polls so the budget actually lasts the month.
+//  several times over even the largest configurable limit (F6.4, 1000/month default). This
+//  paces polls so the budget actually lasts the month.
 //
 
 import Foundation

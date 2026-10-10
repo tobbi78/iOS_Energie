@@ -56,11 +56,22 @@ enum PVWidgetDataSource {
 
     private static let budget = EnphaseRequestBudget(userDefaults: sharedDefaults)
 
+    /// Mirrors `EnphaseBudgetSettings.monthlyLimitKey`/`.defaultMonthlyLimit` (F6.4) — duplicated
+    /// as a raw key string rather than linking that app-only class, same tooling limitation as
+    /// the other duplicated files in this target. Keep in sync by hand if the key or default
+    /// ever changes.
+    static var configuredMonthlyLimit: Int {
+        sharedDefaults.object(forKey: "EnphaseBudgetSettings.monthlyLimit") as? Int ?? EnphaseRequestBudget.defaultMonthlyLimit
+    }
+
     /// Mirrors `EnphaseBudgetSettings.reserveKey`/`.defaultReserve` (F6.3) — duplicated as a raw
     /// key string rather than linking that app-only class, same tooling limitation as the other
     /// duplicated files in this target. Keep in sync by hand if the key or default ever changes.
+    /// Clamped to half of `configuredMonthlyLimit`, mirroring `EnphaseBudgetSettings.maximumReserve`,
+    /// in case a previously stored reserve no longer fits a since-lowered limit.
     static var configuredReserve: Int {
-        sharedDefaults.object(forKey: "EnphaseBudgetSettings.monthlyReserve") as? Int ?? PVWidgetPollPacing.monthlyReserve
+        let stored = sharedDefaults.object(forKey: "EnphaseBudgetSettings.monthlyReserve") as? Int ?? PVWidgetPollPacing.monthlyReserve
+        return min(stored, configuredMonthlyLimit / 2)
     }
     private static let throttle = EnphaseRequestThrottle()
     private static let baseURL = URL(string: "https://api.enphaseenergy.com")!
@@ -124,7 +135,7 @@ enum PVWidgetDataSource {
             return .failure(.notSignedIn)
         }
 
-        guard await !budget.isExhausted(reserve: configuredReserve) else {
+        guard await !budget.isExhausted(monthlyLimit: configuredMonthlyLimit, reserve: configuredReserve) else {
             return .failure(.monthlyBudgetExhausted)
         }
 

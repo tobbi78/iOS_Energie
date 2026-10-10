@@ -153,6 +153,16 @@
     "Dabei wird auch die auf diesem Gerät (und in iCloud) gespeicherte PV-Verlaufshistorie unwiderruflich gelöscht." : {
 
     },
+    "Das Monatslimit richtet sich nach dem gebuchten Enphase-Tarif. Die Reserve wird vom Live-Abruf-Budget zurückgehalten, damit der tägliche Abschluss-Durchlauf am Monatsende immer noch Anfragen übrig hat." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "The monthly limit is based on your booked Enphase plan. The reserve is held back from the live-polling budget so the daily finalize pass still has requests left at the end of the month."
+          }
+        }
+      }
+    },
     "Daten verbleiben, solange die App installiert ist bzw. bis die nutzende Person die Verbindung zu Enphase/Viessmann trennt oder die App deinstalliert. Beim Deinstallieren werden lokal gespeicherte Zugangsdaten (Keychain) automatisch entfernt." : {
 
     },
@@ -251,6 +261,16 @@
     "Enphase Energy (PV-Anlagendaten)" : {
 
     },
+    "Enphase-Abfragebudget" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Enphase request budget"
+          }
+        }
+      }
+    },
     "Enphase-Abfragen diesen Monat: %lld / %lld" : {
       "localizations" : {
         "de" : {
@@ -299,6 +319,16 @@
     },
     "Für die Datenverarbeitung durch diese Anbieter gelten deren eigene Datenschutzbestimmungen. Der Entwickler der App hat keinen Zugriff auf diese Konten oder Daten. Es findet keine Weitergabe von Daten zu Werbezwecken statt. Die App enthält kein Tracking, keine Analyse-Software von Drittanbietern und keine Werbung." : {
 
+    },
+    "Genutzt diesen Monat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Used this month"
+          }
+        }
+      }
     },
     "Gerät" : {
       "localizations" : {
@@ -460,11 +490,64 @@
       }
     },
     "Monatsbudget-Reserve" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Monthly budget reserve"
+          }
+        }
+      }
+    },
+    "Monatslimit: %lld Anfragen" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Monatslimit: %lld Anfrage"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Monatslimit: %lld Anfragen"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Monatslimit: %lld Anfragen"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Monthly limit: %lld request"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Monthly limit: %lld requests"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "Monthly limit: %lld requests"
+                }
+              }
+            }
           }
         }
       }
@@ -733,6 +816,7 @@
       }
     },
     "Wird vom Live-Abruf-Budget zurückgehalten, damit der tägliche Abschluss-Durchlauf am Monatsende immer noch Anfragen übrig hat." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

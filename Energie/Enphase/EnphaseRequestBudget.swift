@@ -10,8 +10,10 @@ import Foundation
 
 /// Persistent per-calendar-month request counter (F4.2).
 ///
-/// 1000/month is the confirmed quota for the booked Enphase plan (verified by the user against
-/// the Enphase developer portal, see BACKLOG.md), enforced here so the app has a defined,
+/// 1000/month was the confirmed quota for the originally booked Enphase plan (verified by the
+/// user against the Enphase developer portal, see BACKLOG.md); F6.4 made the actual limit
+/// user-configurable (`EnphaseBudgetSettings.monthlyLimit`) since other plans grant different
+/// quotas. `isExhausted(monthlyLimit:reserve:)` is enforced here so the app has a defined,
 /// predictable behavior instead of silently exceeding it and finding out via 429s alone.
 ///
 /// An actor, like `EnphaseRequestThrottle`, since `EnphaseClient` can issue several requests
@@ -21,7 +23,10 @@ import Foundation
 /// Instantiated with `SharedAppGroup.userDefaults` so the widget extension — which compiles this
 /// same file via multi-target membership — shares the same budget.
 actor EnphaseRequestBudget {
-    static let monthlyLimit = 1000
+    /// Used only as the fallback when no configured limit is available (e.g. `EnphaseClient`'s
+    /// default closure) — the actual limit now comes from `EnphaseBudgetSettings.monthlyLimit`
+    /// (F6.4).
+    static let defaultMonthlyLimit = 1000
 
     private let userDefaults: UserDefaults
     private let now: @Sendable () -> Date
@@ -58,8 +63,8 @@ actor EnphaseRequestBudget {
 
     /// True once the remaining budget for this month (minus `reserve`, kept for the daily
     /// finalize pass) is used up.
-    func isExhausted(reserve: Int = 20) -> Bool {
-        usedThisMonth() >= Self.monthlyLimit - reserve
+    func isExhausted(monthlyLimit: Int, reserve: Int) -> Bool {
+        usedThisMonth() >= monthlyLimit - reserve
     }
 
     /// Best-effort cross-device reconciliation (Epic 0, F0.4). Several devices (iPhone, iPad,

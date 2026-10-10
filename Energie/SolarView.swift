@@ -19,6 +19,7 @@ struct SolarView: View {
 
     var model: SolarModel
     var displayPreferences: PVDisplayPreferences
+    var budgetSettings: EnphaseBudgetSettings
 
     @State private var requestsUsedThisMonth: Int?
 
@@ -79,7 +80,7 @@ struct SolarView: View {
                 ScrollView {
                     MetricsView(sample: today, feedInTariffPerKWh: displayPreferences.feedInTariffPerKWh)
                     if let requestsUsedThisMonth {
-                        Text("Enphase-Abfragen diesen Monat: \(requestsUsedThisMonth) / \(EnphaseRequestBudget.monthlyLimit)")
+                        Text("Enphase-Abfragen diesen Monat: \(requestsUsedThisMonth) / \(budgetSettings.monthlyLimit)")
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                             .padding(.bottom, 8)
@@ -134,6 +135,7 @@ struct PVSettingsScreen: View {
     @State private var apiKey = ""
     @State private var tariffText = ""
     @State private var showsSignOutConfirmation = false
+    @State private var requestsUsedThisMonth: Int?
 
     var body: some View {
         Form {
@@ -176,22 +178,41 @@ struct PVSettingsScreen: View {
             }
 
             Section {
+                if let requestsUsedThisMonth {
+                    VStack(alignment: .leading, spacing: 6) {
+                        LabeledContent("Genutzt diesen Monat", value: "\(requestsUsedThisMonth) von \(budgetSettings.monthlyLimit)")
+                        ProgressView(value: Double(requestsUsedThisMonth), total: Double(budgetSettings.monthlyLimit))
+                            .tint(.pvAccent)
+                    }
+                }
+                Stepper(
+                    "Monatslimit: \(budgetSettings.monthlyLimit) Anfragen",
+                    value: Binding(
+                        get: { budgetSettings.monthlyLimit },
+                        set: { budgetSettings.setMonthlyLimit($0) }
+                    ),
+                    in: EnphaseBudgetSettings.minimumMonthlyLimit...EnphaseBudgetSettings.maximumMonthlyLimit,
+                    step: 50
+                )
                 Stepper(
                     "Reserve: \(budgetSettings.monthlyReserve) Anfragen",
                     value: Binding(
                         get: { budgetSettings.monthlyReserve },
                         set: { budgetSettings.setMonthlyReserve($0) }
                     ),
-                    in: EnphaseBudgetSettings.minimumReserve...EnphaseBudgetSettings.maximumReserve,
+                    in: EnphaseBudgetSettings.minimumReserve...budgetSettings.maximumReserve,
                     step: 5
                 )
             } header: {
-                Text("Monatsbudget-Reserve")
+                Text("Enphase-Abfragebudget")
             } footer: {
-                Text("Wird vom Live-Abruf-Budget zurückgehalten, damit der tägliche Abschluss-Durchlauf am Monatsende immer noch Anfragen übrig hat.")
+                Text("Das Monatslimit richtet sich nach dem gebuchten Enphase-Tarif. Die Reserve wird vom Live-Abruf-Budget zurückgehalten, damit der tägliche Abschluss-Durchlauf am Monatsende immer noch Anfragen übrig hat.")
             }
         }
         .navigationTitle("PV-Anlage")
+        .task {
+            requestsUsedThisMonth = await model.requestsUsedThisMonth()
+        }
         .onAppear {
             let credentials = model.credentials
             clientID = credentials.clientID

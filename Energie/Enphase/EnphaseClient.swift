@@ -89,6 +89,9 @@ struct EnphaseClient {
     /// How much of the monthly budget to hold back (F6.3) — configurable via
     /// `EnphaseBudgetSettings` instead of the previous hardcoded `20`.
     var reserve: @Sendable () -> Int = { EnphaseBudgetSettings.defaultReserve }
+    /// The monthly request quota itself (F6.4) — configurable via `EnphaseBudgetSettings`
+    /// instead of the previous hardcoded `1000`.
+    var monthlyLimit: @Sendable () -> Int = { EnphaseBudgetSettings.defaultMonthlyLimit }
 
     func fetchSystems() async throws -> [EnphaseSystemDTO] {
         let response: EnphaseSystemsResponse = try await perform(EnphaseEndpoints.systems)
@@ -138,7 +141,7 @@ struct EnphaseClient {
     }
 
     private func perform<T: Decodable>(_ url: URL) async throws -> T {
-        guard await !budget.isExhausted(reserve: reserve()) else {
+        guard await !budget.isExhausted(monthlyLimit: monthlyLimit(), reserve: reserve()) else {
             throw EnphaseClientError.monthlyBudgetExhausted
         }
         await throttle.acquire()

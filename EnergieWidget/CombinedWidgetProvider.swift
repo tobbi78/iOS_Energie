@@ -58,7 +58,7 @@ struct CombinedWidgetProvider: TimelineProvider {
 
         let pvDelay = PVWidgetPollPacing.nextPollDelay(
             usedThisMonth: await usedThisMonth,
-            monthlyLimit: EnphaseRequestBudget.monthlyLimit,
+            monthlyLimit: PVWidgetDataSource.configuredMonthlyLimit,
             reserve: PVWidgetDataSource.configuredReserve,
             now: .now
         )
