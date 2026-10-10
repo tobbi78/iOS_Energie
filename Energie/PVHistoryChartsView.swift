@@ -25,10 +25,14 @@ extension PVDailySample: PVSeriesBar {
 extension PVPeriodTotal: PVSeriesBar {}
 
 private struct PVSeriesPoint: Identifiable {
-    let id = UUID()
     let period: Date
     let seriesLabel: String
     let valueKWh: Double
+
+    /// Stable identity across picker/series changes (F10.6) — a fresh `UUID()` per body
+    /// evaluation would keep Swift Charts from matching marks across updates, forcing a hard
+    /// redraw instead of a morph/fade animation.
+    var id: String { "\(seriesLabel)-\(period.timeIntervalSinceReferenceDate)" }
 }
 
 private func points(from bars: [some PVSeriesBar], selection: PVSeriesSelection) -> [PVSeriesPoint] {
@@ -97,6 +101,8 @@ struct PVHistoryChartsView: View {
     var displayPreferences: PVDisplayPreferences
     var now: Date = Date()
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private var lastThirtyDays: [PVDailySample] {
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Calendar.current.startOfDay(for: now)) else {
             return dailySamples
@@ -108,7 +114,17 @@ struct PVHistoryChartsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Picker("Wertreihe", selection: Binding(
                 get: { displayPreferences.seriesSelection },
-                set: { displayPreferences.setSeriesSelection($0) }
+                set: { newValue in
+                    // F10.6: animiert morphen/fade statt hart springen — bei aktivem
+                    // "Bewegung reduzieren" (F10.3-Konsistenz) ohne Animation setzen.
+                    if reduceMotion {
+                        displayPreferences.setSeriesSelection(newValue)
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            displayPreferences.setSeriesSelection(newValue)
+                        }
+                    }
+                }
             )) {
                 ForEach(PVSeriesSelection.allCases) { selection in
                     Text(selection.label).tag(selection)
