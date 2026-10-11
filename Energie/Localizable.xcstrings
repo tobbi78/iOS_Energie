@@ -440,6 +440,7 @@
       }
     },
     "Mehr" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
