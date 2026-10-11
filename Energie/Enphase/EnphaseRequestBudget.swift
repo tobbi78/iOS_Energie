@@ -131,8 +131,17 @@ actor EnphaseRequestBudget {
         userDefaults.set(count, forKey: Self.countKey)
     }
 
+    /// Enphase's monthly quota is assumed to reset on the calendar month boundary in Pacific
+    /// Time (the timezone of Enphase's own infrastructure), not the device's local timezone —
+    /// using the device's calendar could reset the local counter up to ~9h before/after the
+    /// actual server-side reset, causing spurious 429s or an overly permissive local budget near
+    /// each month boundary. Not officially confirmed by Enphase, see BACKLOG.md.
+    private static let pacificTimeZone = TimeZone(identifier: "America/Los_Angeles")!
+
     private func monthIdentifier(for date: Date) -> String {
-        let components = Calendar.current.dateComponents([.year, .month], from: date)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = Self.pacificTimeZone
+        let components = calendar.dateComponents([.year, .month], from: date)
         return "\(components.year ?? 0)-\(components.month ?? 0)"
     }
 }
