@@ -9,8 +9,15 @@ import Foundation
 import Testing
 @testable import Energie
 
-private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
-    Calendar.current.date(from: DateComponents(year: year, month: month, day: day))!
+private let pacificTimeZone = TimeZone(identifier: "America/Los_Angeles")!
+
+/// Builds a date at the given calendar day/time in the given timezone — Pacific Time by
+/// default, since `EnphaseRequestBudget` now resets its monthly counter on Pacific Time month
+/// boundaries (assumed to match Enphase's own quota reset), not the device's local timezone.
+private func date(_ year: Int, _ month: Int, _ day: Int, hour: Int = 0, minute: Int = 0, timeZone: TimeZone = pacificTimeZone) -> Date {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = timeZone
+    return calendar.date(from: DateComponents(year: year, month: month, day: day, hour: hour, minute: minute))!
 }
 
 struct EnphaseBudgetTests {
@@ -40,6 +47,25 @@ struct EnphaseBudgetTests {
 
         await budget.recordRequest()
         #expect(await budget.usedThisMonth() == 1)
+    }
+
+    @Test func doesNotResetWhenDeviceTimeZoneCrossesIntoTheNewMonthButPacificTimeHasNot() async {
+        // 2026-10-01 00:30 in Europe/Berlin (CEST, UTC+2) is still 2026-09-30, afternoon, in
+        // Pacific Time (UTC-7 in September) — the counter must not reset yet, since the quota
+        // is assumed to follow Enphase's own (Pacific Time) calendar, not the device's.
+        let berlin = TimeZone(identifier: "Europe/Berlin")!
+        var current = date(2026, 9, 30)
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        let budget = EnphaseRequestBudget(userDefaults: defaults, now: { current })
+
+        await budget.recordRequest()
+        #expect(await budget.usedThisMonth() == 1)
+
+        current = date(2026, 10, 1, hour: 0, minute: 30, timeZone: berlin)
+        #expect(await budget.usedThisMonth() == 1)
+
+        current = date(2026, 10, 1)
+        #expect(await budget.usedThisMonth() == 0)
     }
 
     @Test func isExhaustedRespectsReserve() async {
