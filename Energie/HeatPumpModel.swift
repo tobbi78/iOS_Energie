@@ -10,6 +10,9 @@ import Foundation
 import SwiftData
 import SwiftUI
 import UserNotifications
+#if DEBUG
+import os
+#endif
 
 enum HeatPumpError: Error, LocalizedError {
     case signInRequired
@@ -213,6 +216,9 @@ final class HeatPumpModel {
                 currentFeatures = features
             }
             let timestamp = now()
+            #if DEBUG
+            logHistoryProbe(features: features)
+            #endif
             captureEfficiencySnapshots(features: features, timestamp: timestamp)
             checkPressureAlert(features: features, timestamp: timestamp)
             state = .ready
@@ -381,3 +387,58 @@ final class HeatPumpModel {
         }
     }
 }
+
+#if DEBUG
+/// Temporary probe for F-Energieverlauf: confirms on a real device whether
+/// `heating.heat.production.heating`/`.total` exist (only `.summary.heating` is documented in
+/// VIESSMANN_API_WERTE.md) and inspects the comma-separated history strings in
+/// `heating.power.consumption.*`/`heating.heat.production.*`. Logs once per launch via
+/// `GetConsoleOutput`, then should be removed once the data shape is confirmed — see
+/// Plans/Waermepumpe-Integration.md, "Energieverlauf".
+private enum HeatPumpHistoryProbeState {
+    static var hasLogged = false
+}
+
+private func logHistoryProbe(features: [ViessmannFeatureDTO]) {
+    guard !HeatPumpHistoryProbeState.hasLogged else { return }
+    HeatPumpHistoryProbeState.hasLogged = true
+
+    let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Energie", category: "HistoryProbe")
+
+    let targetFeatures = [
+        "heating.heat.production.heating",
+        "heating.heat.production.total",
+        "heating.heat.production.summary.heating",
+    ]
+    for name in targetFeatures {
+        if let feature = features.first(where: { $0.feature == name }) {
+            logger.notice("HistoryProbe \(name, privacy: .public) vorhanden: \(describeProperties(feature.properties), privacy: .public)")
+        } else {
+            logger.notice("HistoryProbe \(name, privacy: .public): nicht vorhanden")
+        }
+    }
+
+    let relatedPrefixes = ["heating.heat.production.", "heating.power.consumption."]
+    for feature in features where relatedPrefixes.contains(where: feature.feature.hasPrefix) {
+        logger.notice("HistoryProbe \(feature.feature, privacy: .public): \(describeProperties(feature.properties), privacy: .public)")
+    }
+}
+
+private func describeProperties(_ properties: [String: ViessmannFeaturePropertyDTO]) -> String {
+    properties.sorted { $0.key < $1.key }.map { key, property in
+        let unitSuffix = property.unit.map { " (\($0))" } ?? ""
+        return "\(key)=\(describeValue(property.value))\(unitSuffix)"
+    }.joined(separator: ", ")
+}
+
+private func describeValue(_ value: ViessmannFeatureValue) -> String {
+    switch value {
+    case .number(let number): return "\(number)"
+    case .bool(let bool): return "\(bool)"
+    case .string(let string): return "\"\(string)\""
+    case .stringArray(let array): return "\(array)"
+    case .numberArray(let array): return "\(array)"
+    case .other: return "other"
+    }
+}
+#endif
