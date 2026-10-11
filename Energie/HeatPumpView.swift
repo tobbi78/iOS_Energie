@@ -32,32 +32,6 @@ struct HeatPumpView: View {
                                 Label("Aktualisieren", systemImage: "arrow.clockwise")
                             }
                         }
-                        ToolbarItem(placement: .primaryAction) {
-                            Menu {
-                                NavigationLink {
-                                    HeatPumpCircuitsScreen(features: model.currentFeatures)
-                                } label: {
-                                    Label("Heizkreise", systemImage: "thermometer.medium")
-                                }
-                                NavigationLink {
-                                    HeatPumpHotWaterScreen(features: model.currentFeatures)
-                                } label: {
-                                    Label("Warmwasser", systemImage: "drop.fill")
-                                }
-                                NavigationLink {
-                                    HeatPumpEfficiencyScreen(features: model.currentFeatures, samples: efficiencySamples)
-                                } label: {
-                                    Label("Effizienz & Verbrauch", systemImage: "chart.xyaxis.line")
-                                }
-                                NavigationLink {
-                                    HeatPumpCompressorsScreen(features: model.currentFeatures)
-                                } label: {
-                                    Label("Verdichter & Kältekreis", systemImage: "gearshape.2")
-                                }
-                            } label: {
-                                Label("Mehr", systemImage: "ellipsis.circle")
-                            }
-                        }
                     }
                 }
         }
@@ -81,7 +55,12 @@ struct HeatPumpView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .ready:
             ScrollView {
-                HeatPumpMetricsView(features: model.currentFeatures)
+                VStack(spacing: 16) {
+                    HeatPumpMetricsView(features: model.currentFeatures)
+                    HeatPumpNavigationSection(features: model.currentFeatures, efficiencySamples: efficiencySamples)
+                        .padding(.horizontal)
+                        .padding(.bottom)
+                }
             }
         case .rateLimited(let resumeAt):
             RateLimitedView(resumeAt: resumeAt) {
@@ -248,6 +227,66 @@ private struct HeatPumpMetricsView: View {
     private func formattedEfficiency(_ ratio: Double?) -> String {
         guard let ratio else { return "–" }
         return ratio.formatted(.number.precision(.fractionLength(1)))
+    }
+}
+
+// MARK: - Navigation
+
+/// Visible, always-discoverable entry points into the four detail screens. Replaces a previous
+/// toolbar overflow menu ("Mehr"/ellipsis), which hid these primary destinations behind an
+/// undiscoverable icon — these screens are core features, not secondary actions, so they belong
+/// directly in the content rather than in a menu (see HIG guidance on overflow menus).
+private struct HeatPumpNavigationSection: View {
+    let features: [ViessmannFeatureDTO]
+    let efficiencySamples: [HeatPumpEfficiencySample]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HeatPumpNavigationRow(title: "Heizkreise", icon: "thermometer.medium") {
+                HeatPumpCircuitsScreen(features: features)
+            }
+            Divider().padding(.leading, 52)
+            HeatPumpNavigationRow(title: "Warmwasser", icon: "drop.fill") {
+                HeatPumpHotWaterScreen(features: features)
+            }
+            Divider().padding(.leading, 52)
+            HeatPumpNavigationRow(title: "Effizienz & Verbrauch", icon: "chart.xyaxis.line") {
+                HeatPumpEfficiencyScreen(features: features, samples: efficiencySamples)
+            }
+            Divider().padding(.leading, 52)
+            HeatPumpNavigationRow(title: "Verdichter & Kältekreis", icon: "gearshape.2") {
+                HeatPumpCompressorsScreen(features: features)
+            }
+        }
+        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct HeatPumpNavigationRow<Destination: View>: View {
+    let title: String
+    let icon: String
+    @ViewBuilder var destination: () -> Destination
+
+    var body: some View {
+        NavigationLink {
+            destination()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.heatPumpAccent)
+                    .frame(width: 24)
+                Text(title)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding()
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
