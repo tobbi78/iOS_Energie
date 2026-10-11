@@ -532,28 +532,28 @@ private func energyPoints(from buckets: [HeatPumpEnergyBucket]) -> [HeatPumpEner
     }
 }
 
-private extension Array where Element == HeatPumpEnergyBucket {
-    /// `chartXSelection` reports an interpolated date along the axis, not necessarily one that
-    /// matches a bucket exactly — this finds the nearest one to show in the selection summary.
-    func closest(to date: Date) -> HeatPumpEnergyBucket? {
-        self.min { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) }
-    }
-}
-
 /// Combined Strom-/Wärme-/Effizienz-Verlauf: a granularity picker, grouped bars for consumption
 /// and production (each on its own honest scale), and a separate, thin efficiency line below —
 /// two independently-scaled charts rather than a dual-axis one, so neither series has to be
-/// rescaled to share the other's range.
+/// rescaled to share the other's range. Both share one explicit `chartXScale` domain spanning
+/// *all* buckets (not just the ones with an efficiency value) so their x-axes still line up —
+/// left to each chart's own data, Swift Charts fits the domain to only the points it's given,
+/// and the efficiency line (usually far fewer points, see `HeatPumpEnergyBucket`) would end up
+/// on a completely different, narrower time window than the bars above it.
 private struct HeatPumpEnergyHistoryCard: View {
     let features: [ViessmannFeatureDTO]
     let samples: [HeatPumpEfficiencySample]
 
     @State private var granularity: HeatPumpHistoryGranularity = .day
-    @State private var selectedDate: Date?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var buckets: [HeatPumpEnergyBucket] {
         HeatPumpEnergyHistory.buckets(granularity: granularity, features: features, samples: samples)
+    }
+
+    private var sharedDateDomain: ClosedRange<Date>? {
+        guard let first = buckets.first?.date, let last = buckets.last?.date else { return nil }
+        return first...last
     }
 
     var body: some View {
@@ -564,7 +564,6 @@ private struct HeatPumpEnergyHistoryCard: View {
             Picker("Zeitraum", selection: Binding(
                 get: { granularity },
                 set: { newValue in
-                    selectedDate = nil
                     if reduceMotion {
                         granularity = newValue
                     } else {
@@ -580,18 +579,14 @@ private struct HeatPumpEnergyHistoryCard: View {
             }
             .pickerStyle(.segmented)
 
-            if buckets.isEmpty {
+            if let sharedDateDomain {
+                HeatPumpEnergyBarChart(buckets: buckets, unit: granularity.chartUnit, domain: sharedDateDomain)
+                HeatPumpEnergyEfficiencyChart(buckets: buckets, unit: granularity.chartUnit, domain: sharedDateDomain)
+            } else {
                 Text("Noch keine Werte — der erste Schnappschuss entsteht beim nächsten Abruf.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(height: 180)
-            } else {
-                HeatPumpEnergyBarChart(buckets: buckets, unit: granularity.chartUnit, selectedDate: $selectedDate)
-                HeatPumpEnergyEfficiencyChart(buckets: buckets, unit: granularity.chartUnit)
-
-                if let selectedBucket = selectedDate.flatMap(buckets.closest(to:)) {
-                    HeatPumpEnergySelectionSummary(bucket: selectedBucket, granularity: granularity)
-                }
             }
         }
         .padding()
@@ -602,7 +597,7 @@ private struct HeatPumpEnergyHistoryCard: View {
 private struct HeatPumpEnergyBarChart: View {
     let buckets: [HeatPumpEnergyBucket]
     let unit: Calendar.Component
-    @Binding var selectedDate: Date?
+    let domain: ClosedRange<Date>
 
     private static let seriesColors: KeyValuePairs<String, Color> = [
         "Strom": .yellow,
@@ -624,7 +619,7 @@ private struct HeatPumpEnergyBarChart: View {
             .opacity(isCurrent(point.date) ? 0.55 : 1)
         }
         .chartForegroundStyleScale(Self.seriesColors)
-        .chartXSelection(value: $selectedDate)
+        .chartXScale(domain: domain)
         .frame(height: 160)
     }
 }
@@ -632,6 +627,7 @@ private struct HeatPumpEnergyBarChart: View {
 private struct HeatPumpEnergyEfficiencyChart: View {
     let buckets: [HeatPumpEnergyBucket]
     let unit: Calendar.Component
+    let domain: ClosedRange<Date>
 
     private var points: [HeatPumpEnergyBucket] {
         buckets.filter { $0.efficiency != nil }
@@ -653,49 +649,9 @@ private struct HeatPumpEnergyEfficiencyChart: View {
                 .symbol(.circle)
             }
             .foregroundStyle(.green)
+            .chartXScale(domain: domain)
             .frame(height: 80)
         }
-    }
-}
-
-private struct HeatPumpEnergySelectionSummary: View {
-    let bucket: HeatPumpEnergyBucket
-    let granularity: HeatPumpHistoryGranularity
-
-    var body: some View {
-        HStack(spacing: 16) {
-            Text(formattedDate)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            if let consumed = bucket.consumedKWh {
-                Label(formattedKWh(consumed), systemImage: "bolt.fill")
-                    .foregroundStyle(.yellow)
-            }
-            if let produced = bucket.producedKWh {
-                Label(formattedKWh(produced), systemImage: "flame.fill")
-                    .foregroundStyle(.heatPumpAccent)
-            }
-            if let efficiency = bucket.efficiency {
-                Label(efficiency.formatted(.number.precision(.fractionLength(0...1))), systemImage: "leaf.fill")
-                    .foregroundStyle(.green)
-            }
-        }
-        .font(.caption.weight(.medium))
-    }
-
-    private var formattedDate: String {
-        switch granularity {
-        case .day, .week:
-            return bucket.date.formatted(date: .abbreviated, time: .omitted)
-        case .month:
-            return bucket.date.formatted(.dateTime.month(.wide).year())
-        case .year:
-            return bucket.date.formatted(.dateTime.year())
-        }
-    }
-
-    private func formattedKWh(_ value: Double) -> String {
-        value.formatted(.number.precision(.fractionLength(0...1))) + " kWh"
     }
 }
 
