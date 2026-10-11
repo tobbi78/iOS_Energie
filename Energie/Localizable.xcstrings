@@ -186,6 +186,7 @@
       }
     },
     "Effizienz" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -359,6 +360,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Installation"
+          }
+        }
+      }
+    },
+    "JAZ" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "SPF"
           }
         }
       }
@@ -569,6 +580,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "No data yet for this period."
+          }
+        }
+      }
+    },
+    "Noch keine Effizienz-Werte für diesen Zeitraum." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "No efficiency values yet for this period."
           }
         }
       }
@@ -828,6 +849,7 @@
       }
     },
     "Zeitpunkt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

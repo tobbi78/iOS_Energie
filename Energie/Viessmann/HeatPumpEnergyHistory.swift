@@ -55,6 +55,18 @@ enum HeatPumpHistoryGranularity: String, CaseIterable, Identifiable {
         }
     }
 
+    /// The `Calendar.Component` Swift Charts should group/space bars by — purely a visual
+    /// grouping hint, not a claim that `.week` buckets are calendar weeks (they aren't, see
+    /// `anchorDate`).
+    var chartUnit: Calendar.Component {
+        switch self {
+        case .day: return .day
+        case .week: return .weekOfYear
+        case .month: return .month
+        case .year: return .year
+        }
+    }
+
     /// The anchor date for the bucket `index` periods back from `now` (0 = the current,
     /// in-progress period). `.week` steps back in plain 7-day blocks rather than calendar weeks,
     /// matching how Viessmann's own `week` array is laid out (not Mon–Sun weeks).
