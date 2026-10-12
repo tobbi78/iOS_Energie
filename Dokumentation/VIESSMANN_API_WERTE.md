@@ -118,11 +118,18 @@ Ausführlich dokumentiert im Effizienz-Tab-Backlog-Eintrag; hier die Rohdaten-Ü
 |---|---|---|
 | `heating.power.consumption.current` | Aktuelle elektrische Leistung | `status` · `value` (kilowatt): 0.0 |
 | `heating.power.consumption.summary.heating` / `.dhw` / `.cooling` | Stromverbrauch nach Zweck, vorberechnete Fenster **(verlässlich befüllt)** | `currentDay`/`currentMonth`/`currentYear`/`lastMonth`/`lastSevenDays`/`lastYear` (kilowattHour) |
-| `heating.power.consumption.heating` / `.dhw` / `.total` | Stromverbrauch als Zeitreihen-Arrays **(auf diesem Gerät leer/unbrauchbar formatiert — siehe unten)** | `day`/`week`/`month`/`year` (kilowattHour, komma-getrennte Werteliste) · `dayValueReadAt`/`weekValueReadAt`/`monthValueReadAt`/`yearValueReadAt` (Zeitstempel) |
+| `heating.power.consumption.heating` / `.dhw` / `.total` | Stromverbrauch als Zeitreihen-Arrays **(echte Historie, siehe unten)** | `day`/`week`/`month`/`year` (kilowattHour, Array von Zahlen) · `dayValueReadAt`/`weekValueReadAt`/`monthValueReadAt`/`yearValueReadAt` (Zeitstempel) |
 | `heating.scop.heating` / `.dhw` / `.total` | Von Viessmann berechnete saisonale Effizienz (Seasonal COP) | `value`: 4.3 / 3.2 / 3.8 |
 | `heating.spf.heating` / `.dhw` / `.total` | Von Viessmann berechnete saisonale Effizienz (Seasonal Performance Factor, identisch zu SCOP bei diesem Gerät) | `value`: 4.3 / 3.2 / 3.8 |
 
-**Hinweis zu `heating.power.consumption.heating/.dhw/.total`:** Anders als zunächst vermutet sind diese Werte nicht leer, sondern liefern **kommagetrennte Listen** (z. B. `day`: "2.0,1.8,2.1,2.4,0.0,2.2,0.0,1.6" — vermutlich die letzten 8 Tage). Unser `FeatureValue`-Decoder liest das aktuell als `stringValue`, nicht als einzelne Zahl — für eine Nutzung dieser Zeitreihen müsste das Decoding erweitert werden. Die `.summary.*`-Variante bleibt die einfachere, bereits genutzte Quelle für Einzelwerte.
+**Hinweis zu `heating.power.consumption.heating/.dhw/.total`:** Entgegen der ursprünglichen Vermutung sind diese Werte weder leer noch kommagetrennte Strings — sie kommen als echtes JSON-Zahlenarray und werden von unserem `FeatureValue`-Decoder schon korrekt als `.numberArray([Double])` gelesen, ohne Decoder-Änderung nötig. Am 2026-10-11 live beobachtet (`heating.power.consumption.dhw`):
+`day`: 8 Werte, `[0]` = heutiger Tag (identisch mit `summary.dhw.currentDay`), `[1…7]` = die letzten 7 Tage absteigend.
+`week`: 5 Werte, `[0]` = aktuelles 7-Tage-Fenster (identisch mit `summary.dhw.lastSevenDays`), `[1…4]` = die vier vorherigen 7-Tage-Fenster (keine Kalenderwochen, einfach 7-Tage-Blöcke rückwärts).
+`month`: 13 Werte, `[0]` = laufender Monat (identisch mit `summary.dhw.currentMonth`), `[1]` = letzter abgeschlossener Monat (identisch mit `summary.dhw.lastMonth`), `[2…12]` weitere 11 Monate zurück.
+`year`: 2 Werte, `[0]` = laufendes Jahr (identisch mit `summary.dhw.currentYear`), `[1]` = Vorjahr (identisch mit `summary.dhw.lastYear`).
+`.total` ist rechnerisch die Summe aus `.heating` + `.dhw` + `.cooling` auf jedem Index (geprüft). Die `.summary.*`-Variante bleibt die einfachste Quelle für den jeweils aktuellen Einzelwert, aber `.heating`/`.dhw`/`.total` liefern jetzt zusätzlich die Historie dahinter.
+
+**Kein Pendant für Wärmemenge:** `heating.heat.production.heating` und `heating.heat.production.total` existieren auf diesem Gerät **nicht** (Stand 2026-10-11, live geprüft) — nur `heating.heat.production.summary.heating`/`.dhw`/`.cooling` mit den Rollwerten. Für die erzeugte Wärmemenge gibt es also keine API-Zeitreihe, nur die App-eigenen Snapshots (`HeatPumpEfficiencySample`).
 
 ## Konfiguration & Anlagenparameter
 

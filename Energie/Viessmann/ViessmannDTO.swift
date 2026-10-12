@@ -104,6 +104,16 @@ enum ViessmannFeatureValue: Decodable {
         }
     }
 
+    /// Viessmann's consumption-history properties (`heating.power.consumption.*`'s `day`/`week`/
+    /// `month`/`year`) decode straight into this case — confirmed live on-device 2026-10-11, see
+    /// VIESSMANN_API_WERTE.md.
+    var numberArrayValue: [Double]? {
+        switch self {
+        case .numberArray(let value): return value
+        default: return nil
+        }
+    }
+
     var stringRepresentation: String? {
         switch self {
         case .string(let value): return value

@@ -483,9 +483,7 @@ private struct HeatPumpEfficiencyScreen: View {
                     }
                 }
 
-                ForEach(Self.displayedPeriods) { period in
-                    HeatPumpEfficiencyTrendChart(period: period, samples: samples(for: period))
-                }
+                HeatPumpEnergyHistoryCard(features: features, samples: samples)
             }
             .padding()
         }
@@ -511,37 +509,149 @@ private struct HeatPumpEfficiencyScreen: View {
     }
 }
 
-private struct HeatPumpEfficiencyTrendChart: View {
-    let period: HeatPumpEfficiencyPeriod
+/// One point for the bar chart — a bucket contributes up to two (Strom/Wärme), each only if
+/// that value exists (see `HeatPumpEnergyBucket`'s doc comment on the two series' different
+/// depth). Matches the "PVSeriesPoint" pattern from `PVHistoryChartsView.swift`.
+private struct HeatPumpEnergyPoint: Identifiable {
+    let date: Date
+    let seriesLabel: String
+    let valueKWh: Double
+    var id: String { "\(seriesLabel)-\(date.timeIntervalSinceReferenceDate)" }
+}
+
+private func energyPoints(from buckets: [HeatPumpEnergyBucket]) -> [HeatPumpEnergyPoint] {
+    buckets.flatMap { bucket -> [HeatPumpEnergyPoint] in
+        var points: [HeatPumpEnergyPoint] = []
+        if let consumed = bucket.consumedKWh {
+            points.append(HeatPumpEnergyPoint(date: bucket.date, seriesLabel: "Strom", valueKWh: consumed))
+        }
+        if let produced = bucket.producedKWh {
+            points.append(HeatPumpEnergyPoint(date: bucket.date, seriesLabel: "Wärme", valueKWh: produced))
+        }
+        return points
+    }
+}
+
+/// Combined Strom-/Wärme-/Effizienz-Verlauf: a granularity picker, grouped bars for consumption
+/// and production (each on its own honest scale), and a separate, thin efficiency line below —
+/// two independently-scaled charts rather than a dual-axis one, so neither series has to be
+/// rescaled to share the other's range. Both share one explicit `chartXScale` domain spanning
+/// *all* buckets (not just the ones with an efficiency value) so their x-axes still line up —
+/// left to each chart's own data, Swift Charts fits the domain to only the points it's given,
+/// and the efficiency line (usually far fewer points, see `HeatPumpEnergyBucket`) would end up
+/// on a completely different, narrower time window than the bars above it.
+private struct HeatPumpEnergyHistoryCard: View {
+    let features: [ViessmannFeatureDTO]
     let samples: [HeatPumpEfficiencySample]
 
+    @State private var granularity: HeatPumpHistoryGranularity = .day
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var buckets: [HeatPumpEnergyBucket] {
+        HeatPumpEnergyHistory.buckets(granularity: granularity, features: features, samples: samples)
+    }
+
+    private var sharedDateDomain: ClosedRange<Date>? {
+        guard let first = buckets.first?.date, let last = buckets.last?.date else { return nil }
+        return first...last
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(period.displayName)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Verlauf")
                 .font(.headline)
 
-            if samples.isEmpty {
+            Picker("Zeitraum", selection: Binding(
+                get: { granularity },
+                set: { newValue in
+                    if reduceMotion {
+                        granularity = newValue
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            granularity = newValue
+                        }
+                    }
+                }
+            )) {
+                ForEach(HeatPumpHistoryGranularity.allCases) { option in
+                    Text(option.displayName).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            if let sharedDateDomain {
+                HeatPumpEnergyBarChart(buckets: buckets, unit: granularity.chartUnit, domain: sharedDateDomain)
+                HeatPumpEnergyEfficiencyChart(buckets: buckets, unit: granularity.chartUnit, domain: sharedDateDomain)
+            } else {
                 Text("Noch keine Werte — der erste Schnappschuss entsteht beim nächsten Abruf.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .frame(height: 120)
-            } else {
-                Chart(samples) { sample in
-                    LineMark(
-                        x: .value("Zeitpunkt", sample.boundaryDate),
-                        y: .value("Effizienz", sample.efficiency)
-                    )
-                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-                    // A lone `LineMark` draws nothing for a single data point — the symbol marks
-                    // every point individually, so at least one visible dot always shows up.
-                    .symbol(.circle)
-                }
-                .foregroundStyle(.heatPumpAccent)
-                .frame(height: 120)
+                    .frame(height: 180)
             }
         }
         .padding()
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct HeatPumpEnergyBarChart: View {
+    let buckets: [HeatPumpEnergyBucket]
+    let unit: Calendar.Component
+    let domain: ClosedRange<Date>
+
+    private static let seriesColors: KeyValuePairs<String, Color> = [
+        "Strom": .yellow,
+        "Wärme": .heatPumpAccent,
+    ]
+
+    private func isCurrent(_ date: Date) -> Bool {
+        buckets.first { $0.date == date }?.isCurrent ?? false
+    }
+
+    var body: some View {
+        Chart(energyPoints(from: buckets)) { point in
+            BarMark(
+                x: .value("Zeitraum", point.date, unit: unit),
+                y: .value("kWh", point.valueKWh)
+            )
+            .position(by: .value("Reihe", point.seriesLabel))
+            .foregroundStyle(by: .value("Reihe", point.seriesLabel))
+            .opacity(isCurrent(point.date) ? 0.55 : 1)
+        }
+        .chartForegroundStyleScale(Self.seriesColors)
+        .chartXScale(domain: domain)
+        .frame(height: 160)
+    }
+}
+
+private struct HeatPumpEnergyEfficiencyChart: View {
+    let buckets: [HeatPumpEnergyBucket]
+    let unit: Calendar.Component
+    let domain: ClosedRange<Date>
+
+    private var points: [HeatPumpEnergyBucket] {
+        buckets.filter { $0.efficiency != nil }
+    }
+
+    var body: some View {
+        if points.isEmpty {
+            Text("Noch keine Effizienz-Werte für diesen Zeitraum.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(height: 60)
+        } else {
+            Chart(points) { bucket in
+                LineMark(
+                    x: .value("Zeitraum", bucket.date, unit: unit),
+                    y: .value("JAZ", bucket.efficiency ?? 0)
+                )
+                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                .symbol(.circle)
+            }
+            .foregroundStyle(.green)
+            .chartXScale(domain: domain)
+            .frame(height: 80)
+        }
     }
 }
 

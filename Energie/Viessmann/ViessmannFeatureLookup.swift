@@ -27,6 +27,10 @@ extension Array where Element == ViessmannFeatureDTO {
         self.property(featureName, property)?.value.stringRepresentation
     }
 
+    func numberArrayValue(_ featureName: String, _ property: String) -> [Double]? {
+        self.property(featureName, property)?.value.numberArrayValue
+    }
+
     /// Reads a comma-separated list of instance indices from a feature like `heating.circuits`'s
     /// `enabled` property (e.g. "0,1") — the authoritative source for "how many circuits/
     /// compressors/etc. does this device actually have" (HP-4), rather than guessing from which
