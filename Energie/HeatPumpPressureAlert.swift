@@ -10,7 +10,7 @@ import Foundation
 /// The three kinds of pressure alert. `.drop` and `.repeatReminder` share the same wording (both
 /// mean "still too low"); `.recovery` is the all-clear. Ported from the macOS sibling project's
 /// `PressureAlertTracker`/`PressureAlertKind`.
-enum HeatPumpPressureAlertKind {
+nonisolated enum HeatPumpPressureAlertKind: Equatable {
     case drop
     case repeatReminder
     case recovery
@@ -19,8 +19,8 @@ enum HeatPumpPressureAlertKind {
 /// Decides whether the current poll should trigger a pressure alert, given the previous state.
 /// Pure and stateless per call — `HeatPumpModel` holds the actual state between polls and passes
 /// it in, same pattern as `HeatPumpEfficiencyTracker.periodsNeedingSnapshot`.
-enum HeatPumpPressureAlertTracker {
-    struct State: Equatable {
+nonisolated enum HeatPumpPressureAlertTracker {
+    nonisolated struct State: Equatable {
         var isBelowThreshold = false
         var lastNotifiedAt: Date?
     }

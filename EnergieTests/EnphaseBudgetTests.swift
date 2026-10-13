@@ -35,7 +35,7 @@ struct EnphaseBudgetTests {
     }
 
     @Test func resetsWhenTheCalendarMonthChanges() async {
-        var current = date(2026, 9, 30)
+        nonisolated(unsafe) var current = date(2026, 9, 30)
         let defaults = UserDefaults(suiteName: UUID().uuidString)!
         let budget = EnphaseRequestBudget(userDefaults: defaults, now: { current })
 
@@ -54,7 +54,7 @@ struct EnphaseBudgetTests {
         // Pacific Time (UTC-7 in September) — the counter must not reset yet, since the quota
         // is assumed to follow Enphase's own (Pacific Time) calendar, not the device's.
         let berlin = TimeZone(identifier: "Europe/Berlin")!
-        var current = date(2026, 9, 30)
+        nonisolated(unsafe) var current = date(2026, 9, 30)
         let defaults = UserDefaults(suiteName: UUID().uuidString)!
         let budget = EnphaseRequestBudget(userDefaults: defaults, now: { current })
 

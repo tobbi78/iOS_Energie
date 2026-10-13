@@ -32,7 +32,7 @@ struct EnphaseOAuthClientTests {
     }
 
     @Test func completeSignInDecodesTokensAndSendsBasicAuth() async throws {
-        var capturedAuthHeader: String?
+        nonisolated(unsafe) var capturedAuthHeader: String?
         MockURLProtocol.requestHandler = { request in
             capturedAuthHeader = request.value(forHTTPHeaderField: "Authorization")
             return MockURLProtocol.jsonResponse(

@@ -45,8 +45,8 @@ struct ViessmannOAuthClientTests {
     }
 
     @Test func completeSignInDecodesTokensWithFormEncodedBody() async throws {
-        var capturedContentType: String?
-        var capturedBody: String?
+        nonisolated(unsafe) var capturedContentType: String?
+        nonisolated(unsafe) var capturedBody: String?
         MockURLProtocol.requestHandler = { request in
             capturedContentType = request.value(forHTTPHeaderField: "Content-Type")
             capturedBody = MockURLProtocol.bodyData(from: request).map { String(data: $0, encoding: .utf8) ?? "" }

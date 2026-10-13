@@ -18,11 +18,11 @@ extension JSONDecoder {
     static let enphase = JSONDecoder()
 }
 
-struct EnphaseSystemsResponse: Decodable {
+nonisolated struct EnphaseSystemsResponse: Decodable {
     let systems: [EnphaseSystemDTO]
 }
 
-struct EnphaseSystemDTO: Decodable {
+nonisolated struct EnphaseSystemDTO: Decodable {
     let systemID: Int
     /// Unix seconds; commissioning/grid-connection date. Used as the backfill start point
     /// (F3.2) instead of an arbitrary fixed window.
@@ -34,7 +34,7 @@ struct EnphaseSystemDTO: Decodable {
     }
 }
 
-struct EnphaseSystemSummaryDTO: Decodable {
+nonisolated struct EnphaseSystemSummaryDTO: Decodable {
     let energyTodayWh: Double
     let currentPowerW: Double?
 
@@ -45,10 +45,10 @@ struct EnphaseSystemSummaryDTO: Decodable {
 }
 
 /// Response shape shared by `telemetry/consumption_meter` and `telemetry/production_meter`.
-struct EnphaseMeterTelemetryResponse: Decodable {
+nonisolated struct EnphaseMeterTelemetryResponse: Decodable {
     let intervals: [Interval]
 
-    struct Interval: Decodable {
+    nonisolated struct Interval: Decodable {
         let endAt: Int
         let enwh: Double
 
@@ -66,10 +66,10 @@ struct EnphaseMeterTelemetryResponse: Decodable {
 /// Response shape for `energy_import_telemetry` / `energy_export_telemetry`. Both endpoints
 /// nest their intervals as a list of lists (`intervals[][]`, see ENPHASE_API_WERTE.md) and only
 /// populate one of `whImported`/`whExported` depending on which endpoint was called.
-struct EnphaseEnergyFlowTelemetryResponse: Decodable {
+nonisolated struct EnphaseEnergyFlowTelemetryResponse: Decodable {
     let intervals: [[Entry]]
 
-    struct Entry: Decodable {
+    nonisolated struct Entry: Decodable {
         let endAt: Int
         let whImported: Double?
         let whExported: Double?
@@ -86,10 +86,10 @@ struct EnphaseEnergyFlowTelemetryResponse: Decodable {
     }
 }
 
-struct EnphaseBatteryTelemetryResponse: Decodable {
+nonisolated struct EnphaseBatteryTelemetryResponse: Decodable {
     let intervals: [Interval]
 
-    struct Interval: Decodable {
+    nonisolated struct Interval: Decodable {
         let endAt: Int
         let charge: EnergyValue
         let discharge: EnergyValue
@@ -101,11 +101,11 @@ struct EnphaseBatteryTelemetryResponse: Decodable {
         }
     }
 
-    struct EnergyValue: Decodable {
+    nonisolated struct EnergyValue: Decodable {
         let enwh: Double
     }
 
-    struct StateOfCharge: Decodable {
+    nonisolated struct StateOfCharge: Decodable {
         let percent: Double
     }
 
@@ -129,12 +129,12 @@ struct EnphaseBatteryTelemetryResponse: Decodable {
 ///
 /// Trailing zeros mean "not yet reported", not "0 Wh" (see ENPHASE_API_WERTE.md) — callers
 /// decide how to treat them; this type only pairs values with their day.
-struct EnphaseLifetimeDailyValue {
+nonisolated struct EnphaseLifetimeDailyValue {
     let date: Date
     let value: Double
 }
 
-private func dailyValues(startDateString: String, values: [Double]) -> [EnphaseLifetimeDailyValue] {
+private nonisolated func dailyValues(startDateString: String, values: [Double]) -> [EnphaseLifetimeDailyValue] {
     let formatter = DateFormatter()
     formatter.calendar = Calendar(identifier: .gregorian)
     formatter.dateFormat = "yyyy-MM-dd"
@@ -149,7 +149,7 @@ private func dailyValues(startDateString: String, values: [Double]) -> [EnphaseL
     }
 }
 
-struct EnphaseEnergyLifetimeResponse: Decodable {
+nonisolated struct EnphaseEnergyLifetimeResponse: Decodable {
     let startDate: String
     let production: [Double]
 
@@ -163,7 +163,7 @@ struct EnphaseEnergyLifetimeResponse: Decodable {
     }
 }
 
-struct EnphaseConsumptionLifetimeResponse: Decodable {
+nonisolated struct EnphaseConsumptionLifetimeResponse: Decodable {
     let startDate: String
     let consumption: [Double]
 
@@ -177,7 +177,7 @@ struct EnphaseConsumptionLifetimeResponse: Decodable {
     }
 }
 
-struct EnphaseImportLifetimeResponse: Decodable {
+nonisolated struct EnphaseImportLifetimeResponse: Decodable {
     let startDate: String
     let imported: [Double]
 
@@ -191,7 +191,7 @@ struct EnphaseImportLifetimeResponse: Decodable {
     }
 }
 
-struct EnphaseExportLifetimeResponse: Decodable {
+nonisolated struct EnphaseExportLifetimeResponse: Decodable {
     let startDate: String
     let exported: [Double]
 
@@ -205,7 +205,7 @@ struct EnphaseExportLifetimeResponse: Decodable {
     }
 }
 
-struct EnphaseBatteryLifetimeResponse: Decodable {
+nonisolated struct EnphaseBatteryLifetimeResponse: Decodable {
     let startDate: String
     let charge: [Double]
     let discharge: [Double]

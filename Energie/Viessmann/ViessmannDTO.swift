@@ -15,24 +15,24 @@ import Foundation
 
 // MARK: - Equipment discovery
 
-struct ViessmannListResponse<Element: Decodable>: Decodable {
+nonisolated struct ViessmannListResponse<Element: Decodable>: Decodable {
     let data: [Element]
 }
 
-struct ViessmannInstallationDTO: Decodable, Identifiable {
+nonisolated struct ViessmannInstallationDTO: Decodable, Identifiable {
     let id: Int
     let description: String?
     let gateways: [ViessmannGatewayDTO]
 }
 
-struct ViessmannGatewayDTO: Decodable, Identifiable {
+nonisolated struct ViessmannGatewayDTO: Decodable, Identifiable {
     let serial: String
     let devices: [ViessmannDeviceDTO]
 
     var id: String { serial }
 }
 
-struct ViessmannDeviceDTO: Decodable, Identifiable {
+nonisolated struct ViessmannDeviceDTO: Decodable, Identifiable {
     let id: String
     let deviceType: String?
     let modelId: String?
@@ -52,7 +52,7 @@ extension Array where Element == ViessmannDeviceDTO {
 
 // MARK: - Features
 
-struct ViessmannFeatureDTO: Decodable {
+nonisolated struct ViessmannFeatureDTO: Decodable {
     let feature: String
     let isEnabled: Bool
     let isReady: Bool
@@ -60,7 +60,7 @@ struct ViessmannFeatureDTO: Decodable {
     let properties: [String: ViessmannFeaturePropertyDTO]
 }
 
-struct ViessmannFeaturePropertyDTO: Decodable {
+nonisolated struct ViessmannFeaturePropertyDTO: Decodable {
     let type: String?
     let value: ViessmannFeatureValue
     let unit: String?
@@ -71,7 +71,7 @@ struct ViessmannFeaturePropertyDTO: Decodable {
 /// feature as its own struct would break on every firmware/API update, so values are captured
 /// generically and interpreted where displayed (HP-4). Ported as-is from the macOS sibling
 /// project's `FeatureValue`.
-enum ViessmannFeatureValue: Decodable {
+nonisolated enum ViessmannFeatureValue: Decodable {
     case number(Double)
     case bool(Bool)
     case string(String)
