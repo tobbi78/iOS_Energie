@@ -11,7 +11,7 @@ import Testing
 
 struct EnphaseRequestThrottleTests {
     @Test func allowsRequestsUpToTheLimitWithoutSleeping() async {
-        var sleptFor: [TimeInterval] = []
+        nonisolated(unsafe) var sleptFor: [TimeInterval] = []
         let throttle = EnphaseRequestThrottle(
             window: 75,
             limit: 3,
@@ -27,7 +27,7 @@ struct EnphaseRequestThrottleTests {
     }
 
     @Test func sleepsOnceTheLimitIsReachedWithinTheWindow() async {
-        var sleptFor: [TimeInterval] = []
+        nonisolated(unsafe) var sleptFor: [TimeInterval] = []
         // Fixed clock — every acquire() happens "at the same instant" as far as the throttle can
         // tell, so the 4th call within a limit of 3 must wait out the full window.
         let throttle = EnphaseRequestThrottle(
@@ -55,8 +55,8 @@ struct EnphaseRequestThrottleTests {
     }
 
     @Test func doesNotSleepAgainOnceTheOldestRequestHasAgedOutOfTheWindow() async {
-        var sleptFor: [TimeInterval] = []
-        var current = Date(timeIntervalSince1970: 1_000)
+        nonisolated(unsafe) var sleptFor: [TimeInterval] = []
+        nonisolated(unsafe) var current = Date(timeIntervalSince1970: 1_000)
         let throttle = EnphaseRequestThrottle(
             window: 75,
             limit: 1,

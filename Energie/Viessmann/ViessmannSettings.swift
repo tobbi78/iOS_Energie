@@ -9,7 +9,7 @@ import Foundation
 
 /// Credentials for the Viessmann API client, entered once by the user. Only a Client-ID is
 /// needed — PKCE replaces the client secret (see Plans/Waermepumpe-Integration.md, Abschnitt 3).
-struct ViessmannCredentials: Equatable {
+nonisolated struct ViessmannCredentials: Equatable {
     var clientID: String
 
     var isComplete: Bool {
@@ -18,7 +18,7 @@ struct ViessmannCredentials: Equatable {
 }
 
 /// OAuth token pair returned by the Viessmann token endpoint.
-struct ViessmannTokens: Equatable {
+nonisolated struct ViessmannTokens: Equatable {
     var accessToken: String
     var refreshToken: String
     var expiresAt: Date
@@ -31,7 +31,7 @@ struct ViessmannTokens: Equatable {
 /// Identifies the single heating device to poll, resolved once after sign-in. Keeping all three
 /// IDs (rather than just a device ID) avoids re-deriving the path on every request and makes the
 /// "gateway pseudo-device" gotcha an explicit, one-time choice instead of a runtime guess.
-struct ViessmannDeviceSelection: Equatable {
+nonisolated struct ViessmannDeviceSelection: Equatable {
     var installationID: Int
     var gatewaySerial: String
     var deviceID: String

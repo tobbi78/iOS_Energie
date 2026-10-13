@@ -8,7 +8,7 @@
 import Foundation
 
 /// Credentials for the Enphase developer app, entered once by the user.
-struct EnphaseCredentials: Equatable {
+nonisolated struct EnphaseCredentials: Equatable {
     var clientID: String
     var clientSecret: String
     var apiKey: String
@@ -19,7 +19,7 @@ struct EnphaseCredentials: Equatable {
 }
 
 /// OAuth token pair returned by the Enphase token endpoint.
-struct EnphaseTokens: Equatable {
+nonisolated struct EnphaseTokens: Equatable {
     var accessToken: String
     var refreshToken: String
     var expiresAt: Date
