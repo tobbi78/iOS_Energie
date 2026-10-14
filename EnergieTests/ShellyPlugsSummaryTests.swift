@@ -106,4 +106,58 @@ struct ShellyPlugsSummaryTests {
         #expect(summary.onCount == 0)
         #expect(summary.totalPower == nil)
     }
+
+    // MARK: - `totalEnergyToday` (F12.3)
+
+    @Test func totalEnergyTodayIsNilWithoutAnyKnownReadings() {
+        let devices = [device("a"), device("b")]
+
+        let summary = ShellyPlugsSummary(devices: devices, statuses: [:])
+
+        #expect(summary.totalEnergyToday == nil)
+    }
+
+    @Test func totalEnergyTodaySumsAcrossAllSavedDevices() {
+        let devices = [device("a"), device("b"), device("c")]
+        let statuses = [
+            "a": onlineStatus(id: "a", output: true, apower: 100),
+            "b": onlineStatus(id: "b", output: false, apower: 0),
+            "c": offlineStatus(id: "c"),
+        ]
+        let energyToday = ["a": 400.0, "b": 50.0, "c": 20.0]
+
+        let summary = ShellyPlugsSummary(devices: devices, statuses: statuses, energyToday: energyToday)
+
+        #expect(summary.totalEnergyToday == 470)
+    }
+
+    /// Unlike `totalPower`, an offline device's last known "today" figure still counts — it was
+    /// genuinely consumed today even if the device can't be reached right now.
+    @Test func totalEnergyTodayIncludesOfflineDevices() {
+        let devices = [device("a")]
+        let statuses = ["a": offlineStatus(id: "a")]
+        let energyToday = ["a": 123.0]
+
+        let summary = ShellyPlugsSummary(devices: devices, statuses: statuses, energyToday: energyToday)
+
+        #expect(summary.totalEnergyToday == 123)
+    }
+
+    @Test func totalEnergyTodayIgnoresEntriesForDeviceIDsNotInTheSavedList() {
+        let devices = [device("a")]
+        let energyToday = ["a": 50.0, "unknown-id": 999.0]
+
+        let summary = ShellyPlugsSummary(devices: devices, statuses: [:], energyToday: energyToday)
+
+        #expect(summary.totalEnergyToday == 50)
+    }
+
+    @Test func totalEnergyTodayOnlySumsDevicesWithAKnownReading() {
+        let devices = [device("a"), device("b")]
+        let energyToday = ["a": 50.0]
+
+        let summary = ShellyPlugsSummary(devices: devices, statuses: [:], energyToday: energyToday)
+
+        #expect(summary.totalEnergyToday == 50)
+    }
 }

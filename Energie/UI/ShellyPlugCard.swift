@@ -20,6 +20,9 @@ import SwiftUI
 struct ShellyPlugCard: View {
     let device: ShellyDevice
     let status: ShellyDeviceStatusDTO?
+    /// Today's consumption (Wh), from `ShellyPlugStatusLoader.energyToday` (F12.3). `nil` renders
+    /// the same "–" as every other not-yet-known metric here.
+    let energyToday: Double?
 
     private var switchStatus: ShellySwitchStatus? {
         status?.status?.switch0
@@ -39,6 +42,11 @@ struct ShellyPlugCard: View {
                 Divider().frame(height: 36)
                 metric(title: "Strom", value: formattedCurrent(switchStatus?.current), icon: "gauge")
             }
+            // A separate row rather than a fourth column — "today" is an accumulated running
+            // total, not a live reading like the three above, and a fourth column would squeeze
+            // all four past comfortable reading at larger Dynamic Type sizes.
+            Divider()
+            InfoRow(label: "Heute", value: formattedEnergy(energyToday))
         }
         .padding()
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -106,6 +114,7 @@ struct ShellyPlugCard: View {
         parts.append("Leistung \(formattedPower(switchStatus?.apower))")
         parts.append("Spannung \(formattedVoltage(switchStatus?.voltage))")
         parts.append("Strom \(formattedCurrent(switchStatus?.current))")
+        parts.append("Heute \(formattedEnergy(energyToday))")
         return parts.joined(separator: ", ")
     }
 
@@ -123,6 +132,17 @@ struct ShellyPlugCard: View {
         guard let amps else { return "–" }
         return amps.formatted(.number.precision(.fractionLength(2))) + " A"
     }
+
+    /// Below 1000 Wh as whole watt-hours, otherwise in kWh (two decimals) — mirrors how
+    /// `apower` stays in W rather than switching units for a handful of watts, just the other
+    /// way round: a day's energy is routinely in the thousands of Wh, where kWh reads better.
+    private func formattedEnergy(_ wattHours: Double?) -> String {
+        guard let wattHours else { return "–" }
+        guard wattHours >= 1000 else {
+            return wattHours.formatted(.number.precision(.fractionLength(0))) + " Wh"
+        }
+        return (wattHours / 1000).formatted(.number.precision(.fractionLength(2))) + " kWh"
+    }
 }
 
 #Preview("An") {
@@ -131,7 +151,8 @@ struct ShellyPlugCard: View {
         status: ShellyDeviceStatusDTO(
             id: "a1b2c3d4e5f6", type: "SNPL-00112EU", code: nil, gen: 2, online: true,
             status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 123, voltage: 231.4, current: 0.53, aenergy: nil))
-        )
+        ),
+        energyToday: 456
     )
     .padding()
 }
@@ -142,7 +163,8 @@ struct ShellyPlugCard: View {
         status: ShellyDeviceStatusDTO(
             id: "0011223344aa", type: "SNPL-00112EU", code: nil, gen: 2, online: true,
             status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))
-        )
+        ),
+        energyToday: 1834.5
     )
     .padding()
 }
@@ -150,7 +172,8 @@ struct ShellyPlugCard: View {
 #Preview("Offline") {
     ShellyPlugCard(
         device: ShellyDevice(id: "ffeeddccbbaa", name: "Garage", model: "Plug S"),
-        status: ShellyDeviceStatusDTO(id: "ffeeddccbbaa", type: nil, code: nil, gen: 2, online: false, status: nil)
+        status: ShellyDeviceStatusDTO(id: "ffeeddccbbaa", type: nil, code: nil, gen: 2, online: false, status: nil),
+        energyToday: 1200
     )
     .padding()
 }
@@ -158,7 +181,8 @@ struct ShellyPlugCard: View {
 #Preview("Noch kein Status") {
     ShellyPlugCard(
         device: ShellyDevice(id: "556677889900", name: "Keller", model: nil),
-        status: nil
+        status: nil,
+        energyToday: nil
     )
     .padding()
 }
