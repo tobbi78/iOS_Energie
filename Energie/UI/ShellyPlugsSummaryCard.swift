@@ -94,9 +94,9 @@ struct ShellyPlugsSummaryCard: View {
             ShellyDevice(id: "c", name: "Garage", model: "Plug S"),
         ],
         statuses: [
-            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 123, voltage: 231.4, current: 0.53, aenergy: nil))),
-            "b": ShellyDeviceStatusDTO(id: "b", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))),
-            "c": ShellyDeviceStatusDTO(id: "c", type: nil, code: nil, gen: 2, online: false, status: nil),
+            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: "G2", online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 123, voltage: 231.4, current: 0.53, aenergy: nil))),
+            "b": ShellyDeviceStatusDTO(id: "b", type: "SNPL-00112EU", code: nil, gen: "G2", online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))),
+            "c": ShellyDeviceStatusDTO(id: "c", type: nil, code: nil, gen: "G2", online: false, status: nil),
         ],
         energyToday: ["a": 1834.5, "b": 620, "c": 410]
     ))
@@ -110,8 +110,8 @@ struct ShellyPlugsSummaryCard: View {
             ShellyDevice(id: "b", name: "Büro", model: "Plug S"),
         ],
         statuses: [
-            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))),
-            "b": ShellyDeviceStatusDTO(id: "b", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))),
+            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: "G2", online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))),
+            "b": ShellyDeviceStatusDTO(id: "b", type: "SNPL-00112EU", code: nil, gen: "G2", online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))),
         ],
         energyToday: ["a": 320, "b": 95]
     ))
@@ -126,7 +126,7 @@ struct ShellyPlugsSummaryCard: View {
             ShellyDevice(id: "c", name: "Garage", model: "Plug S"),
         ],
         statuses: [
-            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 50, voltage: 231.4, current: 0.22, aenergy: nil))),
+            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: "G2", online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 50, voltage: 231.4, current: 0.22, aenergy: nil))),
         ],
         // "b" and "c" are offline/unknown but still contribute their last known "today" figure
         // (F12.3) — `totalEnergyToday` doesn't drop out just because a device can't be reached

@@ -189,7 +189,7 @@ struct ShellyClientTests {
         }
 
         let devices = try await makeClient().fetchDevices(ids: ["a1b2c3"])
-        #expect(devices == [ShellyDeviceStatusDTO(id: "a1b2c3", type: "PlugS", code: nil, gen: 2, online: true, status: nil)])
+        #expect(devices == [ShellyDeviceStatusDTO(id: "a1b2c3", type: "PlugS", code: nil, gen: "2", online: true, status: nil)])
     }
 
     @Test func fetchDevicesDecodesADataResultEnvelope() async throws {
@@ -199,6 +199,24 @@ struct ShellyClientTests {
 
         let devices = try await makeClient().fetchDevices(ids: ["a1b2c3"])
         #expect(devices == [ShellyDeviceStatusDTO(id: "a1b2c3", type: nil, code: nil, gen: nil, online: false, status: nil)])
+    }
+
+    // Regression for the F11.3 "Daten nicht im korrekten Format"-Bug: a real Shelly Plug M Gen3
+    // sends `gen` as the string `"G2"` and `online` as `0`/`1`, not the `Int`/`Bool` SHELLY_API_
+    // WERTE.md assumed — both previously made the *entire* response fail to decode (field-level
+    // type mismatches, not an actually-unrecognized envelope), surfacing the Apple default
+    // DecodingError message instead of a real status.
+    @Test func fetchDevicesDecodesARealGen3PlugResponse() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"90706953bbd4","type":"relay","code":"S3PL-30110EU","gen":"G2","online":1,"status":{"switch:0":{"output":true,"apower":6.4,"voltage":236,"current":0.047,"aenergy":{"total":319.87,"by_minute":[0,205.176,0],"minute_ts":1792013220}}}}]
+            """#)
+        }
+
+        let device = try await makeClient().fetchDevices(ids: ["90706953bbd4"]).first
+        #expect(device?.gen == "G2")
+        #expect(device?.online == true)
+        #expect(device?.status?.switch0?.apower == 6.4)
     }
 
     @Test func fetchDevicesThrowsStatusUnavailableOnUnrecognizedResponseShape() async throws {

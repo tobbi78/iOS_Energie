@@ -149,7 +149,7 @@ struct ShellyPlugCard: View {
     ShellyPlugCard(
         device: ShellyDevice(id: "a1b2c3d4e5f6", name: "Wohnzimmer", model: "Plug S"),
         status: ShellyDeviceStatusDTO(
-            id: "a1b2c3d4e5f6", type: "SNPL-00112EU", code: nil, gen: 2, online: true,
+            id: "a1b2c3d4e5f6", type: "SNPL-00112EU", code: nil, gen: "G2", online: true,
             status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 123, voltage: 231.4, current: 0.53, aenergy: nil))
         ),
         energyToday: 456
@@ -161,7 +161,7 @@ struct ShellyPlugCard: View {
     ShellyPlugCard(
         device: ShellyDevice(id: "0011223344aa", name: "Büro", model: "Plug S"),
         status: ShellyDeviceStatusDTO(
-            id: "0011223344aa", type: "SNPL-00112EU", code: nil, gen: 2, online: true,
+            id: "0011223344aa", type: "SNPL-00112EU", code: nil, gen: "G2", online: true,
             status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))
         ),
         energyToday: 1834.5
@@ -172,7 +172,7 @@ struct ShellyPlugCard: View {
 #Preview("Offline") {
     ShellyPlugCard(
         device: ShellyDevice(id: "ffeeddccbbaa", name: "Garage", model: "Plug S"),
-        status: ShellyDeviceStatusDTO(id: "ffeeddccbbaa", type: nil, code: nil, gen: 2, online: false, status: nil),
+        status: ShellyDeviceStatusDTO(id: "ffeeddccbbaa", type: nil, code: nil, gen: "G2", online: false, status: nil),
         energyToday: 1200
     )
     .padding()

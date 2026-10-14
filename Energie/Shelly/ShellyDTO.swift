@@ -80,9 +80,53 @@ nonisolated struct ShellyDeviceStatusDTO: Decodable, Equatable {
     let id: String
     let type: String?
     let code: String?
-    let gen: Int?
+    /// Component-protocol family — confirmed 2026-10-14 against a real Shelly Plug M Gen3 to
+    /// come back as the **string** `"G2"` (it shares Gen2's JSON-RPC component model, see
+    /// SHELLY_API_WERTE.md, "Gen1 vs. Gen2+"), not the numeric `1`/`2` SHELLY_API_WERTE.md
+    /// assumed from the official docs alone. Decoded tolerantly from either a string or a
+    /// number (normalized to its string form) — that type mismatch, plus `online` below, is
+    /// what the "unrecognized response shape" bug reports traced back to.
+    let gen: String?
     let online: Bool?
     let status: ShellyDeviceStatus?
+
+    private enum CodingKeys: String, CodingKey {
+        case id, type, code, gen, online, status
+    }
+
+    init(id: String, type: String?, code: String?, gen: String?, online: Bool?, status: ShellyDeviceStatus?) {
+        self.id = id
+        self.type = type
+        self.code = code
+        self.gen = gen
+        self.online = online
+        self.status = status
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        type = try container.decodeIfPresent(String.self, forKey: .type)
+        code = try container.decodeIfPresent(String.self, forKey: .code)
+        if let string = try? container.decode(String.self, forKey: .gen) {
+            gen = string
+        } else if let number = try? container.decode(Int.self, forKey: .gen) {
+            gen = String(number)
+        } else {
+            gen = nil
+        }
+        // Confirmed 2026-10-14 against a real device: `online` comes back as `0`/`1` (Int), not
+        // a JSON boolean — `JSONDecoder`'s synthesized `Bool` decoding rejects a bare number
+        // outright. Tolerant of either, same reasoning as `gen` above.
+        if let bool = try? container.decode(Bool.self, forKey: .online) {
+            online = bool
+        } else if let number = try? container.decode(Int.self, forKey: .online) {
+            online = number != 0
+        } else {
+            online = nil
+        }
+        status = try container.decodeIfPresent(ShellyDeviceStatus.self, forKey: .status)
+    }
 }
 
 /// Gen2+ JSON-RPC component status (SHELLY_API_WERTE.md, "Gen2+") — only the `Switch` component
