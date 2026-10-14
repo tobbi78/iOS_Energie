@@ -25,6 +25,7 @@ struct ContentView: View {
     @State private var viessmannSettings = ViessmannSettings()
     @State private var pressureAlertSettings = HeatPumpPressureAlertSettings()
     @State private var shellySettings = ShellySettings()
+    @State private var shellyDeviceList = ShellyDeviceList()
     @State private var heatPumpModel: HeatPumpModel?
     @State private var selectedTab: AppTab = .home
     @State private var watchSyncService = WatchSyncService()
@@ -70,7 +71,8 @@ struct ContentView: View {
                         displayPreferences: displayPreferences,
                         budgetSettings: budgetSettings,
                         heatPumpModel: heatPumpModel,
-                        shellySettings: shellySettings
+                        shellySettings: shellySettings,
+                        shellyDeviceList: shellyDeviceList
                     )
                 } else {
                     ProgressView()

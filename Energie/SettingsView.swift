@@ -17,6 +17,7 @@ struct SettingsView: View {
     var budgetSettings: EnphaseBudgetSettings
     var heatPumpModel: HeatPumpModel
     var shellySettings: ShellySettings
+    var shellyDeviceList: ShellyDeviceList
 
     var body: some View {
         NavigationStack {
@@ -33,7 +34,7 @@ struct SettingsView: View {
                         SettingsRow(title: "Wärmepumpe", icon: "heater.vertical.fill", tint: .heatPumpAccent)
                     }
                     NavigationLink {
-                        ShellySettingsScreen(settings: shellySettings)
+                        ShellySettingsScreen(settings: shellySettings, deviceList: shellyDeviceList)
                     } label: {
                         SettingsRow(title: "Shelly-Steckdosen", icon: "powerplug.fill", tint: .shellyAccent)
                     }

@@ -110,6 +110,12 @@
     "Authorization Key" : {
 
     },
+    "Automatisch suchen oder die Geräte-ID unten manuell eingeben." : {
+
+    },
+    "Automatische Suche" : {
+
+    },
     "bar" : {
       "localizations" : {
         "en" : {
@@ -129,6 +135,9 @@
           }
         }
       }
+    },
+    "Bereits hinzugefügt" : {
+
     },
     "Client-ID" : {
       "localizations" : {
@@ -193,6 +202,9 @@
           }
         }
       }
+    },
+    "Die Geräte-ID findest du in der Shelly-App unter \"Gerät → Einstellungen → Geräteinformationen\"." : {
+
     },
     "Effizienz" : {
       "extractionState" : "stale",
@@ -353,7 +365,16 @@
         }
       }
     },
+    "Geräte automatisch suchen" : {
+
+    },
+    "Geräte-ID" : {
+
+    },
     "Gespeichert" : {
+
+    },
+    "Gespeicherte Steckdosen" : {
 
     },
     "Heizkreise" : {
@@ -365,6 +386,9 @@
           }
         }
       }
+    },
+    "Hinzufügen" : {
+
     },
     "hula.proxy-3c@icloud.com" : {
 
@@ -467,6 +491,9 @@
           }
         }
       }
+    },
+    "Manuell hinzufügen" : {
+
     },
     "Mehr" : {
       "extractionState" : "stale",
@@ -592,6 +619,9 @@
         }
       }
     },
+    "Name (optional)" : {
+
+    },
     "Noch keine Daten für diesen Zeitraum." : {
       "localizations" : {
         "en" : {
@@ -612,6 +642,9 @@
         }
       }
     },
+    "Noch keine Steckdosen" : {
+
+    },
     "Noch keine Werte — der erste Schnappschuss entsteht beim nächsten Abruf." : {
       "localizations" : {
         "en" : {
@@ -622,7 +655,13 @@
         }
       }
     },
+    "Nutzt einen nur inoffiziell dokumentierten Shelly-Endpunkt — funktioniert möglicherweise nicht zuverlässig. Schlägt die Suche fehl, hilft die manuelle Eingabe unten weiter." : {
+
+    },
     "OK" : {
+
+    },
+    "Prüfen und hinzufügen" : {
 
     },
     "PV-Anlage" : {
@@ -757,6 +796,12 @@
           }
         }
       }
+    },
+    "Steckdosen" : {
+
+    },
+    "Suche läuft …" : {
+
     },
     "Tarif" : {
       "localizations" : {

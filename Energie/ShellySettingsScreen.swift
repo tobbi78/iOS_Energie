@@ -13,6 +13,7 @@ import SwiftUI
 /// tab (`SettingsView`), analogous to `PVSettingsScreen`/`HeatPumpSettingsScreen`.
 struct ShellySettingsScreen: View {
     var settings: ShellySettings
+    var deviceList: ShellyDeviceList
 
     @State private var serverURI = ""
     @State private var authKey = ""
@@ -37,6 +38,11 @@ struct ShellySettingsScreen: View {
                 Section("Verbindung") {
                     if let host = URL(string: settings.credentials.serverURI)?.host {
                         LabeledContent("Verbunden mit", value: host)
+                    }
+                    NavigationLink {
+                        ShellyDevicesScreen(settings: settings, deviceList: deviceList)
+                    } label: {
+                        LabeledContent("Steckdosen", value: "\(deviceList.devices.count)")
                     }
                     Button("Zugangsdaten entfernen", role: .destructive) {
                         showsRemoveConfirmation = true
@@ -103,15 +109,21 @@ struct ShellySettingsScreen: View {
 
 #Preview("Leer") {
     NavigationStack {
-        ShellySettingsScreen(settings: ShellySettings(store: InMemoryShellySecretStore()))
+        ShellySettingsScreen(
+            settings: ShellySettings(store: InMemoryShellySecretStore()),
+            deviceList: ShellyDeviceList(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
+        )
     }
 }
 
 #Preview("Verbunden") {
     NavigationStack {
-        ShellySettingsScreen(settings: ShellySettings(store: InMemoryShellySecretStore(seed: [
-            .serverURI: "https://shelly-12-eu.shelly.cloud",
-            .authKey: "preview-key",
-        ])))
+        ShellySettingsScreen(
+            settings: ShellySettings(store: InMemoryShellySecretStore(seed: [
+                .serverURI: "https://shelly-12-eu.shelly.cloud",
+                .authKey: "preview-key",
+            ])),
+            deviceList: ShellyDeviceList(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
+        )
     }
 }
