@@ -23,6 +23,12 @@ nonisolated struct ShellyPlugsSummary: Equatable {
     /// refresh) — `ShellyPlugsSummaryCard` renders that as "–", same convention as
     /// `ShellyPlugCard`'s individual metrics.
     let totalPower: Double?
+    /// Sum of `energyToday` (Wh, F12.3) across *all* saved devices with a known reading today —
+    /// unlike `totalPower`, this includes devices that are currently offline, since "today's"
+    /// consumption up to the point they went offline is still valid and shouldn't drop out of
+    /// the total just because the device can't be reached right now. `nil` under the same
+    /// "nothing known yet" condition as `totalPower`.
+    let totalEnergyToday: Double?
 
     /// - Parameters:
     ///   - devices: the saved plugs (`ShellyDeviceList.devices`), defining both the count and
@@ -31,14 +37,21 @@ nonisolated struct ShellyPlugsSummary: Equatable {
     ///     Entries for IDs not present in `devices` are ignored — only saved devices count.
     ///     A device with no entry here (not yet loaded) is treated the same as "offline": its
     ///     state simply isn't known yet.
-    init(devices: [ShellyDevice], statuses: [String: ShellyDeviceStatusDTO]) {
+    ///   - energyToday: today's consumption (Wh) per device ID (`ShellyPlugStatusLoader.
+    ///     energyToday`, F12.3). Defaults to empty for callers that predate F12.3.
+    init(devices: [ShellyDevice], statuses: [String: ShellyDeviceStatusDTO], energyToday: [String: Double] = [:]) {
         deviceCount = devices.count
 
         var onCount = 0
         var offlineCount = 0
         var totalPower: Double?
+        var totalEnergyToday: Double?
 
         for device in devices {
+            if let energyForToday = energyToday[device.id] {
+                totalEnergyToday = (totalEnergyToday ?? 0) + energyForToday
+            }
+
             guard let status = statuses[device.id], status.online == true else {
                 offlineCount += 1
                 continue
@@ -55,5 +68,6 @@ nonisolated struct ShellyPlugsSummary: Equatable {
         self.onCount = onCount
         self.offlineCount = offlineCount
         self.totalPower = totalPower
+        self.totalEnergyToday = totalEnergyToday
     }
 }

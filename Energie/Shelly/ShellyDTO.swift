@@ -105,6 +105,16 @@ nonisolated struct ShellySwitchStatus: Decodable, Equatable {
     let apower: Double?
     let voltage: Double?
     let current: Double?
+    /// Cumulative energy since the last device reboot (F12.3) — `ShellyDailyEnergyTracker` turns
+    /// this into a "today" figure, since it is not one itself (SHELLY_API_WERTE.md).
+    let aenergy: ShellyEnergyCounter?
+}
+
+/// `Switch.GetStatus`'s `aenergy` object. Only `total` (Wh, cumulative since the last reboot)
+/// matters for F12.3 — `by_minute`/`minute_ts` (last 3 minutes only) aren't a substitute for a
+/// real daily total and are left undecoded.
+nonisolated struct ShellyEnergyCounter: Decodable, Equatable {
+    let total: Double?
 }
 
 /// Tolerant top-level decode for `/v2/devices/api/get` — same caveat as

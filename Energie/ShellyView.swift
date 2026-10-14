@@ -65,11 +65,15 @@ struct ShellyView: View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 if deviceList.devices.count >= 2 {
-                    ShellyPlugsSummaryCard(summary: ShellyPlugsSummary(devices: deviceList.devices, statuses: loader.statuses))
+                    ShellyPlugsSummaryCard(summary: ShellyPlugsSummary(
+                        devices: deviceList.devices,
+                        statuses: loader.statuses,
+                        energyToday: loader.energyToday
+                    ))
                         .staggeredAppear(index: 0)
                 }
                 ForEach(Array(deviceList.devices.enumerated()), id: \.element.id) { index, device in
-                    ShellyPlugCard(device: device, status: loader.statuses[device.id])
+                    ShellyPlugCard(device: device, status: loader.statuses[device.id], energyToday: loader.energyToday[device.id])
                         .staggeredAppear(index: index + (deviceList.devices.count >= 2 ? 1 : 0))
                 }
                 if let lastUpdated = loader.lastUpdated {
