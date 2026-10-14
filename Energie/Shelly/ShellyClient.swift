@@ -51,6 +51,13 @@ struct ShellyClient {
     /// `@MainActor`-isolated settings objects — a plain synchronous `@Sendable` closure could
     /// not read MainActor-isolated state from an arbitrary calling context.
     var credentials: @Sendable () async -> ShellyCredentials
+    /// F12.2: pause between chunks in `fetchDevices` when more than 10 IDs are requested, so a
+    /// large device list can't blow through the account-wide 1-request/second limit on its own
+    /// — a stopgap until F15.1's shared throttle covers every Shelly call, not just this one.
+    var chunkDelay: Duration = .seconds(1)
+    /// Swappable so tests don't have to actually wait — same reasoning as the `now`/`sleep`
+    /// seams elsewhere in this codebase (e.g. `EnphaseRequestThrottle`).
+    var sleep: @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
 
     /// F11.3 "Geräte automatisch suchen". Any failure — network, HTTP, or an unrecognized
     /// response shape — surfaces as `.discoveryUnavailable` rather than the underlying error,
@@ -69,13 +76,18 @@ struct ShellyClient {
 
     /// F11.3 manual-entry verification, and (unmodified) reused for F12 status polling later.
     /// Chunks into batches of 10 — the API's per-call maximum (SHELLY_API_WERTE.md) — even
-    /// though F11.3 itself only ever calls this with a single ID.
+    /// though F11.3 itself only ever calls this with a single ID. For more than one chunk
+    /// (F12.2: more than 10 saved devices), waits `chunkDelay` before every chunk after the
+    /// first, so this one call alone can't exceed the account-wide 1-request/second limit.
     func fetchDevices(ids: [String]) async throws -> [ShellyDeviceStatusDTO] {
         guard !ids.isEmpty else { return [] }
         let credentials = try await requireCredentials()
 
         var devices: [ShellyDeviceStatusDTO] = []
-        for chunk in ids.chunked(into: 10) {
+        for (index, chunk) in ids.chunked(into: 10).enumerated() {
+            if index > 0 {
+                try await sleep(chunkDelay)
+            }
             let request = ShellyEndpoints.deviceStatusRequest(server: credentials.serverURI, authKey: credentials.authKey, ids: chunk)
             let data = try await perform(request)
             devices.append(contentsOf: try JSONDecoder().decode(ShellyDeviceStatusResponse.self, from: data).devices)

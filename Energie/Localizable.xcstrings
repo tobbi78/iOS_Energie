@@ -4,6 +4,19 @@
     "„Energie“ ist eine private App, die ausschließlich im Rahmen eines nicht-öffentlichen TestFlight-Tests mit einem begrenzten Personenkreis (Familie/Freunde) verwendet wird. Sie wird nicht im öffentlichen App Store angeboten." : {
 
     },
+    "%lld offline" : {
+
+    },
+    "%lld von %lld an" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld von %2$lld an"
+          }
+        }
+      }
+    },
     "€/kWh" : {
       "localizations" : {
         "en" : {
@@ -818,6 +831,9 @@
           }
         }
       }
+    },
+    "Übersicht" : {
+
     },
     "Verantwortlicher" : {
 
