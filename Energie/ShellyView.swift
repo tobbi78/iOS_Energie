@@ -8,8 +8,10 @@
 import SwiftUI
 
 /// "Steckdosen" tab (F12.1, taking F16.2's navigation decision): one `ShellyPlugCard` per saved
-/// device. Refreshes on open and via pull-to-refresh only — see `ShellyPlugStatusLoader` for why
-/// there's no poll loop yet (F16.1 is still open).
+/// device, plus a `ShellyPlugsSummaryCard` on top once there's more than one (F12.2) — with just
+/// one plug, an overview of "itself" would be redundant. Refreshes on open and via
+/// pull-to-refresh only — see `ShellyPlugStatusLoader` for why there's no poll loop yet (F16.1 is
+/// still open).
 struct ShellyView: View {
     var settings: ShellySettings
     var deviceList: ShellyDeviceList
@@ -62,9 +64,13 @@ struct ShellyView: View {
     private var plugList: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
+                if deviceList.devices.count >= 2 {
+                    ShellyPlugsSummaryCard(summary: ShellyPlugsSummary(devices: deviceList.devices, statuses: loader.statuses))
+                        .staggeredAppear(index: 0)
+                }
                 ForEach(Array(deviceList.devices.enumerated()), id: \.element.id) { index, device in
                     ShellyPlugCard(device: device, status: loader.statuses[device.id])
-                        .staggeredAppear(index: index)
+                        .staggeredAppear(index: index + (deviceList.devices.count >= 2 ? 1 : 0))
                 }
                 if let lastUpdated = loader.lastUpdated {
                     Text("Aktualisiert um \(lastUpdated.formatted(date: .omitted, time: .shortened))")
