@@ -29,11 +29,17 @@ final class ShellyPlugStatusLoader {
     /// Keyed by device ID so `ShellyView` can look up each `ShellyDevice`'s status directly,
     /// regardless of the order `ShellyClient.fetchDevices` happens to return them in.
     private(set) var statuses: [String: ShellyDeviceStatusDTO] = [:]
+    /// Today's consumption (Wh) per device ID (F12.3), derived from `aenergy.total` by
+    /// `energyTracker`. Only ever contains entries `energyTracker` actually has a same-day
+    /// reading for — a device not yet loaded, or only ever seen on an earlier day, has no entry
+    /// here at all (same "absent means unknown" convention as `statuses`).
+    private(set) var energyToday: [String: Double] = [:]
     private(set) var lastUpdated: Date?
 
     private let settings: ShellySettings
     private let deviceList: ShellyDeviceList
     private let client: ShellyClient
+    private let energyTracker: ShellyDailyEnergyTrackerStore
     private let now: @Sendable () -> Date
     /// Guards against a second `refresh()` starting while one is already in flight (e.g. a
     /// double pull-to-refresh) — with no throttle yet (F15.1 is still open), that's the only
@@ -44,11 +50,13 @@ final class ShellyPlugStatusLoader {
         settings: ShellySettings,
         deviceList: ShellyDeviceList,
         client: ShellyClient? = nil,
+        energyTracker: ShellyDailyEnergyTrackerStore? = nil,
         now: @escaping @Sendable () -> Date = Date.init
     ) {
         self.settings = settings
         self.deviceList = deviceList
         self.client = client ?? ShellyClient(credentials: { await settings.credentials })
+        self.energyTracker = energyTracker ?? ShellyDailyEnergyTrackerStore()
         self.now = now
     }
 
@@ -79,12 +87,24 @@ final class ShellyPlugStatusLoader {
             // Already batched into groups of ≤10 by `ShellyClient.fetchDevices` (F12.2/F15.2) —
             // one request regardless of how many plugs are saved, up to that per-call maximum.
             let devices = try await client.fetchDevices(ids: ids)
+            let fetchTime = now()
+            // Only devices that are actually online and report a known `aenergy.total` have
+            // anything meaningful to fold into the tracker (F12.3) — an offline plug's last
+            // known counter value could be stale or missing entirely, and feeding that in would
+            // either skip a reboot detection or silently stall "today"'s accumulation.
+            for device in devices where device.online == true {
+                guard let total = device.status?.switch0?.aenergy?.total else { continue }
+                energyTracker.record(deviceID: device.id, total: total, at: fetchTime)
+            }
             withAnimation {
                 // `reduce(into:)` rather than `Dictionary(uniqueKeysWithValues:)` — the response
                 // shape isn't verified against a real account yet (SHELLY_API_WERTE.md, "Noch
                 // offen"), so a duplicate ID must not crash this screen; the later entry wins.
                 statuses = devices.reduce(into: [:]) { $0[$1.id] = $1 }
-                lastUpdated = now()
+                energyToday = ids.reduce(into: [:]) { partial, id in
+                    partial[id] = energyTracker.energyToday(deviceID: id, now: fetchTime)
+                }
+                lastUpdated = fetchTime
                 state = .ready
             }
         } catch {

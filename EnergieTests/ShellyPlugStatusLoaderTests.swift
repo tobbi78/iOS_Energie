@@ -18,7 +18,9 @@ struct ShellyPlugStatusLoaderTests {
 
     private func makeLoader(
         hasCredentials: Bool = true,
-        deviceList: ShellyDeviceList? = nil
+        deviceList: ShellyDeviceList? = nil,
+        energyTracker: ShellyDailyEnergyTrackerStore? = nil,
+        now: @escaping @Sendable () -> Date = Date.init
     ) -> ShellyPlugStatusLoader {
         let settings = ShellySettings(store: InMemoryShellySecretStore(seed: hasCredentials ? [
             .serverURI: "https://shelly-12-eu.shelly.cloud",
@@ -26,7 +28,14 @@ struct ShellyPlugStatusLoaderTests {
         ] : [:]))
         let client = ShellyClient(urlSession: MockURLProtocol.makeSession(), credentials: { [credentials] in credentials })
         let resolvedDeviceList = deviceList ?? ShellyDeviceList(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
-        return ShellyPlugStatusLoader(settings: settings, deviceList: resolvedDeviceList, client: client)
+        let resolvedEnergyTracker = energyTracker ?? ShellyDailyEnergyTrackerStore(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
+        return ShellyPlugStatusLoader(
+            settings: settings,
+            deviceList: resolvedDeviceList,
+            client: client,
+            energyTracker: resolvedEnergyTracker,
+            now: now
+        )
     }
 
     private func deviceList(withIDs ids: [String]) -> ShellyDeviceList {
@@ -127,6 +136,85 @@ struct ShellyPlugStatusLoaderTests {
             Issue.record("Expected .error state, got \(loader.state)")
             return
         }
+    }
+
+    // MARK: - Daily energy tracking (F12.3)
+
+    @Test func refreshRecordsAEnergyTotalForAnOnlineDeviceWithAKnownReading() async throws {
+        let fixedNow = Date(timeIntervalSince1970: 1_000_000)
+        let tracker = ShellyDailyEnergyTrackerStore(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","online":true,"status":{"switch:0":{"output":true,"apower":42,"aenergy":{"total":123.4}}}}]
+            """#)
+        }
+        let loader = makeLoader(deviceList: deviceList(withIDs: ["a1b2c3"]), energyTracker: tracker, now: { fixedNow })
+
+        await loader.refresh()
+
+        #expect(loader.state == .ready)
+        // First-ever reading baselines at 0 Wh (nothing to diff against yet) — the point of this
+        // test is that a reading was recorded at all, not the resulting value.
+        #expect(tracker.energyToday(deviceID: "a1b2c3", now: fixedNow) == 0)
+        #expect(loader.energyToday["a1b2c3"] == 0)
+    }
+
+    @Test func refreshDoesNotRecordAReadingForAnOfflineDevice() async throws {
+        let fixedNow = Date(timeIntervalSince1970: 1_000_000)
+        let tracker = ShellyDailyEnergyTrackerStore(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","online":false,"status":{"switch:0":{"output":false,"apower":0,"aenergy":{"total":123.4}}}}]
+            """#)
+        }
+        let loader = makeLoader(deviceList: deviceList(withIDs: ["a1b2c3"]), energyTracker: tracker, now: { fixedNow })
+
+        await loader.refresh()
+
+        #expect(loader.state == .ready)
+        #expect(tracker.energyToday(deviceID: "a1b2c3", now: fixedNow) == nil)
+        #expect(loader.energyToday["a1b2c3"] == nil)
+    }
+
+    @Test func refreshDoesNotRecordAReadingWithoutAKnownAenergyTotal() async throws {
+        let fixedNow = Date(timeIntervalSince1970: 1_000_000)
+        let tracker = ShellyDailyEnergyTrackerStore(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","online":true,"status":{"switch:0":{"output":true,"apower":42}}}]
+            """#)
+        }
+        let loader = makeLoader(deviceList: deviceList(withIDs: ["a1b2c3"]), energyTracker: tracker, now: { fixedNow })
+
+        await loader.refresh()
+
+        #expect(loader.state == .ready)
+        #expect(tracker.energyToday(deviceID: "a1b2c3", now: fixedNow) == nil)
+        #expect(loader.energyToday["a1b2c3"] == nil)
+    }
+
+    @Test func secondRefreshAccumulatesOnTopOfTheFirstReading() async throws {
+        nonisolated(unsafe) var current = Date(timeIntervalSince1970: 1_000_000)
+        let tracker = ShellyDailyEnergyTrackerStore(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
+        let loader = makeLoader(deviceList: deviceList(withIDs: ["a1b2c3"]), energyTracker: tracker, now: { current })
+
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","online":true,"status":{"switch:0":{"output":true,"apower":42,"aenergy":{"total":100}}}}]
+            """#)
+        }
+        await loader.refresh()
+        #expect(loader.energyToday["a1b2c3"] == 0)
+
+        current = current.addingTimeInterval(3600)
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","online":true,"status":{"switch:0":{"output":true,"apower":42,"aenergy":{"total":150}}}}]
+            """#)
+        }
+        await loader.refresh()
+
+        #expect(loader.energyToday["a1b2c3"] == 50)
     }
 }
 
