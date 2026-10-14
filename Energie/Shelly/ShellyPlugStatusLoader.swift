@@ -67,7 +67,14 @@ final class ShellyPlugStatusLoader {
 
         isRefreshing = true
         defer { isRefreshing = false }
-        state = .loading
+        // Only the very first load shows the full-screen spinner. A pull-to-refresh on already-
+        // loaded data leaves `state` at `.ready` and the card list mounted — SwiftUI's native
+        // `.refreshable` spinner already communicates "in progress" on its own, and swapping the
+        // whole screen out from under an in-progress pull gesture would cut that gesture off
+        // mid-interaction.
+        if state != .ready {
+            state = .loading
+        }
         do {
             // Already batched into groups of ≤10 by `ShellyClient.fetchDevices` (F12.2/F15.2) —
             // one request regardless of how many plugs are saved, up to that per-call maximum.

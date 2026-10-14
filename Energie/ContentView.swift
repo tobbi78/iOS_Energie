@@ -8,9 +8,10 @@
 import SwiftData
 import SwiftUI
 
-/// Identifies the three top-level sections so `HomeView` can jump straight into a tab (HP-5).
+/// Identifies the top-level sections so `HomeView`/`ShellyView` can jump straight into a tab
+/// (HP-5, F12.1).
 enum AppTab: Hashable {
-    case home, pv, heatPump, settings
+    case home, pv, heatPump, shelly, settings
 }
 
 /// App root. A `TabView` so PV and the heat pump stay independent sections, with a combined
@@ -63,6 +64,11 @@ struct ContentView: View {
                 // F10.8: same as the PV tab, for the heat pump's pressure alert (F5.5).
                 Label("Wärmepumpe", systemImage: "heater.vertical.fill")
                     .symbolEffect(.bounce, value: notificationEcho.heatPumpTrigger)
+            }
+            Tab(value: .shelly) {
+                ShellyView(settings: shellySettings, deviceList: shellyDeviceList, selectedTab: $selectedTab)
+            } label: {
+                Label("Steckdosen", systemImage: "powerplug.fill")
             }
             Tab("Einstellungen", systemImage: "gearshape.fill", value: .settings) {
                 if let solarModel, let heatPumpModel {
