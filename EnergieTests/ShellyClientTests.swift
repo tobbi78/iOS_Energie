@@ -109,6 +109,30 @@ struct ShellyClientTests {
         #expect(json["ids"] as? [String] == ["a1b2c3"])
     }
 
+    // `+` is a legal, unescaped character in a URL query per RFC 3986, but Shelly's server
+    // decodes query parameters using form-urlencoded conventions where `+` means space — an
+    // `auth_key` containing `+` must be percent-encoded to `%2B` or it gets silently corrupted
+    // into a space server-side, failing auth with HTTP 401 (reported bug, F11.3).
+    @Test func fetchDevicesPercentEncodesAPlusInTheAuthKey() async throws {
+        nonisolated(unsafe) var capturedRequest: URLRequest?
+        MockURLProtocol.requestHandler = { request in
+            capturedRequest = request
+            return MockURLProtocol.jsonResponse(url: request.url!, json: #"[{"id":"a1b2c3","online":true}]"#)
+        }
+
+        let client = ShellyClient(
+            urlSession: MockURLProtocol.makeSession(),
+            credentials: { ShellyCredentials(serverURI: "https://shelly-12-eu.shelly.cloud", authKey: "abc+def/ghi=") }
+        )
+        _ = try await client.fetchDevices(ids: ["a1b2c3"])
+
+        let request = try #require(capturedRequest)
+        let url = try #require(request.url)
+        #expect(!url.absoluteString.contains("+"))
+        let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        #expect(components.queryItems?.first(where: { $0.name == "auth_key" })?.value == "abc+def/ghi=")
+    }
+
     @Test func fetchDevicesChunksMoreThanTenIDsIntoMultipleRequests() async throws {
         nonisolated(unsafe) var requestCount = 0
         MockURLProtocol.requestHandler = { request in
