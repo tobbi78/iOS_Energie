@@ -107,6 +107,9 @@
         }
       }
     },
+    "Authorization Key" : {
+
+    },
     "bar" : {
       "localizations" : {
         "en" : {
@@ -170,6 +173,12 @@
 
     },
     "Datenschutzerklärung" : {
+
+    },
+    "Der gespeicherte Schlüssel wird aus der Keychain gelöscht. Die bereits erfassten Steckdosendaten bleiben erhalten." : {
+
+    },
+    "Der Schlüssel ändert sich automatisch bei einer Passwortänderung des Shelly-Kontos und muss dann hier neu eingegeben werden. Er bleibt — anders als die Server-URI — nur auf diesem Gerät gespeichert." : {
 
     },
     "Die App zeigt Photovoltaik-Daten (über die Enphase-API) und Wärmepumpen-Daten (über die Viessmann-API) an, die ausschließlich aus dem eigenen Nutzerkonto der jeweiligen Person stammen, die die App installiert hat." : {
@@ -298,6 +307,9 @@
         }
       }
     },
+    "Entfernen" : {
+
+    },
     "Entwarnung senden" : {
       "localizations" : {
         "en" : {
@@ -341,6 +353,9 @@
         }
       }
     },
+    "Gespeichert" : {
+
+    },
     "Heizkreise" : {
       "localizations" : {
         "en" : {
@@ -352,6 +367,9 @@
       }
     },
     "hula.proxy-3c@icloud.com" : {
+
+    },
+    "In der Shelly-App unter \"Nutzereinstellungen → Autorisierungsschlüssel für die Cloud\"." : {
 
     },
     "Installation" : {
@@ -604,6 +622,9 @@
         }
       }
     },
+    "OK" : {
+
+    },
     "PV-Anlage" : {
       "localizations" : {
         "en" : {
@@ -699,6 +720,18 @@
         }
       }
     },
+    "Server-URI" : {
+
+    },
+    "Server-URI ungültig — bitte unverändert aus der Shelly-App übernehmen." : {
+
+    },
+    "Shelly-Steckdosen" : {
+
+    },
+    "Shelly-Zugangsdaten" : {
+
+    },
     "Speicherdauer" : {
 
     },
@@ -747,6 +780,9 @@
           }
         }
       }
+    },
+    "Verbunden mit" : {
+
     },
     "Verdichter & Kältekreis" : {
       "localizations" : {
@@ -878,6 +914,12 @@
           }
         }
       }
+    },
+    "Zugangsdaten entfernen" : {
+
+    },
+    "Zugangsdaten entfernen?" : {
+
     },
     "Zugangsdaten speichern" : {
       "localizations" : {

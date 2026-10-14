@@ -13,4 +13,5 @@ import SwiftUI
 extension ShapeStyle where Self == Color {
     static var pvAccent: Color { .orange }
     static var heatPumpAccent: Color { .indigo }
+    static var shellyAccent: Color { .teal }
 }
