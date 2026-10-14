@@ -95,6 +95,13 @@ Die von `/v2/devices/api/get` bzw. `/device/all_status` gelieferten `status`-Obj
 
 **Tagesenergie aus `aenergy.total` (F12.3, umgesetzt 2026-10-14):** `aenergy.total` ist seit dem letzten Geräteneustart kumulativ, keine Tagesgröße — `ShellyDailyEnergyTracker` bildet daraus die Differenz zweier Zählerstände. Ein Geräteneustart (Zählerstand springt auf 0 zurück) wird erkannt und nie als negativer Verbrauch gewertet. Ohne Hintergrund-Poll (F16.1 noch offen) kann zwischen zwei Abrufen Mitternacht liegen — die Differenz wird dann linear nach Zeit auf die betroffenen Tage verteilt (Schätzwert, kein exakter Wert).
 
+**Erstmals gegen ein echtes Konto verifiziert (2026-10-14, Shelly Plug M Gen3, Bugreport "Daten nicht im korrekten Format"):** Die Top-Level-Hülle von `/v2/devices/api/get` ist tatsächlich das dokumentierte bare Array — der eigentliche Fehler lag auf Feldebene, wo zwei Annahmen aus der offiziellen Doku nicht zutrafen:
+- `gen` ist ein **String** (`"G2"`), keine Zahl `1`/`2` wie angenommen. Ein Gen3-Gerät meldet hier `"G2"`, da es intern dasselbe JSON-RPC-Komponentenmodell wie Gen2 nutzt — `gen` spiegelt die Protokollfamilie, nicht die Marketing-Generation.
+- `online` ist `0`/`1` (Zahl), kein JSON-Bool `true`/`false`.
+- `type` liefert die Geräte-Kategorie (z. B. `"relay"`), keinen Modellnamen — der Modellname steckt in `code` (z. B. `"S3PL-30110EU"`).
+
+`ShellyDeviceStatusDTO` (`ShellyDTO.swift`) decodiert `gen`/`online` seither tolerant gegen beide Varianten (String/Zahl bzw. Bool/Zahl).
+
 ## Echtzeit-Events (WebSocket, optional)
 
 Für Push-Updates statt Polling bietet Shelly einen WebSocket-Kanal — **mit echtem OAuth2-Flow**, anders als die auth_key-basierten HTTP-Endpunkte oben:

@@ -17,13 +17,13 @@ struct ShellyPlugsSummaryTests {
 
     private func onlineStatus(id: String, output: Bool?, apower: Double?) -> ShellyDeviceStatusDTO {
         ShellyDeviceStatusDTO(
-            id: id, type: "SNPL-00112EU", code: nil, gen: 2, online: true,
+            id: id, type: "SNPL-00112EU", code: nil, gen: "G2", online: true,
             status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: output, apower: apower, voltage: nil, current: nil, aenergy: nil))
         )
     }
 
     private func offlineStatus(id: String) -> ShellyDeviceStatusDTO {
-        ShellyDeviceStatusDTO(id: id, type: nil, code: nil, gen: 2, online: false, status: nil)
+        ShellyDeviceStatusDTO(id: id, type: nil, code: nil, gen: "G2", online: false, status: nil)
     }
 
     @Test func emptyDeviceListSummarizesToAllZerosAndNoPower() {
@@ -74,7 +74,7 @@ struct ShellyPlugsSummaryTests {
         let statuses = [
             "a": onlineStatus(id: "a", output: true, apower: 42),
             // Online, but apower not (yet) known — e.g. a Gen1 device or unrecognized shape.
-            "b": ShellyDeviceStatusDTO(id: "b", type: nil, code: nil, gen: 1, online: true, status: nil),
+            "b": ShellyDeviceStatusDTO(id: "b", type: nil, code: nil, gen: "G1", online: true, status: nil),
         ]
 
         let summary = ShellyPlugsSummary(devices: devices, statuses: statuses)
@@ -98,7 +98,7 @@ struct ShellyPlugsSummaryTests {
 
     @Test func aGen1OrUnrecognizedShapeOnlineDeviceCountsAsOnlineButNotOn() {
         let devices = [device("a")]
-        let statuses = ["a": ShellyDeviceStatusDTO(id: "a", type: nil, code: nil, gen: 1, online: true, status: nil)]
+        let statuses = ["a": ShellyDeviceStatusDTO(id: "a", type: nil, code: nil, gen: "G1", online: true, status: nil)]
 
         let summary = ShellyPlugsSummary(devices: devices, statuses: statuses)
 
