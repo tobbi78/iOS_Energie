@@ -93,6 +93,8 @@ Die von `/v2/devices/api/get` bzw. `/device/all_status` gelieferten `status`-Obj
 
 **Wichtige Falle, aus Community-Berichten (noch nicht selbst verifiziert):** `EM`/`EM1` liefern **keine** kumulative Energie in `GetStatus` (anders als `Switch`/`PM1` mit `aenergy`) — für Tages-/Lebenszeit-Summen ist zwingend der separate `EM1Data.GetData`/`EMData.GetData`-Aufruf nötig. Bei einer Umsetzung mit einem Energiezähler-Gerät (EM/EM1/Pro-Serie) unbedingt beide Aufrufe einplanen, nicht nur `GetStatus`.
 
+**Tagesenergie aus `aenergy.total` (F12.3, umgesetzt 2026-10-14):** `aenergy.total` ist seit dem letzten Geräteneustart kumulativ, keine Tagesgröße — `ShellyDailyEnergyTracker` bildet daraus die Differenz zweier Zählerstände. Ein Geräteneustart (Zählerstand springt auf 0 zurück) wird erkannt und nie als negativer Verbrauch gewertet. Ohne Hintergrund-Poll (F16.1 noch offen) kann zwischen zwei Abrufen Mitternacht liegen — die Differenz wird dann linear nach Zeit auf die betroffenen Tage verteilt (Schätzwert, kein exakter Wert).
+
 ## Echtzeit-Events (WebSocket, optional)
 
 Für Push-Updates statt Polling bietet Shelly einen WebSocket-Kanal — **mit echtem OAuth2-Flow**, anders als die auth_key-basierten HTTP-Endpunkte oben:
