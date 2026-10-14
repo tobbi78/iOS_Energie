@@ -251,8 +251,8 @@ Neue Idee, noch **nicht** geplant/entschieden — nur als Backlog-Eintrag festge
 
 ### Epic 12 — Momentanwerte & Monitoring (Steckdosen)
 
-- **F12.1 Kennzahlenkarte je Steckdose.** Aktuelle Leistung (W), Spannung (V), Strom (A) und Schaltzustand (an/aus) aus `Switch.GetStatus` (`apower`/`voltage`/`current`/`output`) — analog `MetricCard`-Muster aus PV/Wärmepumpe.
-- **F12.2 Mehrere Steckdosen gleichzeitig.** Übersicht/Liste statt Einzelansicht wie bei PV/Wärmepumpe (dort je genau eine Anlage) — Statusabruf über `v2/devices/api/get` mit allen Device-IDs in einem Request (bis zu 10 je Aufruf), nicht einzeln pro Steckdose, wegen des knappen 1-Request/Sekunde-Limits.
+- **F12.1 Kennzahlenkarte je Steckdose. ✅ Umgesetzt (2026-10-14, Branch `feature/shelly-kennzahlenkarte`).** Aktuelle Leistung (W), Spannung (V), Strom (A) und Schaltzustand (an/aus) aus `Switch.GetStatus` (`apower`/`voltage`/`current`/`output`) — eigene `ShellyPlugCard` statt mehrerer `MetricCard`s, da vier Werte plus Zustand pro Steckdose nicht sinnvoll in einzelne Kacheln passen (Optik bleibt an `MetricCard` angelehnt). UI: neuer Tab „Steckdosen“ (nimmt F16.2 vorweg), Aktualisierung beim Öffnen und per Pull-to-Refresh (`ShellyPlugStatusLoader`) — bewusst noch kein Poll-Loop und keine Drossel (siehe F16.1/F15.1). Nur Gen2+ (`switch:0`) wird decodiert; Gen1 (`relays`/`meters`) oder ein unbekanntes Format zeigen „–“. Das Status-Format ist weiterhin nicht an einem echten Konto verifiziert (`SHELLY_API_WERTE.md`, „Noch offen“).
+- **F12.2 Mehrere Steckdosen gleichzeitig.** Übersicht/Liste statt Einzelansicht wie bei PV/Wärmepumpe (dort je genau eine Anlage) — Statusabruf über `v2/devices/api/get` mit allen Device-IDs in einem Request (bis zu 10 je Aufruf), nicht einzeln pro Steckdose, wegen des knappen 1-Request/Sekunde-Limits. Mit F12.1 bereits vorweggenommen: `ShellyPlugStatusLoader` ruft `ShellyClient.fetchDevices` für alle gespeicherten Geräte in einem Aufruf ab.
 - **F12.3 Tagesenergie aus `aenergy.total` ableiten.** `aenergy.total` ist ein **seit dem letzten Geräteneustart kumulativer** Zählerstand, keine Tagesgröße (anders als Enphases `energy_today`) — ein "heute verbraucht"-Wert muss die App selbst aus der Differenz zweier Zählerstände bilden, inkl. Behandlung eines Geräteneustarts (Zählerstand springt dabei zurück auf 0, keine negative Differenz als Verbrauch werten).
 
 ### Epic 13 — Schalten (erste schreibende Funktion der App)
@@ -271,13 +271,13 @@ Neue Idee, noch **nicht** geplant/entschieden — nur als Backlog-Eintrag festge
 ### Epic 15 — API-Limit-Management
 
 - **F15.1 Globale 1-Request/Sekunde-Drossel.** Gilt kontoweit, nicht pro Steckdose — bei mehreren Steckdosen plus gelegentlichen Schalt-Befehlen (Epic 13) müssen alle Shelly-Aufrufe durch **eine** gemeinsame Drossel laufen (analog `EnphaseRequestThrottle`, aber mit 1s-Fenster statt 75s/10 Requests).
-- **F15.2 Batch-Status nutzen.** `v2/devices/api/get` mit mehreren IDs pro Aufruf (F12.2) statt einer Anfrage pro Steckdose, damit das knappe 1 req/s-Limit nicht schon beim reinen Monitoring mehrerer Steckdosen ausgeschöpft wird.
+- **F15.2 Batch-Status nutzen. ✅ Umgesetzt (2026-10-14, F12.1).** `v2/devices/api/get` mit mehreren IDs pro Aufruf (F12.2) statt einer Anfrage pro Steckdose, damit das knappe 1 req/s-Limit nicht schon beim reinen Monitoring mehrerer Steckdosen ausgeschöpft wird — `ShellyPlugStatusLoader` nutzt dafür das bereits in 10er-Gruppen chunkende `ShellyClient.fetchDevices`.
 - **F15.3 Kein Monatskontingent bekannt.** Anders als bei Enphase (Epic 4) ist aktuell kein Monats-/Tageskontingent dokumentiert — nur die Sekunden-Drossel ist bekanntermaßen nötig; falls sich beim echten Betrieb ein zusätzliches Kontingent zeigt, hier nachtragen.
 
 ### Epic 16 — iOS-Architektur & Widget
 
 - **F16.1 Eigenes `ShellyModel`.** Eigener Poll-Loop/State, unabhängig von `SolarModel`/`HeatPumpModel` (bewährtes Muster, siehe Epic 1 bei Enphase).
-- **F16.2 Navigation.** Vierter Bereich/Tab neben PV/Wärmepumpe/Start, oder zunächst ein Unterpunkt in den Einstellungen, falls der Scope erst mal klein bleiben soll (zu entscheiden, sobald F13.4 geklärt ist).
+- **F16.2 Navigation. ✅ Entschieden (2026-10-14, F12.1).** Eigener Tab „Steckdosen“ neben Start/PV/Wärmepumpe/Einstellungen (`ShellyView`), nicht nur ein Unterpunkt in den Einstellungen.
 - **F16.3 Widget — zurückgestellt bis Grundfunktion steht.** Eine Steckdosen-Kachel analog `HeatPumpWidget`/`CombinedWidget` wäre denkbar, aber erst sinnvoll, wenn Epic 11–13 in der App selbst funktionieren.
 - **F16.4 Schalten nicht aus dem Widget.** Falls Epic 13 umgesetzt wird: Schalt-Aktionen bewusst nur in der App anbieten, nicht im Widget — ein versehentlicher Tap auf dem Homescreen hat keinen Bestätigungsdialog-Schutz (F13.2) wie in der App.
 

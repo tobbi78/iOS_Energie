@@ -37,6 +37,9 @@
         }
       }
     },
+    "Aktualisiert um %@" : {
+
+    },
     "Aktueller Druck" : {
       "localizations" : {
         "en" : {
@@ -471,6 +474,9 @@
           }
         }
       }
+    },
+    "Lade Steckdosen…" : {
+
     },
     "Lade Wärmepumpendaten…" : {
       "localizations" : {
@@ -949,6 +955,9 @@
           }
         }
       }
+    },
+    "Zu den Einstellungen" : {
+
     },
     "Zugangsdaten" : {
       "localizations" : {

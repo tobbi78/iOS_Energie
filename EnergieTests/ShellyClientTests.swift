@@ -124,7 +124,7 @@ struct ShellyClientTests {
         }
 
         let devices = try await makeClient().fetchDevices(ids: ["a1b2c3"])
-        #expect(devices == [ShellyDeviceStatusDTO(id: "a1b2c3", type: "PlugS", code: nil, gen: 2, online: true)])
+        #expect(devices == [ShellyDeviceStatusDTO(id: "a1b2c3", type: "PlugS", code: nil, gen: 2, online: true, status: nil)])
     }
 
     @Test func fetchDevicesDecodesADataResultEnvelope() async throws {
@@ -133,7 +133,43 @@ struct ShellyClientTests {
         }
 
         let devices = try await makeClient().fetchDevices(ids: ["a1b2c3"])
-        #expect(devices == [ShellyDeviceStatusDTO(id: "a1b2c3", type: nil, code: nil, gen: nil, online: false)])
+        #expect(devices == [ShellyDeviceStatusDTO(id: "a1b2c3", type: nil, code: nil, gen: nil, online: false, status: nil)])
+    }
+
+    // MARK: - fetchDevices — status decoding (F12.1)
+
+    @Test func fetchDevicesDecodesTheSwitch0StatusForAGen2PlusDevice() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","gen":2,"online":true,"status":{"switch:0":{"output":true,"apower":123.4,"voltage":231.0,"current":0.53}}}]
+            """#)
+        }
+
+        let device = try await makeClient().fetchDevices(ids: ["a1b2c3"]).first
+        #expect(device?.status?.switch0 == ShellySwitchStatus(output: true, apower: 123.4, voltage: 231.0, current: 0.53))
+    }
+
+    @Test func fetchDevicesLeavesStatusNilWhenTheFieldIsAbsent() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"[{"id":"a1b2c3","online":true}]"#)
+        }
+
+        let device = try await makeClient().fetchDevices(ids: ["a1b2c3"]).first
+        #expect(device?.status == nil)
+    }
+
+    @Test func fetchDevicesLeavesSwitch0NilForAGen1StatusShape() async throws {
+        // Gen1 devices report `relays`/`meters` instead of a `switch:0` component
+        // (SHELLY_API_WERTE.md, "Gen1") — the device lookup itself must still succeed, only the
+        // metric card has nothing to show.
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","gen":1,"online":true,"status":{"relays":[{"ison":true}]}}]
+            """#)
+        }
+
+        let device = try await makeClient().fetchDevices(ids: ["a1b2c3"]).first
+        #expect(device?.status?.switch0 == nil)
     }
 
     // MARK: - verifyDevice
