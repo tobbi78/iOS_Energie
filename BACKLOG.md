@@ -105,7 +105,7 @@ Ursprünglicher Text vom 2026-09-30 (zur Historie):
 >
 > **Konsequenz (entschieden 2026-09-30): Cloud-Anforderung vorerst zurückgestellt.** Statt einer der Alternativen (eigener Server, Managed-Backend-Dienst) zu wählen, speichert die App **zunächst rein lokal pro Gerät** (normales `SwiftData` ohne CloudKit). Die zentrale Cloud-Speicherung bleibt ein **späteres Muss**, nicht Teil der jetzt startenden Umsetzung — wird nachgeholt, sobald eine Backend-Entscheidung ansteht (bezahlter Apple-Account für CloudKit, oder ein Managed-Dienst/eigener Server). Bis dahin: **kein** geräteübergreifender Datenzugriff, die geplante macOS-App kann vorerst nicht auf denselben Datenbestand zugreifen wie die iOS-App — auch das ist zurückgestellt.
 
-## Epic 0 — Cloud-Synchronisation (CloudKit) — ✅ vollständig umgesetzt (2026-10-05)
+### Epic 0 — Cloud-Synchronisation (CloudKit) — ✅ vollständig umgesetzt (2026-10-05)
 
 Ursprüngliche Anforderung vom 2026-09-30: Die Daten sollten zentral in der Cloud gespeichert werden, nicht nur lokal auf dem Gerät. Nach der Absage an einen bezahlten Account zunächst **verworfen**, nach Vorliegen des bezahlten Accounts (2026-10-04) dann doch umgesetzt — alle sechs Punkte sind erledigt:
 
@@ -118,7 +118,7 @@ Ursprüngliche Anforderung vom 2026-09-30: Die Daten sollten zentral in der Clou
 
 **Damit entfällt die ursprüngliche Einschränkung "App speichert rein lokal pro Gerät, die geplante macOS-App kann vorerst nicht auf denselben Datenbestand zugreifen" nur für iOS-Geräte des Nutzers** — das separate macOS-Schwesterprojekt ("Dashboard-Waermepumpe") nutzt weiterhin keinen gemeinsamen CloudKit-Container mit dieser App; eine Zusammenführung wäre ein eigenes, hier nicht geplantes Vorhaben.
 
-## Epic 1 — Enphase-Authentifizierung
+### Epic 1 — Enphase-Authentifizierung
 
 - **F1.1 OAuth2-Login-Flow.** Authorization-Code-Flow über `ASWebAuthenticationSession`, Rücksprung per Custom-URL-Scheme (`…://enphase-oauth-callback` o.ä.), im Enphase-Portal vom Nutzer manuell hinterlegt.
 - **F1.2 Zugangsdaten-Verwaltung.** Eingabe von Client-ID, Client-Secret, API-Key in einer Einstellungen-/Login-Ansicht.
@@ -128,13 +128,13 @@ Ursprüngliche Anforderung vom 2026-09-30: Die Daten sollten zentral in der Clou
 
 > **Übertragbares Architekturmuster (aus `ERKENNTNISSE_MACOS.md`):** Im macOS-Projekt hat jede Datenquelle (Viessmann-Wärmepumpe, Enphase-PV) ihr eigenes `Model` mit eigenem OAuth-Client, eigenem Poll-Loop und eigenem State-Enum — komplett unabhängig, ein Fehler/Rate-Limit auf der einen Seite betrifft die andere nie. Da wir die PV-Architektur bewusst so anlegen, dass später eine zweite Energiequelle ergänzbar ist (siehe Entscheidungen oben, F5.3), übernehmen wir dieses Muster von Anfang an: ein eigenständiges `SolarModel`-Äquivalent statt eines generischen "DashboardModel", das später mühsam aufgespalten werden müsste.
 
-## Epic 2 — Live-/Tageskennzahlen
+### Epic 2 — Live-/Tageskennzahlen
 
 - **F2.1 Kennzahlenkarten:** Autarkiegrad (%, berechnet: `(Verbrauch − Netzbezug) / Verbrauch`), Verbrauch (kWh), Produktion (kWh), Einspeisung (kWh) — jeweils "heute".
 - **F2.2 Speicherzustand-Karte:** Ladezustand (%), heute geladen/entladen (kWh) — nur relevant, da eine Encharge-Batterie vorhanden ist.
 - **F2.3 Geschätzte Einspeisevergütung.** Konfigurierbarer Tarif (Default-Vorschlag 0,08 €/kWh, Richtwert ohne Abrechnungsanspruch) × Einspeisung, als Zusatztext bei der Einspeisung-Karte.
 
-## Epic 3 — Historische Daten & Diagramme
+### Epic 3 — Historische Daten & Diagramme
 
 - **F3.1 Lokale Tageshistorie.** Eigenes Datenmodell (analog `PVDailySample`: Datum, produzierte/verbrauchte/importierte/exportierte Wh, Batterie-SOC/Lade-/Entladewerte, `isFinal`-Flag).
 - **F3.2 Rückwirkendes Nachladen (Backfill).** Fehlende Tage über die fünf `_lifetime`-Endpunkte nachladen; Zeitraum ab Inbetriebnahmedatum (`operational_at`) statt fixem 30-Tage-Fenster (Fallback 30 Tage, falls `operational_at` fehlt).
@@ -148,7 +148,7 @@ Ursprüngliche Anforderung vom 2026-09-30: Die Daten sollten zentral in der Clou
 - Falle: Mehrere `LineMark`s ohne unterscheidendes `by:`-Attribut verschmelzen zu einer Linie, `.annotation()` erscheint dann nur am ersten Mark — für Pro-Punkt-Beschriftungen zusätzliche `PointMark`s verwenden.
 - Zweite Y-Achse simulieren: Werte in den bestehenden Wertebereich hochskalieren, zweite `AxisMarks(position: .trailing)` mit eigener Beschriftung (Swift Charts hat keine echte zweite Y-Domain).
 
-## Epic 4 — API-Budget-Management
+### Epic 4 — API-Budget-Management
 
 Enphase begrenzt **pro Minute und pro Monat** (laut `ENPHASE_API_WERTE.md`; die konkreten Plan-Kontingente stehen nicht in der Spec — in der Vorlage wurden 10/Minute und 1000/Monat als vom Nutzer vorgegebene Annahme verwendet, nicht offiziell verifiziert).
 
@@ -158,7 +158,7 @@ Enphase begrenzt **pro Minute und pro Monat** (laut `ENPHASE_API_WERTE.md`; die 
 - **F4.3 429-Handling. ✅ Umgesetzt.** Antwort-Body (`period`, `period_end`) wird ausgewertet und ergibt eine konkrete Fehlermeldung (`EnphaseClientError.rateLimited`) statt nur generischem HTTP-Fehler. `period_start`/`limit` aus dem Body werden aktuell nicht ausgewertet (nicht für die Anzeige gebraucht).
 - **F4.4 Transparenzanzeige. ✅ Umgesetzt, reduzierter Umfang.** "Enphase-Abfragen diesen Monat: X / 1000" dezent unter den Kennzahlenkarten — der ursprünglich vorgesehene Zusatz "nächster Abruf ca. HH:MM" entfällt, da es (noch) keinen getakteten Poll-Loop gibt, dessen nächsten Zeitpunkt man anzeigen könnte. Lebt direkt auf der Hauptansicht statt in "den Einstellungen", da Epic 6 (Einstellungen-Screen) noch nicht existiert.
 
-## Epic 5 — iOS-spezifische Architektur (neu, in der macOS-Spec nicht adressiert)
+### Epic 5 — iOS-spezifische Architektur (neu, in der macOS-Spec nicht adressiert)
 
 Die macOS-Vorlage geht von einem dauerhaft laufenden Task-Loop (`Task { while true { … } }`) aus, der im Hintergrund weiterläuft, solange die Mac-App offen ist. **Das funktioniert auf iOS so nicht** — Apps werden im Hintergrund suspendiert. Das ist der wichtigste architektonische Punkt, den ich vor der Umsetzung mit dir klären möchte (siehe Rückfragen unten).
 
@@ -173,7 +173,7 @@ Die macOS-Vorlage geht von einem dauerhaft laufenden Task-Loop (`Task { while tr
   - ~~**Kein gemeinsamer Quellcode zwischen App- und Widget-Target**~~ — **überholt seit `8620ae9` (2026-10-05):** `EnphaseRequestBudget.swift`/`EnphaseRequestThrottle.swift` sind jetzt über Xcodes Multi-Target-Membership echter, geteilter Quellcode statt handgepflegter Duplikate; "synchron halten" ist nicht mehr nötig. Ursprünglicher Befund (zur Historie: die damals verfügbaren Projekt-Tools boten kein Äquivalent zu "Target Membership"-Checkboxen) bleibt unten stehen, da `PVWidgetDataSource.swift` weiterhin bewusst eine **eigene, minimale** Implementierung ist (nur die 3 Endpunkte für Produktion/Autarkiegrad), keine Kopie des vollen `EnphaseClient`.
   - **Bekannte Einschränkung:** Die Minuten-Drossel (`EnphaseRequestThrottle`) ist **nicht** prozessübergreifend — App und Widget laufen in getrennten Prozessen mit je eigenem In-Memory-Zustand, nur das (persistierte) Monatsbudget wird wirklich geteilt. Geringes Restrisiko bei zufälligem Zusammentreffen beider Poller im selben ~75s-Fenster, abgefangen durch das bestehende 429-Handling.
 
-## Epic 8 — Persistenz & Migration
+### Epic 8 — Persistenz & Migration
 
 Neu aus `ERKENNTNISSE_MACOS.md`, dort als offene Lücke benannt ("von Anfang an einplanen, dieses Projekt hat die Lücke nie geschlossen"):
 
@@ -181,14 +181,14 @@ Neu aus `ERKENNTNISSE_MACOS.md`, dort als offene Lücke benannt ("von Anfang an 
   - *Ursprüngliche Beschreibung:* `VersionedSchema`/`SchemaMigrationPlan` von der ersten Modellversion an einplanen, statt nur ein flaches `Schema([...])` — die Vorlage musste mangels Migrationsplan einmal die komplette lokale Datenbank löschen, um sie nach mehreren Modelländerungen zu reparieren. **Update 2026-10-06:** Im Code weiterhin kein `VersionedSchema`/`SchemaMigrationPlan` gefunden (`grep` negativ) — seit CloudKit-Sync aktiv ist (Epic 0), kann ein zukünftiges Modell-Update ohne Migrationsplan nicht mehr nur die lokale Datenbank zerstören, sondern auch den geteilten CloudKit-Container inkonsistent hinterlassen. Vor der nächsten `@Model`-Änderung nachziehen.
 - **F8.2 Technische Falle beim Erweitern von `@Model`-Typen (unbedingt beachten):** Ein neues, nicht-optionales `@Model`-Property braucht seinen Default **direkt an der Property-Deklaration** (z. B. `var isFinal: Bool = false`), nicht nur im `init()` — sonst erkennt SwiftDatas Lightweight-Migration die Änderung nicht und die lokale Datenbank bricht zur Laufzeit mit `no such table`/`no such column` (nur in den App-Logs sichtbar, kein Compiler-Fehler). Gilt unabhängig von CloudKit (Epic 0) — **seit dessen Umsetzung am 2026-10-05 ist das keine theoretische Zukunftsfrage mehr, sondern eine harte, aktuell geltende Voraussetzung statt nur einer Best Practice** (gilt auch mit dem Migrationsplan aus F8.1 weiter).
 
-## Epic 6 — Einstellungen
+### Epic 6 — Einstellungen
 
 - **F6.1 ✅ Umgesetzt.** Zugangsdaten-Eingabe/-Bearbeitung (Client-ID/Secret/API-Key) plus Verbindungsstatus und "Abmelden" auf einem eigenen Einstellungen-Screen.
 - **F6.2 ✅ Umgesetzt.** Einspeisevergütung einstellbar, persistiert in `PVDisplayPreferences`.
 - **F6.3 ✅ Umgesetzt (2026-10-04, Branch `feature/budget-reserve-setting`).** `EnphaseBudgetSettings` (neue Klasse, App-Group-`UserDefaults`-gestützt statt `.standard`, da auch das Widget denselben Wert lesen muss) macht die bisher hartkodierte Reserve von 20 Anfragen konfigurierbar (0–100, Schrittweite 5) über einen Stepper in den PV-Einstellungen. Durchgereicht an `EnphaseClient.perform()` (neuer `reserve`-Closure-Parameter, Default bleibt 20) über `SolarModel`, sowie — da `EnphaseClient`/`EnphaseBudgetSettings` nicht im Widget-Target verlinkt sind (gleiche Tooling-Einschränkung wie bei den bereits duplizierten `EnphaseRequestBudget`/`EnphaseRequestThrottle`) — direkt per dupliziertem Schlüssel-String an `PVWidgetDataSource`/`PVWidgetPollPacing`.
 - **F6.4 ✅ Umgesetzt (2026-10-10, Branch `feature/enphase-monatslimit`).** Das monatliche Enphase-Anfragekontingent selbst ist jetzt ebenfalls über `EnphaseBudgetSettings` konfigurierbar (100–1000, Schrittweite 50), statt der bisher fest codierten `EnphaseRequestBudget.monthlyLimit = 1000`-Konstante — verschiedene Enphase-Tarife gewähren unterschiedliche Kontingente. Die Reserve ist auf höchstens die Hälfte des Limits begrenzt und wird beim Senken des Limits automatisch mitreduziert. Die PV-Einstellungen zeigen zusätzlich die im aktuellen Kalendermonat bereits genutzten Anfragen read-only mit Fortschrittsbalken an (bisherige Zählung aus F4.2/F4.4 unverändert, nur neu angezeigt).
 
-## Epic 7 — Tests
+### Epic 7 — Tests
 
 - **F7.1** DTO-Decoding-Tests für alle verwendeten Endpunkte.
 - **F7.2** Modell-Tests (Autarkiegrad-Berechnung, Vergütungsschätzung).
@@ -205,7 +205,7 @@ Keine Features, sondern Arbeitsweisen, die sich in der Vorlage bewährt haben un
 - **Testansatz:** Swift Testing, `URLProtocol`-Stub für Netzwerk, In-Memory-`ModelContainer`, temporäre `UserDefaults`-Instanz, injizierte Uhr — kein Test berührt echte API/Tokens/Datenbank. Die App erkennt einen laufenden Testlauf und startet dann kein Polling und öffnet nicht die echte Datenbank. Zielwert: Testabdeckung der Fachlogik ≥ 80 %.
 - **Ein Dokument pro größerem Feature** mit Stand/Entscheidungen vor bzw. während der Umsetzung (wie dieses Backlog) — hat sich bewährt, um Architekturentscheidungen vor der Umsetzung festzuhalten.
 
-## Epic 9 — Sicherheit (Security-Review 2026-10-05)
+### Epic 9 — Sicherheit (Security-Review 2026-10-05)
 
 Ergebnis einer vollständigen Sicherheitsdurchsicht der App (Keychain-Stores, OAuth/PKCE-Flows, Netzwerk-Clients, Entitlements, Widget-Datenquellen, Watch-Sync) am 2026-10-05, ohne akuten Anlass. Keine kritischen Funde (kein Logging von Secrets, keine Hardcoded-Secrets, kein ATS-Bypass, korrekte `SecureField`-Nutzung bei allen Zugangsdaten-Feldern) — die folgenden Punkte sind Härtungen, keine akuten Lecks.
 
@@ -220,7 +220,7 @@ Ergebnis einer vollständigen Sicherheitsdurchsicht der App (Keychain-Stores, OA
   - **Wartungsrisiko (inhärent bei jedem Certificate Pinning):** Rotiert einer der drei Anbieter seine Zwischen-CA **und** die jeweils mitgepinnte Root gleichzeitig, blockiert ATS die Verbindung zu diesem Host vollständig, bis ein App-Update mit neuen Pins ausliefert — die Backup-Root-Pins reduzieren dieses Risiko, heben es aber nicht auf. Sollte eine der drei APIs künftig plötzlich für alle Nutzer nicht mehr erreichbar sein, ist ein rotiertes Zertifikat die erste Verdachtsstelle (Pins mit obigem `openssl`-Befehl neu ziehen).
 - **F9.6 ✅ Umgesetzt (2026-10-05).** Zuvor: Kein Schutz vor veralteten Refresh-Token-Ständen durch parallele Schreiber — bei Viessmann schrieben App und Widget unabhängig auf denselben Keychain-Eintrag, ohne dass eine Seite merkte, wenn die andere zwischenzeitlich schon neu refresht hatte. Jetzt prüfen beide Seiten vor dem Überschreiben, ob der Keychain-Refresh-Token noch der ist, von dem der eigene Refresh-Versuch ausging (`ViessmannSettings.adoptRefreshedTokens`/`reloadTokensFromStore` auf App-Seite, dieselbe Prüfung dupliziert in `HPWidgetDataSource` auf Widget-Seite, gleiche Tooling-Einschränkung wie bei den bereits duplizierten Dateien): Stimmt er nicht mehr überein, verwirft die jeweilige Seite ihr eigenes Ergebnis und übernimmt stattdessen den bereits von der anderen Seite geschriebenen, neueren Stand — sowohl beim erfolgreichen Refresh (Race beim Zurückschreiben) als auch beim fehlgeschlagenen Refresh (Race beim Token-Lesen: der eigene `refresh_token`-Grant schlägt fehl, weil die andere Seite den Token bereits rotiert hat, bevor stattdessen aufgegeben wird, wird erst geprüft, ob schon ein frischer Access-Token in der Keychain wartet). 3 neue Tests für `ViessmannSettings` (unveränderter vs. bereits rotierter Refresh-Token, externe Änderung wird übernommen). Löst nebenbei endgültig den in `ViessmannKeychainStore`/F0.3 dokumentierten iCloud-Sync-Anteil dieser Race (bereits durch F9.3 entschärft) **und** die bisher ungelöste reine App↔Widget-Race auf demselben Gerät.
 
-## Epic 10 — UI-Animationen & Startbildschirm — ✅ vollständig umgesetzt (2026-10-11)
+### Epic 10 — UI-Animationen & Startbildschirm — ✅ vollständig umgesetzt (2026-10-11)
 
 Konkretisierung der Design-Leitplanke oben ("durchgängig professionell, modern, freundlich") um gezielte Animationen — zuvor wirkte die App im Vergleich zu ihrem sonst sorgfältigen Feinschliff (Farbgebung, Kennzahlenkarten, Diagramme) an Übergängen/Zustandswechseln noch recht statisch. Alle acht Punkte (F10.1–F10.8) sind umgesetzt; die "Idee, größerer Scope" unten bleibt bewusst offen und separat zu entscheiden.
 
