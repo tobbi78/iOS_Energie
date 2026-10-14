@@ -16,12 +16,12 @@ struct ShellyClientTests {
     private let credentials = ShellyCredentials(serverURI: "https://shelly-12-eu.shelly.cloud", authKey: "the-auth-key")
 
     private func makeClient(
-        chunkDelay: Duration = .seconds(1),
-        sleep: @escaping @Sendable (Duration) async throws -> Void = { _ in }
+        throttle: ShellyRequestThrottle = ShellyRequestThrottle(sleep: { _ in })
     ) -> ShellyClient {
-        // `sleep` defaults to a no-op here so every test *not* specifically about the F12.2
-        // chunk delay doesn't actually wait a real second per extra chunk.
-        ShellyClient(urlSession: MockURLProtocol.makeSession(), credentials: { [credentials] in credentials }, chunkDelay: chunkDelay, sleep: sleep)
+        // `throttle` defaults to a no-op-sleep instance (but still a fresh one per test, never
+        // `.shared`) so no test here actually waits a real second, and no test leaks throttle
+        // state into another one via the same actor instance.
+        ShellyClient(urlSession: MockURLProtocol.makeSession(), credentials: { [credentials] in credentials }, throttle: throttle)
     }
 
     // MARK: - discoverDevices — request shape
@@ -86,6 +86,23 @@ struct ShellyClientTests {
         }
     }
 
+    // MARK: - F15.1 shared throttle applies to every call, not just fetchDevices
+
+    @Test func discoverDevicesGoesThroughTheSharedThrottleToo() async throws {
+        nonisolated(unsafe) var acquireCount = 0
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"{"isok":true,"data":{"devices":[]}}"#)
+        }
+        let throttle = ShellyRequestThrottle(sleep: { _ in acquireCount += 1 })
+
+        _ = try await makeClient(throttle: throttle).discoverDevices()
+        _ = try await makeClient(throttle: throttle).discoverDevices()
+
+        // Second call within the same 1s window must wait — proves discoverDevices() is gated by
+        // the same throttle as fetchDevices(), not just a call unique to status polling.
+        #expect(acquireCount == 1)
+    }
+
     // MARK: - fetchDevices / verifyDevice — request shape
 
     @Test func fetchDevicesPostsToTheV2GetEndpointWithIDsAndAuthKey() async throws {
@@ -122,7 +139,8 @@ struct ShellyClientTests {
 
         let client = ShellyClient(
             urlSession: MockURLProtocol.makeSession(),
-            credentials: { ShellyCredentials(serverURI: "https://shelly-12-eu.shelly.cloud", authKey: "abc+def/ghi=") }
+            credentials: { ShellyCredentials(serverURI: "https://shelly-12-eu.shelly.cloud", authKey: "abc+def/ghi=") },
+            throttle: ShellyRequestThrottle(sleep: { _ in })
         )
         _ = try await client.fetchDevices(ids: ["a1b2c3"])
 
@@ -145,29 +163,33 @@ struct ShellyClientTests {
         #expect(requestCount == 2)
     }
 
-    // MARK: - fetchDevices — F12.2 pause between chunks
+    // MARK: - fetchDevices — F15.1 shared throttle paces chunks
 
     @Test func fetchDevicesDoesNotSleepForTenOrFewerIDs() async throws {
         nonisolated(unsafe) var sleepCount = 0
         MockURLProtocol.requestHandler = { request in
             MockURLProtocol.jsonResponse(url: request.url!, json: "[]")
         }
+        let throttle = ShellyRequestThrottle(now: { Date(timeIntervalSince1970: 1_000) }, sleep: { _ in sleepCount += 1 })
 
-        _ = try await makeClient(sleep: { _ in sleepCount += 1 }).fetchDevices(ids: (1...10).map { "device\($0)" })
+        _ = try await makeClient(throttle: throttle).fetchDevices(ids: (1...10).map { "device\($0)" })
 
         #expect(sleepCount == 0)
     }
 
+    // A fixed clock makes every `perform(_:)` call look like it happens "at the same instant" as
+    // far as the throttle can tell, so each chunk after the first must wait out the full window.
     @Test func fetchDevicesSleepsOnceBetweenTwoChunks() async throws {
-        nonisolated(unsafe) var sleptDurations: [Duration] = []
+        nonisolated(unsafe) var sleptFor: [TimeInterval] = []
         MockURLProtocol.requestHandler = { request in
             MockURLProtocol.jsonResponse(url: request.url!, json: "[]")
         }
+        let throttle = ShellyRequestThrottle(window: 1, now: { Date(timeIntervalSince1970: 1_000) }, sleep: { sleptFor.append($0) })
 
-        let client = makeClient(chunkDelay: .seconds(1), sleep: { sleptDurations.append($0) })
+        let client = makeClient(throttle: throttle)
         _ = try await client.fetchDevices(ids: (1...15).map { "device\($0)" })
 
-        #expect(sleptDurations == [.seconds(1)])
+        #expect(sleptFor == [1])
     }
 
     @Test func fetchDevicesSleepsBeforeEveryChunkAfterTheFirst() async throws {
@@ -175,8 +197,9 @@ struct ShellyClientTests {
         MockURLProtocol.requestHandler = { request in
             MockURLProtocol.jsonResponse(url: request.url!, json: "[]")
         }
+        let throttle = ShellyRequestThrottle(now: { Date(timeIntervalSince1970: 1_000) }, sleep: { _ in sleepCount += 1 })
 
-        _ = try await makeClient(sleep: { _ in sleepCount += 1 }).fetchDevices(ids: (1...25).map { "device\($0)" })
+        _ = try await makeClient(throttle: throttle).fetchDevices(ids: (1...25).map { "device\($0)" })
 
         #expect(sleepCount == 2)
     }

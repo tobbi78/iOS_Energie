@@ -48,10 +48,10 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
 }
 
 /// Access to the Shelly Cloud Control API using just the `auth_key` already in
-/// `ShellyCredentials` — no OAuth token, and (unlike `EnphaseClient`) no budget/throttle gate
-/// yet, since F11.3 only ever calls this on direct user action (tapping "automatisch suchen" or
-/// "prüfen und hinzufügen"), never from a background poll loop. F15.1 adds the shared
-/// 1-request/second throttle once polling needs it.
+/// `ShellyCredentials` — no OAuth token, unlike `EnphaseClient`/`ViessmannClient`. Every call
+/// goes through the shared, account-wide 1-request/second throttle (F15.1) before hitting the
+/// network, whether it's a direct user action (F11.3's "automatisch suchen") or, once F16.1 adds
+/// a recurring poll loop, a background refresh.
 struct ShellyClient {
     var urlSession: URLSession = .shared
     /// Async (not just `@Sendable`) so the closure can safely hop onto `ShellySettings`'s
@@ -60,13 +60,9 @@ struct ShellyClient {
     /// `@MainActor`-isolated settings objects — a plain synchronous `@Sendable` closure could
     /// not read MainActor-isolated state from an arbitrary calling context.
     var credentials: @Sendable () async -> ShellyCredentials
-    /// F12.2: pause between chunks in `fetchDevices` when more than 10 IDs are requested, so a
-    /// large device list can't blow through the account-wide 1-request/second limit on its own
-    /// — a stopgap until F15.1's shared throttle covers every Shelly call, not just this one.
-    var chunkDelay: Duration = .seconds(1)
-    /// Swappable so tests don't have to actually wait — same reasoning as the `now`/`sleep`
-    /// seams elsewhere in this codebase (e.g. `EnphaseRequestThrottle`).
-    var sleep: @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+    /// Defaults to the shared, app-wide instance (see `ShellyRequestThrottle.shared`) since
+    /// `ShellyClient` itself has no single long-lived owner yet to hold one instead.
+    var throttle: ShellyRequestThrottle = .shared
 
     /// F11.3 "Geräte automatisch suchen". Any failure — network, HTTP, or an unrecognized
     /// response shape — surfaces as `.discoveryUnavailable` rather than the underlying error,
@@ -86,17 +82,14 @@ struct ShellyClient {
     /// F11.3 manual-entry verification, and (unmodified) reused for F12 status polling later.
     /// Chunks into batches of 10 — the API's per-call maximum (SHELLY_API_WERTE.md) — even
     /// though F11.3 itself only ever calls this with a single ID. For more than one chunk
-    /// (F12.2: more than 10 saved devices), waits `chunkDelay` before every chunk after the
-    /// first, so this one call alone can't exceed the account-wide 1-request/second limit.
+    /// (F12.2: more than 10 saved devices), each chunk is its own request through `perform(_:)`,
+    /// so the shared throttle (F15.1) already paces them without any extra logic here.
     func fetchDevices(ids: [String]) async throws -> [ShellyDeviceStatusDTO] {
         guard !ids.isEmpty else { return [] }
         let credentials = try await requireCredentials()
 
         var devices: [ShellyDeviceStatusDTO] = []
-        for (index, chunk) in ids.chunked(into: 10).enumerated() {
-            if index > 0 {
-                try await sleep(chunkDelay)
-            }
+        for chunk in ids.chunked(into: 10) {
             let request = ShellyEndpoints.deviceStatusRequest(server: credentials.serverURI, authKey: credentials.authKey, ids: chunk)
             let data = try await perform(request)
             do {
@@ -130,6 +123,7 @@ struct ShellyClient {
     }
 
     private func perform(_ request: URLRequest) async throws -> Data {
+        await throttle.acquire()
         let (data, response) = try await urlSession.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ShellyClientError.invalidResponse
