@@ -67,13 +67,12 @@ struct ShellyView: View {
                 if deviceList.devices.count >= 2 {
                     ShellyPlugsSummaryCard(summary: ShellyPlugsSummary(
                         devices: deviceList.devices,
-                        statuses: loader.statuses,
-                        energyToday: loader.energyToday
+                        statuses: loader.statuses
                     ))
                         .staggeredAppear(index: 0)
                 }
                 ForEach(Array(deviceList.devices.enumerated()), id: \.element.id) { index, device in
-                    ShellyPlugCard(device: device, status: loader.statuses[device.id], energyToday: loader.energyToday[device.id])
+                    ShellyPlugCard(device: device, status: loader.statuses[device.id])
                         .staggeredAppear(index: index + (deviceList.devices.count >= 2 ? 1 : 0))
                 }
                 if let lastUpdated = loader.lastUpdated {
