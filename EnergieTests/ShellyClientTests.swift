@@ -190,6 +190,28 @@ struct ShellyClientTests {
         #expect(device?.status?.switch0 == ShellySwitchStatus(output: true, apower: 123.4, voltage: 231.0, current: 0.53, aenergy: nil))
     }
 
+    @Test func fetchDevicesDecodesAenergyTotal() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","gen":2,"online":true,"status":{"switch:0":{"output":true,"apower":42,"aenergy":{"total":1234.5,"by_minute":[0,0,0],"minute_ts":0}}}}]
+            """#)
+        }
+
+        let device = try await makeClient().fetchDevices(ids: ["a1b2c3"]).first
+        #expect(device?.status?.switch0?.aenergy?.total == 1234.5)
+    }
+
+    @Test func fetchDevicesLeavesAenergyNilWhenTheFieldIsAbsent() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","gen":2,"online":true,"status":{"switch:0":{"output":true,"apower":42}}}]
+            """#)
+        }
+
+        let device = try await makeClient().fetchDevices(ids: ["a1b2c3"]).first
+        #expect(device?.status?.switch0?.aenergy == nil)
+    }
+
     @Test func fetchDevicesLeavesStatusNilWhenTheFieldIsAbsent() async throws {
         MockURLProtocol.requestHandler = { request in
             MockURLProtocol.jsonResponse(url: request.url!, json: #"[{"id":"a1b2c3","online":true}]"#)
