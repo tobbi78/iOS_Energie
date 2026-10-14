@@ -201,6 +201,16 @@ struct ShellyClientTests {
         #expect(devices == [ShellyDeviceStatusDTO(id: "a1b2c3", type: nil, code: nil, gen: nil, online: false, status: nil)])
     }
 
+    @Test func fetchDevicesThrowsStatusUnavailableOnUnrecognizedResponseShape() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"{"unexpected":true}"#)
+        }
+
+        await #expect(throws: ShellyClientError.statusUnavailable) {
+            try await makeClient().fetchDevices(ids: ["a1b2c3"])
+        }
+    }
+
     // MARK: - fetchDevices — status decoding (F12.1)
 
     @Test func fetchDevicesDecodesTheSwitch0StatusForAGen2PlusDevice() async throws {

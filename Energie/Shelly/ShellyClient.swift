@@ -6,6 +6,9 @@
 //
 
 import Foundation
+import os
+
+private let shellyClientLogger = Logger(subsystem: "de.florian.tobias.Energie", category: "ShellyClient")
 
 enum ShellyClientError: Error, LocalizedError, Equatable {
     case missingCredentials
@@ -19,6 +22,10 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
     /// `v2/devices/api/get` returned no entry for a requested device ID — most likely a typo in
     /// a manually entered ID, or a device that doesn't belong to this account.
     case deviceNotFound
+    /// `v2/devices/api/get` responded with something this app's tolerant decoding (see
+    /// `ShellyDeviceStatusResponse`) couldn't make sense of. The raw body goes to the logger
+    /// only, never to the user — same reasoning as `.http`'s `body`.
+    case statusUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -34,6 +41,8 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
             return "Automatische Geräteerkennung nicht verfügbar. Bitte Geräte-ID manuell eingeben."
         case .deviceNotFound:
             return "Kein Gerät mit dieser ID gefunden. Bitte die Geräte-ID in der Shelly-App prüfen."
+        case .statusUnavailable:
+            return "Gerätestatus konnte nicht gelesen werden. Bitte später erneut versuchen."
         }
     }
 }
@@ -90,7 +99,16 @@ struct ShellyClient {
             }
             let request = ShellyEndpoints.deviceStatusRequest(server: credentials.serverURI, authKey: credentials.authKey, ids: chunk)
             let data = try await perform(request)
-            devices.append(contentsOf: try JSONDecoder().decode(ShellyDeviceStatusResponse.self, from: data).devices)
+            do {
+                devices.append(contentsOf: try JSONDecoder().decode(ShellyDeviceStatusResponse.self, from: data).devices)
+            } catch {
+                // Diagnostic for an unrecognized status response shape — the raw body is the
+                // only way to find out what a real device actually sent (SHELLY_API_WERTE.md,
+                // "Noch offen"), but must never reach the user (see `.statusUnavailable`).
+                let body = String(data: data, encoding: .utf8) ?? ""
+                shellyClientLogger.error("Shelly device-status response for \(chunk.joined(separator: ","), privacy: .public) had an unrecognized shape: \(body, privacy: .public)")
+                throw ShellyClientError.statusUnavailable
+            }
         }
         return devices
     }
