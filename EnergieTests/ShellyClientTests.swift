@@ -187,7 +187,7 @@ struct ShellyClientTests {
         }
 
         let device = try await makeClient().fetchDevices(ids: ["a1b2c3"]).first
-        #expect(device?.status?.switch0 == ShellySwitchStatus(output: true, apower: 123.4, voltage: 231.0, current: 0.53))
+        #expect(device?.status?.switch0 == ShellySwitchStatus(output: true, apower: 123.4, voltage: 231.0, current: 0.53, aenergy: nil))
     }
 
     @Test func fetchDevicesLeavesStatusNilWhenTheFieldIsAbsent() async throws {

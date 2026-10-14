@@ -130,7 +130,7 @@ struct ShellyPlugCard: View {
         device: ShellyDevice(id: "a1b2c3d4e5f6", name: "Wohnzimmer", model: "Plug S"),
         status: ShellyDeviceStatusDTO(
             id: "a1b2c3d4e5f6", type: "SNPL-00112EU", code: nil, gen: 2, online: true,
-            status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 123, voltage: 231.4, current: 0.53))
+            status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 123, voltage: 231.4, current: 0.53, aenergy: nil))
         )
     )
     .padding()
@@ -141,7 +141,7 @@ struct ShellyPlugCard: View {
         device: ShellyDevice(id: "0011223344aa", name: "Büro", model: "Plug S"),
         status: ShellyDeviceStatusDTO(
             id: "0011223344aa", type: "SNPL-00112EU", code: nil, gen: 2, online: true,
-            status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0))
+            status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))
         )
     )
     .padding()

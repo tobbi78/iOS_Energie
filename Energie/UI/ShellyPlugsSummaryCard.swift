@@ -80,8 +80,8 @@ struct ShellyPlugsSummaryCard: View {
             ShellyDevice(id: "c", name: "Garage", model: "Plug S"),
         ],
         statuses: [
-            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 123, voltage: 231.4, current: 0.53))),
-            "b": ShellyDeviceStatusDTO(id: "b", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0))),
+            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 123, voltage: 231.4, current: 0.53, aenergy: nil))),
+            "b": ShellyDeviceStatusDTO(id: "b", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))),
             "c": ShellyDeviceStatusDTO(id: "c", type: nil, code: nil, gen: 2, online: false, status: nil),
         ]
     ))
@@ -95,8 +95,8 @@ struct ShellyPlugsSummaryCard: View {
             ShellyDevice(id: "b", name: "Büro", model: "Plug S"),
         ],
         statuses: [
-            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0))),
-            "b": ShellyDeviceStatusDTO(id: "b", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0))),
+            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))),
+            "b": ShellyDeviceStatusDTO(id: "b", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: false, apower: 0, voltage: 230.9, current: 0, aenergy: nil))),
         ]
     ))
     .padding()
@@ -110,7 +110,7 @@ struct ShellyPlugsSummaryCard: View {
             ShellyDevice(id: "c", name: "Garage", model: "Plug S"),
         ],
         statuses: [
-            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 50, voltage: 231.4, current: 0.22))),
+            "a": ShellyDeviceStatusDTO(id: "a", type: "SNPL-00112EU", code: nil, gen: 2, online: true, status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: true, apower: 50, voltage: 231.4, current: 0.22, aenergy: nil))),
         ]
     ))
     .padding()

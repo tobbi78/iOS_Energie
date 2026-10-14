@@ -18,7 +18,7 @@ struct ShellyPlugsSummaryTests {
     private func onlineStatus(id: String, output: Bool?, apower: Double?) -> ShellyDeviceStatusDTO {
         ShellyDeviceStatusDTO(
             id: id, type: "SNPL-00112EU", code: nil, gen: 2, online: true,
-            status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: output, apower: apower, voltage: nil, current: nil))
+            status: ShellyDeviceStatus(switch0: ShellySwitchStatus(output: output, apower: apower, voltage: nil, current: nil, aenergy: nil))
         )
     }
 
