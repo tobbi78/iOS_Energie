@@ -68,18 +68,43 @@ nonisolated struct ShellyDeviceListResponse: Decodable {
     }
 }
 
-// MARK: - `/v2/devices/api/get` (F11.3 ID-Prüfung, später F12 Statusabruf)
+// MARK: - `/v2/devices/api/get` (F11.3 ID-Prüfung, F12.1 Statusabruf)
 
-/// A single device's identity/reachability from `v2/devices/api/get`. `status` itself is
-/// deliberately not decoded here yet (F12 extends this once the metric cards need the actual
-/// `apower`/`voltage`/`current`/`output` fields) — F11.3 only needs enough to confirm a
-/// manually-entered device ID is real and reachable.
+/// A single device's identity/reachability from `v2/devices/api/get`. `status` is only
+/// populated for Gen2+ devices whose `Switch.GetStatus` shape (SHELLY_API_WERTE.md) this app
+/// understands (F12.1) — Gen1 devices (`relays[]`/`meters[]`) or an unrecognized shape simply
+/// decode to `nil`, which `ShellyPlugCard` renders as "–" rather than failing the whole lookup.
+/// F11.3's device-ID verification only ever needed `id`/`type`, so `status` being absent there
+/// doesn't change that flow.
 nonisolated struct ShellyDeviceStatusDTO: Decodable, Equatable {
     let id: String
     let type: String?
     let code: String?
     let gen: Int?
     let online: Bool?
+    let status: ShellyDeviceStatus?
+}
+
+/// Gen2+ JSON-RPC component status (SHELLY_API_WERTE.md, "Gen2+") — only the `Switch` component
+/// at index 0 is decoded, since the confirmed hardware (Backlog F12.1) is a Plug S-family
+/// single-channel plug. A device with more than one switch channel, or a non-`Switch` component
+/// (`PM1`/`EM`/`EM1`), simply yields `switch0 == nil`.
+nonisolated struct ShellyDeviceStatus: Decodable, Equatable {
+    let switch0: ShellySwitchStatus?
+
+    private enum CodingKeys: String, CodingKey {
+        case switch0 = "switch:0"
+    }
+}
+
+/// `Switch.GetStatus` fields relevant to F12.1's metric card. All optional — a field missing
+/// from a real response (firmware differences, a component still booting, …) degrades to "–" in
+/// the UI rather than discarding the whole status.
+nonisolated struct ShellySwitchStatus: Decodable, Equatable {
+    let output: Bool?
+    let apower: Double?
+    let voltage: Double?
+    let current: Double?
 }
 
 /// Tolerant top-level decode for `/v2/devices/api/get` — same caveat as
