@@ -234,26 +234,66 @@ Konkretisierung der Design-Leitplanke oben ("durchgängig professionell, modern,
 - **F10.8 ✅ Umgesetzt (2026-10-11, Branch `feature/f10.8-tab-icon-echo`).** Zuvor: löste eine der bestehenden lokalen Benachrichtigungen aus (Anlagenausfall/Budget/Speicherstand bei PV, Druckalarm bei der Wärmepumpe — F5.5, geplant von `PVWidgetAlerts`/`HPWidgetAlerts` in `EnergieWidget` bzw. `HeatPumpModel.notifyPressureAlert`), hatte das kein sichtbares Echo *innerhalb* der App. Jetzt: neuer `NotificationEcho` (`NotificationEcho.swift`) liest bei jedem Vordergrundwerden (`ContentView`, nach dem `LaunchView`-Overlay (F10.1) und bei jedem `scenePhase`-Wechsel auf `.active`) `UNUserNotificationCenter.deliveredNotifications()`, gruppiert nach den stabilen ID-Präfixen `pv.`/`heatPump.` und vergleicht das jeweils neueste Zustellungsdatum mit einem in `UserDefaults` gemerkten "zuletzt gesehen"-Zeitpunkt — ist es neuer, zählt ein `pvTrigger`/`heatPumpTrigger` hoch, der in `ContentView` als `symbolEffect(.bounce, value:)` auf dem jeweiligen Tab-Icon hängt (dafür nutzen PV-/Wärmepumpe-Tab jetzt `Tab(value:content:label:)` statt der String/SystemImage-Kurzform). Der Vergleich selbst ist als `static func evaluate` testbar ausgelagert (`NotificationEchoTests`, 6 Tests); `refresh()` selbst bleibt wie `HeatPumpModel.notifyPressureAlert` ungetestet. Im Simulator per temporärem Debug-Pfad (nicht Teil des Commits) verifiziert: eine echte, erst im Hintergrund zugestellte Testbenachrichtigung mit ID `pv.lowBattery` ließ `pvTrigger` nach Rückkehr in den Vordergrund zuverlässig von 0 auf 1 springen — der Mechanismus funktioniert durchgängig. Dabei auch empirisch bestätigt: eine *im Vordergrund* mit `trigger: nil` zugestellte Notification erreicht ohne eigenen `UNUserNotificationCenterDelegate` nie `deliveredNotifications()` — unkritisch für den echten Anwendungsfall, da `PVWidgetAlerts`/`HPWidgetAlerts` laut eigenem Kommentar ohnehin nur "in den Momenten, in denen die App nicht offen ist" sinnvoll sind. Der Bounce selbst (SF-Symbol-Animation auf dem Tab-Icon) ließ sich mangels Zwischenzustand-Screenshots nicht visuell einfangen (gleiche Tooling-Grenze wie bei F10.5/F10.7) — als Nachweis diente ein temporärer Debug-Zähler-Overlay, der den `pvTrigger`-Sprung sichtbar machte. Build und alle 231 Tests grün.
 - **Idee, größerer Scope, nicht Teil der ursprünglichen Anfrage — zurückgestellt (2026-10-13):** Einmaliger, animierter Hinweis beim allerersten App-Start, der kurz auf die zwei Start-Abschnitte (PV/Wärmepumpe) und ihre Akzentfarben hinweist, bevor echte Daten da sind. Vom Nutzer bewusst zurückgestellt statt entschieden.
 
-## Dritte Energiequelle: Shelly-Geräte — Backlog-Idee (2026-10-14)
+## Dritte Energiequelle: Shelly-Geräte — Backlog-Idee (2026-10-14, Scope präzisiert 2026-10-14)
 
-Neue Idee, noch **nicht** geplant/entschieden — nur als Backlog-Eintrag festgehalten, analog zur ursprünglichen Wärmepumpen-Vorausplanung vor `feature/waermepumpe` (siehe oben). Scope laut erster Rückfrage an den Nutzer:
+Neue Idee, noch **nicht** geplant/entschieden — nur als Backlog-Eintrag festgestellt, analog zur ursprünglichen Wärmepumpen-Vorausplanung vor `feature/waermepumpe` (siehe oben).
 
-- **Zwei gewünschte Teile:**
-  - **Energiemonitoring als dritte Datenquelle.** Shelly-Geräte mit eigener Energiemessung (z. B. EM/EM3, Pro-Serie) liefern zusätzliche Verbrauchswerte — analog zum bestehenden PV-/Wärmepumpen-Muster: eigenes `ShellyModel`, eigener Poll-Loop, eigener State (siehe [[project_pv_enphase_integration]] bzw. das "übertragbare Architekturmuster" bei Epic 1).
-  - **Schaltbare Geräte steuern (Relais/Steckdosen ein/aus).** **Wichtig:** Das wäre die **erste schreibende Funktion** der App — widerspricht der bisherigen, bewusst getroffenen Entscheidung "reines Monitoring-Dashboard, keine schreibenden Endpunkte" (siehe "Bewusst zurückgestellt" unten, Punkt "Schreibender Zugriff"). Vor der Umsetzung explizit mit dem Nutzer bestätigen, dass dieser Architekturgrundsatz hier bewusst aufgegeben wird, und absichern (z. B. Bestätigungsdialog vor dem Schalten, da ein irrtümliches Abschalten reale, angeschlossene Geräte betrifft).
-- **Zugriffsweg laut Rückfrage: Shelly-Cloud-API**, nicht lokaler Heimnetz-Zugriff — damit auch unterwegs und im Hintergrund (Widget) nutzbar, mit denselben Tradeoffs wie bei Enphase/Viessmann (Cloud-Konto/Internetabhängigkeit vorausgesetzt, Rate-Limits/Kontingente der Shelly-Cloud-API unbekannt).
-- **API per Web-Recherche dokumentiert (2026-10-14, noch nicht gegen ein echtes Konto verifiziert): siehe `Dokumentation/SHELLY_API_WERTE.md`.** Kurzfassung der wichtigsten Ergebnisse:
-  - Passende Schnittstelle ist die **"Cloud Control API"** (nicht die Integrator API, die für viele fremde Endkundenkonten gedacht ist und eine kommerzielle Freigabe durch Shelly braucht, und nicht der Fleet Manager für Installateure).
-  - **Authentifizierung einfacher als bei Enphase/Viessmann:** kein OAuth-Flow für die HTTP-Endpunkte nötig, nur ein in der Shelly-App generierter `auth_key` — ändert sich aber automatisch bei einer Passwortänderung des Shelly-Kontos (kein Refresh-Token-Mechanismus).
-  - **Rate-Limit: 1 Anfrage/Sekunde** (für Status **und** Schalt-Befehle), kein bekanntes Monats-/Tageskontingent wie bei Enphase.
-  - Status-Felder unterscheiden sich deutlich zwischen Gen1- und Gen2+-Geräten (siehe Dokument) — welche Geräte der Nutzer besitzt, ist weiterhin offen (siehe unten).
-  - Schalten läuft über `v2/devices/api/set/switch` (bzw. `/cover`, `/light`) — das wäre die im vorigen Absatz beschriebene erste schreibende Funktion.
-- **Noch zu klären vor einer konkreten Umsetzungsplanung:**
-  - Wie Schalt-Befehle abgesichert werden (Bestätigungsdialog, Rückmeldung über tatsächlichen Erfolg, Umgang mit offline gemeldeten Geräten).
-  - Welche konkreten Shelly-Modelle/-Geräte beim Nutzer tatsächlich im Einsatz sind — bestimmt, welche Endpunkte/Messgrößen überhaupt relevant sind.
+- **Zugriffsweg: Shelly-Cloud-API** (nicht lokaler Heimnetz-Zugriff), damit auch unterwegs und im Hintergrund (Widget) nutzbar — Details siehe `Dokumentation/SHELLY_API_WERTE.md`: passende Schnittstelle ist die "Cloud Control API" (`auth_key`, **kein OAuth-Flow** nötig, anders als Enphase/Viessmann), **Rate-Limit 1 Anfrage/Sekunde**, kein bekanntes Monats-/Tageskontingent.
+- **Tatsächlich vorhandene Hardware beim Nutzer (bestätigt 2026-10-14): ausschließlich Shelly-Steckdosen** (Gen2+, vermutlich Shelly Plug S-Familie) — **keine** separaten Energiezähler (EM/EM1/3EM), **keine** Rollläden/Lichter. Eine Shelly-Steckdose vereint laut `SHELLY_API_WERTE.md` bereits beides in einer `Switch`-Komponente: Leistungsmessung (`apower`/`voltage`/`current`/`aenergy`) **und** Schaltfunktion (`output`/`on`). Die Epics unten sind entsprechend **ausschließlich auf Steckdosen zugeschnitten** — Rollläden/Lichter/separate Energiezähler sind nicht Teil dieses Scopes (siehe auch "Bewusst zurückgestellt" unten).
+- Schalten (F13.x) ist weiterhin die **erste schreibende Funktion** der App — widerspricht der bisherigen Entscheidung "reines Monitoring-Dashboard, keine schreibenden Endpunkte" (siehe "Bewusst zurückgestellt" unten). Vor der Umsetzung explizit mit dem Nutzer bestätigen, dass dieser Architekturgrundsatz hier bewusst aufgegeben wird.
+
+### Epic 11 — Shelly-Zugriff & Authentifizierung
+
+- **F11.1 Zugangsdaten-Verwaltung.** Eingabe von Server-URI und `auth_key` in einer Einstellungenansicht (kein OAuth-Consent-Flow wie bei Enphase/Viessmann — beide Werte kopiert der Nutzer direkt aus der Shelly-App, "User settings → Authorization cloud key").
+- **F11.2 Sichere Speicherung.** `auth_key` im Keychain, analog `EnphaseKeychainStore`/`ViessmannKeychainStore` (gleiches Muster: Secrets lokal, nicht iCloud-synchronisiert — Entscheidung bei Bedarf gegen [[feedback_branch_workflow]]/F0.3-Präzedenzfall abwägen).
+- **F11.3 Geräteliste.** `/interface/device/list` (laut Doku nur community-dokumentiert, vor Nutzung verifizieren) oder, als robusterer Fallback, manuelle Eingabe der Steckdosen-Device-IDs durch den Nutzer (in der Shelly-App unter "Device → Settings → Device Information" einsehbar) — bei nur einer Handvoll Steckdosen vertretbarer Aufwand und unabhängig davon, ob der undokumentierte Endpunkt stabil funktioniert.
+- **F11.4 Auth-Fehlererkennung.** `auth_key` ändert sich automatisch bei einer Passwortänderung des Shelly-Kontos, es gibt keinen Refresh-Token-Mechanismus (siehe `SHELLY_API_WERTE.md`) — ein Auth-Fehler muss erkannt und der Nutzer zur erneuten Eingabe aufgefordert werden, statt endlos mit einem toten Schlüssel weiterzupollen.
+
+### Epic 12 — Momentanwerte & Monitoring (Steckdosen)
+
+- **F12.1 Kennzahlenkarte je Steckdose.** Aktuelle Leistung (W), Spannung (V), Strom (A) und Schaltzustand (an/aus) aus `Switch.GetStatus` (`apower`/`voltage`/`current`/`output`) — analog `MetricCard`-Muster aus PV/Wärmepumpe.
+- **F12.2 Mehrere Steckdosen gleichzeitig.** Übersicht/Liste statt Einzelansicht wie bei PV/Wärmepumpe (dort je genau eine Anlage) — Statusabruf über `v2/devices/api/get` mit allen Device-IDs in einem Request (bis zu 10 je Aufruf), nicht einzeln pro Steckdose, wegen des knappen 1-Request/Sekunde-Limits.
+- **F12.3 Tagesenergie aus `aenergy.total` ableiten.** `aenergy.total` ist ein **seit dem letzten Geräteneustart kumulativer** Zählerstand, keine Tagesgröße (anders als Enphases `energy_today`) — ein "heute verbraucht"-Wert muss die App selbst aus der Differenz zweier Zählerstände bilden, inkl. Behandlung eines Geräteneustarts (Zählerstand springt dabei zurück auf 0, keine negative Differenz als Verbrauch werten).
+
+### Epic 13 — Schalten (erste schreibende Funktion der App)
+
+- **F13.1 Ein/Aus-Schalten.** `POST v2/devices/api/set/switch` (`id`, `channel`, `on`) je Steckdose.
+- **F13.2 Bestätigungsdialog vor dem Schalten.** Bewusste Absicherung gegen Fehlbedienung, da ein irrtümliches Abschalten ein reales, angeschlossenes Gerät betrifft — anders als alle bisherigen (rein lesenden) Aktionen der App.
+- **F13.3 Erfolgs-/Fehlerrückmeldung.** Sichtbare Bestätigung nach dem Schalten (neuer Zustand im UI), Fehlertext bei `DEVICE_OFFLINE`/`DEVICE_FAILED_COMMAND` (siehe Fehlercode-Tabelle in `SHELLY_API_WERTE.md`) statt stillem Fehlschlag.
+- **F13.4 Scope-Entscheidung, noch zu bestätigen:** Soll geschaltet werden können, oder zunächst nur überwacht (Epic 12 ohne Epic 13)? Falls der Nutzer das Schalten (zumindest vorerst) nicht braucht, entfiele die gesamte Architekturfrage "erster schreibender Zugriff" und Epic 13 bliebe zurückgestellt.
+
+### Epic 14 — Historische Daten
+
+- **F14.1 Lokales Tagesmodell.** Eigenes `@Model` (analog `PVDailySample`), da die Shelly-API — anders als Enphase — **keine** serverseitige Lifetime-Zeitreihe liefert, nur `aenergy.by_minute` (letzte 3 Minuten) im Status.
+- **F14.2 Tageswert-Fortschreibung beim Polling.** Bei jedem Poll `aenergy.total`-Differenz zum letzten bekannten Stand aufaddieren (siehe F12.3-Lektion zum Geräteneustart) statt auf eine serverseitige Historie zu vertrauen — näher am Prinzip der macOS-Vorlage (eigene Aufzeichnung) als am Enphase-Muster (Server hat die Historie).
+- **F14.3 Diagramme.** Tage/Monate/Jahre analog `PVHistoryChartsView`, sobald F14.1/F14.2 genug Datenpunkte gesammelt haben — im Gegensatz zu Enphase gibt es hier **kein** rückwirkendes Backfill (F3.2-Äquivalent), die Historie beginnt erst ab dem Tag der Ersteinrichtung.
+
+### Epic 15 — API-Limit-Management
+
+- **F15.1 Globale 1-Request/Sekunde-Drossel.** Gilt kontoweit, nicht pro Steckdose — bei mehreren Steckdosen plus gelegentlichen Schalt-Befehlen (Epic 13) müssen alle Shelly-Aufrufe durch **eine** gemeinsame Drossel laufen (analog `EnphaseRequestThrottle`, aber mit 1s-Fenster statt 75s/10 Requests).
+- **F15.2 Batch-Status nutzen.** `v2/devices/api/get` mit mehreren IDs pro Aufruf (F12.2) statt einer Anfrage pro Steckdose, damit das knappe 1 req/s-Limit nicht schon beim reinen Monitoring mehrerer Steckdosen ausgeschöpft wird.
+- **F15.3 Kein Monatskontingent bekannt.** Anders als bei Enphase (Epic 4) ist aktuell kein Monats-/Tageskontingent dokumentiert — nur die Sekunden-Drossel ist bekanntermaßen nötig; falls sich beim echten Betrieb ein zusätzliches Kontingent zeigt, hier nachtragen.
+
+### Epic 16 — iOS-Architektur & Widget
+
+- **F16.1 Eigenes `ShellyModel`.** Eigener Poll-Loop/State, unabhängig von `SolarModel`/`HeatPumpModel` (bewährtes Muster, siehe Epic 1 bei Enphase).
+- **F16.2 Navigation.** Vierter Bereich/Tab neben PV/Wärmepumpe/Start, oder zunächst ein Unterpunkt in den Einstellungen, falls der Scope erst mal klein bleiben soll (zu entscheiden, sobald F13.4 geklärt ist).
+- **F16.3 Widget — zurückgestellt bis Grundfunktion steht.** Eine Steckdosen-Kachel analog `HeatPumpWidget`/`CombinedWidget` wäre denkbar, aber erst sinnvoll, wenn Epic 11–13 in der App selbst funktionieren.
+- **F16.4 Schalten nicht aus dem Widget.** Falls Epic 13 umgesetzt wird: Schalt-Aktionen bewusst nur in der App anbieten, nicht im Widget — ein versehentlicher Tap auf dem Homescreen hat keinen Bestätigungsdialog-Schutz (F13.2) wie in der App.
+
+### Epic 17 — Einstellungen
+
+- **F17.1 Verbindungseinstellungen.** `auth_key`/Server-URI verwalten, Verbindungstest, "Abmelden" (löscht nur den gespeicherten Schlüssel) — analog bestehendem PV-/Wärmepumpen-Einstellungen-Screen.
+- **F17.2 Geräteverwaltung.** Welche Steckdosen in der App angezeigt werden (Namen/Reihenfolge), insbesondere falls F11.3 auf manuelle Geräte-ID-Eingabe zurückfällt.
+
+### Epic 18 — Tests
+
+- **F18.1 Reine Fachlogik testbar auslagern.** DTO-Decoding, Tageswert-Differenzbildung (F14.2), Drossel-Logik (F15.1) als unabhängig testbare Typen, analog dem bestehenden `Enphase*`/`Viessmann*`-Testmuster (siehe "Engineering-Konventionen" oben) — Zielwert weiterhin ≥80 % Logikabdeckung.
+- **F18.2 Schalt-Pfad (Epic 13) mit Mock-Netzwerk testen.** Erfolgs-/Fehlerfälle (`DEVICE_OFFLINE` etc.) über `MockURLProtocol`, bevor echte Steckdosen angefasst werden.
 
 ## Bewusst zurückgestellt / außerhalb des Scopes
 
+- **Shelly-Rollläden/-Lichter sowie separate Shelly-Energiezähler (EM/EM1/3EM).** Der Nutzer besitzt ausschließlich Shelly-Steckdosen (bestätigt 2026-10-14) — die `/set/cover`- und `/set/light`-Endpunkte sowie die `EM`/`EM1`-Komponenten aus `SHELLY_API_WERTE.md` sind entsprechend nicht Teil der Epics 11–18. Bei Bedarf später eigenständig nachziehen, kein Blocker für die Steckdosen-Integration.
 - ~~Cloud-Synchronisation (Epic 0) und geräteübergreifender Datenzugriff~~ — seit 2026-10-05 umgesetzt (siehe Epic 0 oben), **ausgenommen** der geplanten macOS-App, die weiterhin keinen gemeinsamen Datenbestand mit dieser App nutzt (separates Projekt, eigener Container).
 - **Export** von Daten (laut Spec-Vorlage explizit auf später verschoben).
 - **Mehrfachanlagen-Unterstützung.**
