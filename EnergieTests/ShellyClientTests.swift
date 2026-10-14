@@ -15,8 +15,13 @@ extension NetworkMockedTests {
 struct ShellyClientTests {
     private let credentials = ShellyCredentials(serverURI: "https://shelly-12-eu.shelly.cloud", authKey: "the-auth-key")
 
-    private func makeClient() -> ShellyClient {
-        ShellyClient(urlSession: MockURLProtocol.makeSession(), credentials: { [credentials] in credentials })
+    private func makeClient(
+        chunkDelay: Duration = .seconds(1),
+        sleep: @escaping @Sendable (Duration) async throws -> Void = { _ in }
+    ) -> ShellyClient {
+        // `sleep` defaults to a no-op here so every test *not* specifically about the F12.2
+        // chunk delay doesn't actually wait a real second per extra chunk.
+        ShellyClient(urlSession: MockURLProtocol.makeSession(), credentials: { [credentials] in credentials }, chunkDelay: chunkDelay, sleep: sleep)
     }
 
     // MARK: - discoverDevices — request shape
@@ -114,6 +119,42 @@ struct ShellyClientTests {
         _ = try await makeClient().fetchDevices(ids: (1...15).map { "device\($0)" })
 
         #expect(requestCount == 2)
+    }
+
+    // MARK: - fetchDevices — F12.2 pause between chunks
+
+    @Test func fetchDevicesDoesNotSleepForTenOrFewerIDs() async throws {
+        nonisolated(unsafe) var sleepCount = 0
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: "[]")
+        }
+
+        _ = try await makeClient(sleep: { _ in sleepCount += 1 }).fetchDevices(ids: (1...10).map { "device\($0)" })
+
+        #expect(sleepCount == 0)
+    }
+
+    @Test func fetchDevicesSleepsOnceBetweenTwoChunks() async throws {
+        nonisolated(unsafe) var sleptDurations: [Duration] = []
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: "[]")
+        }
+
+        let client = makeClient(chunkDelay: .seconds(1), sleep: { sleptDurations.append($0) })
+        _ = try await client.fetchDevices(ids: (1...15).map { "device\($0)" })
+
+        #expect(sleptDurations == [.seconds(1)])
+    }
+
+    @Test func fetchDevicesSleepsBeforeEveryChunkAfterTheFirst() async throws {
+        nonisolated(unsafe) var sleepCount = 0
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: "[]")
+        }
+
+        _ = try await makeClient(sleep: { _ in sleepCount += 1 }).fetchDevices(ids: (1...25).map { "device\($0)" })
+
+        #expect(sleepCount == 2)
     }
 
     // MARK: - fetchDevices — tolerant decoding
