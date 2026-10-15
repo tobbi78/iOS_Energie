@@ -18,8 +18,9 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
     /// (SHELLY_API_WERTE.md: this invalidates `auth_key` with no refresh-token mechanism to fall
     /// back on, unlike Enphase/Viessmann). Detected from HTTP 401/403, or — since the exact error
     /// envelope isn't officially documented — tolerantly from a 2xx body that still signals
-    /// failure (see `ShellyClient.isAuthFailure`). Takes priority over `.http`/`.discoveryUnavailable`/
-    /// `.switchCommandFailed` so the app can tell "dead key" apart from any other failure.
+    /// failure (see `ShellyResponseClassifier.isAuthFailure`). Takes priority over `.http`/
+    /// `.discoveryUnavailable`/`.switchCommandFailed` so the app can tell "dead key" apart from
+    /// any other failure.
     case unauthorized
     /// `/interface/device/list` responded with something this app's tolerant decoding (see
     /// `ShellyDTO.swift`) couldn't make sense of, or the request itself failed — it's only
@@ -159,54 +160,8 @@ struct ShellyClient {
         do {
             _ = try await perform(request)
         } catch ShellyClientError.http(_, let body) {
-            throw ShellyClientError.switchCommandFailed(code: Self.errorCode(fromResponseBody: body))
+            throw ShellyClientError.switchCommandFailed(code: ShellyResponseClassifier.errorCode(fromResponseBody: body))
         }
-    }
-
-    private static func errorCode(fromResponseBody body: String) -> String? {
-        guard let data = body.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return nil
-        }
-        if let code = json["code"] as? String {
-            return code
-        }
-        if let error = json["error"] as? [String: Any], let code = error["code"] as? String {
-            return code
-        }
-        return nil
-    }
-
-    /// Known top-level/`error.code` values that mean "the `auth_key` itself was rejected" rather
-    /// than some other failure — not officially documented (SHELLY_API_WERTE.md), best-effort
-    /// like `errorCode(fromResponseBody:)` above.
-    private static let authErrorCodes: Set<String> = ["UNAUTHORIZED", "WRONG_AUTH_KEY", "INVALID_AUTH_KEY", "UNAUTHENTICATED"]
-
-    /// Whether this response signals a rejected `auth_key` (F11.4). Checked on *every* response,
-    /// not just non-2xx ones: the older `/interface/device/list`-style endpoints are reported to
-    /// sometimes answer auth failures with HTTP 200 and `{"isok": false, "errors": {...}}`
-    /// instead of a 4xx status.
-    private static func isAuthFailure(statusCode: Int, body: String) -> Bool {
-        if statusCode == 401 || statusCode == 403 {
-            return true
-        }
-        guard let data = body.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return false
-        }
-        if let code = json["code"] as? String, authErrorCodes.contains(code.uppercased()) {
-            return true
-        }
-        if let error = json["error"] as? [String: Any], let code = error["code"] as? String, authErrorCodes.contains(code.uppercased()) {
-            return true
-        }
-        if let isok = json["isok"] as? Bool, !isok, let errors = json["errors"] as? [String: Any] {
-            return errors.keys.contains { key in
-                let lowercased = key.lowercased()
-                return lowercased.contains("auth") || lowercased.contains("token")
-            }
-        }
-        return false
     }
 
     private func requireCredentials() async throws -> ShellyCredentials {
@@ -222,7 +177,7 @@ struct ShellyClient {
             throw ShellyClientError.invalidResponse
         }
         let body = String(data: data, encoding: .utf8) ?? ""
-        if Self.isAuthFailure(statusCode: httpResponse.statusCode, body: body) {
+        if ShellyResponseClassifier.isAuthFailure(statusCode: httpResponse.statusCode, body: body) {
             throw ShellyClientError.unauthorized
         }
         guard (200..<300).contains(httpResponse.statusCode) else {

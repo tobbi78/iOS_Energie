@@ -31,23 +31,22 @@ struct ShellyPlugCard: View {
     @State private var isToggling = false
     @State private var toggleError: String?
 
-    private var switchStatus: ShellySwitchStatus? {
-        status?.status?.switch0
-    }
-
-    private var isOnline: Bool {
-        status?.online ?? false
+    /// Derives online/switch-state/formatting from `status` — kept as a single computed
+    /// property rather than repeating `ShellyPlugDisplay(status: status)` at every use site
+    /// (F18.1).
+    private var display: ShellyPlugDisplay {
+        ShellyPlugDisplay(status: status)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             header
             HStack(spacing: 0) {
-                metric(title: "Leistung", value: formattedPower(switchStatus?.apower), icon: "bolt.fill")
+                metric(title: "Leistung", value: display.formattedPower, icon: "bolt.fill")
                 Divider().frame(height: 36)
-                metric(title: "Spannung", value: formattedVoltage(switchStatus?.voltage), icon: "waveform.path")
+                metric(title: "Spannung", value: display.formattedVoltage, icon: "waveform.path")
                 Divider().frame(height: 36)
-                metric(title: "Strom", value: formattedCurrent(switchStatus?.current), icon: "gauge")
+                metric(title: "Strom", value: display.formattedCurrent, icon: "gauge")
             }
         }
         .padding()
@@ -60,7 +59,7 @@ struct ShellyPlugCard: View {
         // card wouldn't do anything for a VoiceOver user even though sighted users can tap the
         // badge directly (F13.1/F13.2).
         .accessibilityAction {
-            guard isOnline, let output = switchStatus?.output, !isToggling else { return }
+            guard display.canToggle, let output = display.output, !isToggling else { return }
             pendingTarget = !output
         }
         .confirmationDialog(
@@ -141,9 +140,9 @@ struct ShellyPlugCard: View {
                 .controlSize(.small)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-        } else if !isOnline {
+        } else if !display.isOnline {
             badge(text: "Offline", color: .secondary)
-        } else if let output = switchStatus?.output {
+        } else if let output = display.output {
             Button {
                 pendingTarget = !output
             } label: {
@@ -184,14 +183,14 @@ struct ShellyPlugCard: View {
     /// metric's icon/value/title as disconnected fragments.
     private var accessibilitySummary: String {
         var parts = [device.name]
-        if !isOnline {
+        if !display.isOnline {
             parts.append("Offline")
-        } else if let output = switchStatus?.output {
+        } else if let output = display.output {
             parts.append(output ? "Eingeschaltet" : "Ausgeschaltet")
         }
-        parts.append("Leistung \(formattedPower(switchStatus?.apower))")
-        parts.append("Spannung \(formattedVoltage(switchStatus?.voltage))")
-        parts.append("Strom \(formattedCurrent(switchStatus?.current))")
+        parts.append("Leistung \(display.formattedPower)")
+        parts.append("Spannung \(display.formattedVoltage)")
+        parts.append("Strom \(display.formattedCurrent)")
         return parts.joined(separator: ", ")
     }
 
@@ -199,23 +198,8 @@ struct ShellyPlugCard: View {
     /// empty hint is simply not announced by VoiceOver, same as not setting one at all.
     /// `String(localized:)` for the same reason as `confirmationTitle` above.
     private var accessibilityHint: String {
-        guard isOnline, switchStatus?.output != nil, !isToggling else { return "" }
+        guard display.canToggle, !isToggling else { return "" }
         return String(localized: "Doppeltippen zum Schalten")
-    }
-
-    private func formattedPower(_ watts: Double?) -> String {
-        guard let watts else { return "–" }
-        return watts.formatted(.number.precision(.fractionLength(0))) + " W"
-    }
-
-    private func formattedVoltage(_ volts: Double?) -> String {
-        guard let volts else { return "–" }
-        return volts.formatted(.number.precision(.fractionLength(1))) + " V"
-    }
-
-    private func formattedCurrent(_ amps: Double?) -> String {
-        guard let amps else { return "–" }
-        return amps.formatted(.number.precision(.fractionLength(2))) + " A"
     }
 
 }

@@ -58,9 +58,10 @@ struct ShellyPlugsSummaryCard: View {
             .foregroundStyle(.secondary)
     }
 
+    /// Shares its "–"/rounding convention with `ShellyPlugCard`'s per-plug power reading
+    /// (`ShellyPlugDisplay.formatPower`, F18.1) rather than duplicating it here.
     private var formattedTotalPower: String {
-        guard let totalPower = summary.totalPower else { return "–" }
-        return totalPower.formatted(.number.precision(.fractionLength(0))) + " W"
+        ShellyPlugDisplay.formatPower(summary.totalPower)
     }
 
     private var accessibilitySummary: String {
