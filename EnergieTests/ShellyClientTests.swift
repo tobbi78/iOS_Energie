@@ -392,6 +392,78 @@ struct ShellyClientTests {
         #expect(ShellyClientError.switchCommandFailed(code: nil).errorDescription != nil)
     }
 
+    // MARK: - Auth failure detection (F11.4)
+
+    @Test func fetchDevicesThrowsUnauthorizedOnHTTP401() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: "{}")
+        }
+
+        await #expect(throws: ShellyClientError.unauthorized) {
+            try await makeClient().fetchDevices(ids: ["a1b2c3"])
+        }
+    }
+
+    @Test func fetchDevicesThrowsUnauthorizedOnHTTP403() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 403, json: "{}")
+        }
+
+        await #expect(throws: ShellyClientError.unauthorized) {
+            try await makeClient().fetchDevices(ids: ["a1b2c3"])
+        }
+    }
+
+    // Some older Shelly cloud endpoints are reported to answer an auth failure with HTTP 200
+    // and `{"isok": false, "errors": {...}}` instead of a 4xx status — the exact shape isn't
+    // officially documented (SHELLY_API_WERTE.md), so this is detected tolerantly.
+    @Test func fetchDevicesThrowsUnauthorizedOnAnIsokFalseAuthErrorBody() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"{"isok":false,"errors":{"wrong_auth_key":"invalid"}}"#)
+        }
+
+        await #expect(throws: ShellyClientError.unauthorized) {
+            try await makeClient().fetchDevices(ids: ["a1b2c3"])
+        }
+    }
+
+    @Test func fetchDevicesThrowsUnauthorizedOnATopLevelAuthErrorCode() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 400, json: #"{"code":"WRONG_AUTH_KEY"}"#)
+        }
+
+        await #expect(throws: ShellyClientError.unauthorized) {
+            try await makeClient().fetchDevices(ids: ["a1b2c3"])
+        }
+    }
+
+    // A dead `auth_key` must not be papered over as "discovery itself is unavailable" — the
+    // UI's fallback (manual device-ID entry) would fail identically, which hides the actual
+    // problem from the user.
+    @Test func discoverDevicesThrowsUnauthorizedInsteadOfDiscoveryUnavailable() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: "{}")
+        }
+
+        await #expect(throws: ShellyClientError.unauthorized) {
+            try await makeClient().discoverDevices()
+        }
+    }
+
+    @Test func setSwitchThrowsUnauthorizedInsteadOfSwitchCommandFailed() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: "{}")
+        }
+
+        await #expect(throws: ShellyClientError.unauthorized) {
+            try await makeClient().setSwitch(id: "a1b2c3", channel: 0, on: true)
+        }
+    }
+
+    @Test func unauthorizedHasAUserFacingMessage() {
+        #expect(ShellyClientError.unauthorized.errorDescription != nil)
+    }
+
     // MARK: - setSwitch — F15.1 shared throttle applies too
 
     @Test func setSwitchGoesThroughTheSharedThrottleToo() async throws {

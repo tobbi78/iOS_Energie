@@ -45,6 +45,13 @@ struct ShellyView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .ready:
             plugList
+        case .authFailed:
+            goToSettings(
+                title: "Shelly-Schlüssel ungültig",
+                description: "Der hinterlegte Schlüssel wurde abgelehnt — vermutlich wurde das Passwort des Shelly-Kontos geändert. Bitte den neuen Schlüssel in den Einstellungen hinterlegen.",
+                systemImage: "exclamationmark.triangle.fill",
+                retry: { Task { await model.refresh(force: true) } }
+            )
         case .error(let message):
             ErrorView(message: message) {
                 Task { await model.refresh() }
@@ -82,14 +89,28 @@ struct ShellyView: View {
         }
     }
 
-    private func goToSettings(title: String, description: String) -> some View {
+    private func goToSettings(
+        title: String,
+        description: String,
+        systemImage: String = "powerplug",
+        retry: (() -> Void)? = nil
+    ) -> some View {
         ContentUnavailableView {
-            Label(title, systemImage: "powerplug")
+            Label(title, systemImage: systemImage)
         } description: {
             Text(description)
         } actions: {
-            Button("Zu den Einstellungen") {
-                selectedTab = .settings
+            if let retry {
+                Button("Zu den Einstellungen") {
+                    selectedTab = .settings
+                }
+                .buttonStyle(.borderedProminent)
+                Button("Erneut versuchen", action: retry)
+                    .buttonStyle(.bordered)
+            } else {
+                Button("Zu den Einstellungen") {
+                    selectedTab = .settings
+                }
             }
         }
     }

@@ -14,6 +14,13 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
     case missingCredentials
     case invalidResponse
     case http(status: Int, body: String)
+    /// The `auth_key` was rejected — most likely because the Shelly account's password changed
+    /// (SHELLY_API_WERTE.md: this invalidates `auth_key` with no refresh-token mechanism to fall
+    /// back on, unlike Enphase/Viessmann). Detected from HTTP 401/403, or — since the exact error
+    /// envelope isn't officially documented — tolerantly from a 2xx body that still signals
+    /// failure (see `ShellyClient.isAuthFailure`). Takes priority over `.http`/`.discoveryUnavailable`/
+    /// `.switchCommandFailed` so the app can tell "dead key" apart from any other failure.
+    case unauthorized
     /// `/interface/device/list` responded with something this app's tolerant decoding (see
     /// `ShellyDTO.swift`) couldn't make sense of, or the request itself failed — it's only
     /// community-documented, not official (SHELLY_API_WERTE.md). The UI falls back to manual
@@ -44,6 +51,8 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
             // `body` kept on the error case for diagnostics only, same reasoning as
             // EnphaseClientError.http/ViessmannClientError.http — never shown to the user.
             return "Shelly-Anfrage fehlgeschlagen (HTTP \(status))."
+        case .unauthorized:
+            return "Der Shelly-Schlüssel wurde abgelehnt. Wurde das Passwort des Shelly-Kontos geändert? Bitte den neuen Schlüssel in den Einstellungen hinterlegen."
         case .discoveryUnavailable:
             return "Automatische Geräteerkennung nicht verfügbar. Bitte Geräte-ID manuell eingeben."
         case .deviceNotFound:
@@ -93,6 +102,10 @@ struct ShellyClient {
             let request = ShellyEndpoints.deviceListRequest(server: credentials.serverURI, authKey: credentials.authKey)
             let data = try await perform(request)
             return try JSONDecoder().decode(ShellyDeviceListResponse.self, from: data).devices
+        } catch ShellyClientError.unauthorized {
+            // A dead `auth_key` isn't "discovery itself is unavailable" — the UI's manual-entry
+            // fallback would just fail identically, so this surfaces distinctly (F11.4).
+            throw ShellyClientError.unauthorized
         } catch {
             throw ShellyClientError.discoveryUnavailable
         }
@@ -164,6 +177,38 @@ struct ShellyClient {
         return nil
     }
 
+    /// Known top-level/`error.code` values that mean "the `auth_key` itself was rejected" rather
+    /// than some other failure — not officially documented (SHELLY_API_WERTE.md), best-effort
+    /// like `errorCode(fromResponseBody:)` above.
+    private static let authErrorCodes: Set<String> = ["UNAUTHORIZED", "WRONG_AUTH_KEY", "INVALID_AUTH_KEY", "UNAUTHENTICATED"]
+
+    /// Whether this response signals a rejected `auth_key` (F11.4). Checked on *every* response,
+    /// not just non-2xx ones: the older `/interface/device/list`-style endpoints are reported to
+    /// sometimes answer auth failures with HTTP 200 and `{"isok": false, "errors": {...}}`
+    /// instead of a 4xx status.
+    private static func isAuthFailure(statusCode: Int, body: String) -> Bool {
+        if statusCode == 401 || statusCode == 403 {
+            return true
+        }
+        guard let data = body.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return false
+        }
+        if let code = json["code"] as? String, authErrorCodes.contains(code.uppercased()) {
+            return true
+        }
+        if let error = json["error"] as? [String: Any], let code = error["code"] as? String, authErrorCodes.contains(code.uppercased()) {
+            return true
+        }
+        if let isok = json["isok"] as? Bool, !isok, let errors = json["errors"] as? [String: Any] {
+            return errors.keys.contains { key in
+                let lowercased = key.lowercased()
+                return lowercased.contains("auth") || lowercased.contains("token")
+            }
+        }
+        return false
+    }
+
     private func requireCredentials() async throws -> ShellyCredentials {
         let credentials = await credentials()
         guard credentials.isComplete else { throw ShellyClientError.missingCredentials }
@@ -176,8 +221,12 @@ struct ShellyClient {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ShellyClientError.invalidResponse
         }
+        let body = String(data: data, encoding: .utf8) ?? ""
+        if Self.isAuthFailure(statusCode: httpResponse.statusCode, body: body) {
+            throw ShellyClientError.unauthorized
+        }
         guard (200..<300).contains(httpResponse.statusCode) else {
-            throw ShellyClientError.http(status: httpResponse.statusCode, body: String(data: data, encoding: .utf8) ?? "")
+            throw ShellyClientError.http(status: httpResponse.statusCode, body: body)
         }
         return data
     }

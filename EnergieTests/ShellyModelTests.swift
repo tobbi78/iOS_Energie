@@ -141,6 +141,86 @@ struct ShellyModelTests {
         }
     }
 
+    // MARK: - Auth failure detection (F11.4)
+
+    @Test func refreshSetsAuthFailedOnAnUnauthorizedResponse() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: "{}")
+        }
+        let model = makeModel(deviceList: deviceList(withIDs: ["a1b2c3"]))
+
+        await model.refresh()
+
+        #expect(model.state == .authFailed)
+    }
+
+    @Test func refreshDoesNotRetryTheSameRejectedKey() async throws {
+        nonisolated(unsafe) var requestCount = 0
+        MockURLProtocol.requestHandler = { request in
+            requestCount += 1
+            return MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: "{}")
+        }
+        let model = makeModel(deviceList: deviceList(withIDs: ["a1b2c3"]))
+
+        await model.refresh()
+        #expect(requestCount == 1)
+        await model.refresh()
+
+        // The rejected key hasn't changed — a second `refresh()` must not hit the network again,
+        // or the poll loop would hammer a dead key every tick (F16.1).
+        #expect(requestCount == 1)
+        #expect(model.state == .authFailed)
+    }
+
+    @Test func refreshRetriesAutomaticallyOnceANewKeyIsStored() async throws {
+        nonisolated(unsafe) var requestCount = 0
+        MockURLProtocol.requestHandler = { request in
+            requestCount += 1
+            return MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: "{}")
+        }
+        let settings = ShellySettings(store: InMemoryShellySecretStore(seed: [
+            .serverURI: "https://shelly-12-eu.shelly.cloud",
+            .authKey: "the-auth-key",
+        ]))
+        let client = ShellyClient(
+            urlSession: MockURLProtocol.makeSession(),
+            credentials: { await settings.credentials },
+            throttle: ShellyRequestThrottle(sleep: { _ in })
+        )
+        let model = ShellyModel(settings: settings, deviceList: deviceList(withIDs: ["a1b2c3"]), client: client)
+
+        await model.refresh()
+        #expect(model.state == .authFailed)
+        #expect(requestCount == 1)
+
+        MockURLProtocol.requestHandler = { request in
+            requestCount += 1
+            return MockURLProtocol.jsonResponse(url: request.url!, json: "[]")
+        }
+        settings.setCredentials(serverURI: "https://shelly-12-eu.shelly.cloud", authKey: "a-new-key")
+        await model.refresh()
+
+        #expect(requestCount == 2)
+        #expect(model.state == .ready)
+    }
+
+    @Test func forceRefreshBypassesTheRejectedKeyShortCircuit() async throws {
+        nonisolated(unsafe) var requestCount = 0
+        MockURLProtocol.requestHandler = { request in
+            requestCount += 1
+            return MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: "{}")
+        }
+        let model = makeModel(deviceList: deviceList(withIDs: ["a1b2c3"]))
+
+        await model.refresh()
+        #expect(requestCount == 1)
+        await model.refresh(force: true)
+
+        // `force: true` bypasses the short-circuit even with an unchanged key — e.g. an explicit
+        // "Erneut versuchen" tap, in case the earlier rejection was a one-off server hiccup.
+        #expect(requestCount == 2)
+    }
+
     // MARK: - setSwitch (F13.1)
 
     @Test func setSwitchCallsTheClientThenRefreshes() async throws {
@@ -185,6 +265,26 @@ struct ShellyModelTests {
             try await model.setSwitch(deviceID: "a1b2c3", on: false)
         }
         #expect(model.state == .ready)
+    }
+
+    /// Unlike other per-device switch failures, a rejected `auth_key` (F11.4) affects every
+    /// device, so it's the one case where `setSwitch` does change `state`.
+    @Test func setSwitchSetsAuthFailedAndRethrowsOnUnauthorized() async throws {
+        let model = makeModel(deviceList: deviceList(withIDs: ["a1b2c3"]))
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"[{"id":"a1b2c3","online":true}]"#)
+        }
+        await model.refresh()
+        #expect(model.state == .ready)
+
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: "{}")
+        }
+
+        await #expect(throws: ShellyClientError.unauthorized) {
+            try await model.setSwitch(deviceID: "a1b2c3", on: false)
+        }
+        #expect(model.state == .authFailed)
     }
 
     // MARK: - Poll loop (F16.1)
