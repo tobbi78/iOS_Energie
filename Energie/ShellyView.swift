@@ -63,8 +63,10 @@ struct ShellyView: View {
                         .staggeredAppear(index: 0)
                 }
                 ForEach(Array(deviceList.devices.enumerated()), id: \.element.id) { index, device in
-                    ShellyPlugCard(device: device, status: model.statuses[device.id])
-                        .staggeredAppear(index: index + (deviceList.devices.count >= 2 ? 1 : 0))
+                    ShellyPlugCard(device: device, status: model.statuses[device.id]) { on in
+                        try await model.setSwitch(deviceID: device.id, on: on)
+                    }
+                    .staggeredAppear(index: index + (deviceList.devices.count >= 2 ? 1 : 0))
                 }
                 if let lastUpdated = model.lastUpdated {
                     Text("Aktualisiert um \(lastUpdated.formatted(date: .omitted, time: .shortened))")

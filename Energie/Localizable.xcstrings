@@ -4,6 +4,26 @@
     "„Energie“ ist eine private App, die ausschließlich im Rahmen eines nicht-öffentlichen TestFlight-Tests mit einem begrenzten Personenkreis (Familie/Freunde) verwendet wird. Sie wird nicht im öffentlichen App Store angeboten." : {
 
     },
+    "%@ ausschalten?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Turn Off %@?"
+          }
+        }
+      }
+    },
+    "%@ einschalten?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Turn On %@?"
+          }
+        }
+      }
+    },
     "%lld offline" : {
 
     },
@@ -123,6 +143,16 @@
         }
       }
     },
+    "Ausschalten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Turn Off"
+          }
+        }
+      }
+    },
     "Authorization Key" : {
 
     },
@@ -222,6 +252,16 @@
     "Die Geräte-ID findest du in der Shelly-App unter \"Gerät → Einstellungen → Geräteinformationen\"." : {
 
     },
+    "Doppeltippen zum Schalten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Double tap to switch"
+          }
+        }
+      }
+    },
     "Effizienz" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -259,6 +299,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Changing the credentials requires signing in again."
+          }
+        }
+      }
+    },
+    "Einschalten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Turn On"
           }
         }
       }
@@ -764,6 +814,16 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Reference value with no billing claim, used for the estimated compensation on the feed-in tile."
+          }
+        }
+      }
+    },
+    "Schalten fehlgeschlagen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Switching Failed"
           }
         }
       }

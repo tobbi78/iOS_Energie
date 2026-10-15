@@ -89,6 +89,15 @@ final class ShellyModel {
         pollTask = nil
     }
 
+    /// F13.1 — switches a single plug and reloads the current status afterwards so the UI picks
+    /// up the real new state rather than assuming the command took effect. Rethrows on failure
+    /// instead of folding into `state`: a failed switch on one device is a per-card concern (see
+    /// `ShellyPlugCard`), not a reason to drop the whole "Steckdosen" screen into `.error`.
+    func setSwitch(deviceID: String, on: Bool) async throws {
+        try await client.setSwitch(id: deviceID, channel: 0, on: on)
+        await refresh()
+    }
+
     func refresh() async {
         guard !isRefreshing else { return }
 
