@@ -75,6 +75,15 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
     }
 }
 
+/// Result of "Verbindung testen" (F17.1) — how many of the saved devices answered as online.
+/// Deliberately not a boolean "connection works": the key being accepted and individual devices
+/// being reachable are separate concerns (a device can be offline even with a perfectly valid
+/// key), so the UI reports both numbers rather than collapsing them into one verdict.
+nonisolated struct ShellyConnectionTestResult: Equatable {
+    var online: Int
+    var total: Int
+}
+
 /// Access to the Shelly Cloud Control API using just the `auth_key` already in
 /// `ShellyCredentials` — no OAuth token, unlike `EnphaseClient`/`ViessmannClient`. Every call
 /// goes through the shared, account-wide 1-request/second throttle (F15.1) before hitting the
@@ -162,6 +171,16 @@ struct ShellyClient {
         } catch ShellyClientError.http(_, let body) {
             throw ShellyClientError.switchCommandFailed(code: ShellyResponseClassifier.errorCode(fromResponseBody: body))
         }
+    }
+
+    /// "Verbindung testen" (F17.1) — reuses `fetchDevices` (same chunking, throttle, and
+    /// `.unauthorized` detection as the status poll) rather than a dedicated lightweight
+    /// endpoint; there isn't one, and a real status fetch doubles as the most faithful test of
+    /// what the poll loop (`ShellyModel`) will actually experience.
+    func testConnection(deviceIDs: [String]) async throws -> ShellyConnectionTestResult {
+        let devices = try await fetchDevices(ids: deviceIDs)
+        let online = devices.filter { $0.online == true }.count
+        return ShellyConnectionTestResult(online: online, total: deviceIDs.count)
     }
 
     private func requireCredentials() async throws -> ShellyCredentials {

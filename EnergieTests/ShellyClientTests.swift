@@ -288,6 +288,29 @@ struct ShellyClientTests {
         #expect(device?.status?.switch0 == nil)
     }
 
+    // MARK: - testConnection (F17.1)
+
+    @Test func testConnectionCountsOnlineDevicesAgainstTheTotalRequested() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"a1b2c3","online":true},{"id":"d4e5f6","online":false}]
+            """#)
+        }
+
+        let result = try await makeClient().testConnection(deviceIDs: ["a1b2c3", "d4e5f6"])
+        #expect(result == ShellyConnectionTestResult(online: 1, total: 2))
+    }
+
+    @Test func testConnectionThrowsUnauthorizedOnADeadKey() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 401, json: "{}")
+        }
+
+        await #expect(throws: ShellyClientError.unauthorized) {
+            try await makeClient().testConnection(deviceIDs: ["a1b2c3"])
+        }
+    }
+
     // MARK: - verifyDevice
 
     @Test func verifyDeviceReturnsTheMatchingDevice() async throws {

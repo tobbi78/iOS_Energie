@@ -25,6 +25,12 @@ struct ShellyDevicesScreen: View {
     @State private var manualError: String?
     @State private var showsAddedConfirmation = false
 
+    /// The device currently being renamed (F17.2), if any — drives the rename `.alert` below.
+    /// `nil` both before renaming starts and once it's dismissed, so a single optional doubles as
+    /// the alert's `isPresented` state via the computed `Binding` in `body`.
+    @State private var renamingDevice: ShellyDevice?
+    @State private var renameText = ""
+
     private var client: ShellyClient {
         ShellyClient(credentials: { await settings.credentials })
     }
@@ -41,16 +47,16 @@ struct ShellyDevicesScreen: View {
                     .listRowBackground(Color.clear)
                 }
             } else {
-                Section("Gespeicherte Steckdosen") {
+                Section {
                     ForEach(deviceList.devices) { device in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(device.name)
-                            Text(device.id)
-                                .font(.caption.monospaced())
-                                .foregroundStyle(.secondary)
-                        }
+                        deviceRow(device)
                     }
                     .onDelete { deviceList.remove(atOffsets: $0) }
+                    .onMove { deviceList.move(fromOffsets: $0, toOffset: $1) }
+                } header: {
+                    Text("Gespeicherte Steckdosen")
+                } footer: {
+                    Text("Tippen zum Umbenennen, „Bearbeiten“ zum Sortieren oder Löschen. Die Reihenfolge gilt auch im Steckdosen-Tab.")
                 }
             }
 
@@ -113,6 +119,60 @@ struct ShellyDevicesScreen: View {
             }
         }
         .sensoryFeedback(.success, trigger: showsAddedConfirmation)
+        .alert(
+            "Steckdose umbenennen",
+            isPresented: Binding(
+                get: { renamingDevice != nil },
+                set: { if !$0 { renamingDevice = nil } }
+            )
+        ) {
+            TextField("Name", text: $renameText)
+            Button("Abbrechen", role: .cancel) {}
+            Button("Sichern") {
+                if let renamingDevice {
+                    deviceList.rename(id: renamingDevice.id, to: renameText)
+                }
+            }
+        } message: {
+            if let renamingDevice {
+                Text(renamingDevice.id)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func deviceRow(_ device: ShellyDevice) -> some View {
+        Button {
+            beginRenaming(device)
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(device.name)
+                        .foregroundStyle(.primary)
+                    Text(device.id)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "pencil")
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+            }
+        }
+        .buttonStyle(.plain)
+        .swipeActions(edge: .leading) {
+            Button {
+                beginRenaming(device)
+            } label: {
+                Label("Umbenennen", systemImage: "pencil")
+            }
+            .tint(.shellyAccent)
+        }
+    }
+
+    private func beginRenaming(_ device: ShellyDevice) {
+        renamingDevice = device
+        renameText = device.name
     }
 
     @ViewBuilder
