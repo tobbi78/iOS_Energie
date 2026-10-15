@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftData
 import SwiftUI
 
 nonisolated enum ShellyPlugsState: Equatable {
@@ -44,6 +45,10 @@ final class ShellyModel {
     private let deviceList: ShellyDeviceList
     private let client: ShellyClient
     private let now: @Sendable () -> Date
+    /// Writes each successful poll's `aenergy.total` readings into the plugs' own history (F14.2).
+    /// `nil` when no `ModelContext` was passed (previews, tests that don't care about history) —
+    /// polling works the same, nothing gets recorded.
+    @ObservationIgnored private let historyRecorder: ShellyHistoryRecorder?
     /// Guards against a second `refresh()` starting while one is already in flight (e.g. a
     /// double pull-to-refresh racing the poll loop) — redundant with the throttle (F15.1) for
     /// correctness, but avoids needlessly queueing up a second request that would just sit
@@ -67,11 +72,13 @@ final class ShellyModel {
         settings: ShellySettings,
         deviceList: ShellyDeviceList,
         client: ShellyClient? = nil,
+        modelContext: ModelContext? = nil,
         now: @escaping @Sendable () -> Date = Date.init
     ) {
         self.settings = settings
         self.deviceList = deviceList
         self.client = client ?? ShellyClient(credentials: { await settings.credentials })
+        self.historyRecorder = modelContext.map { ShellyHistoryRecorder(modelContext: $0) }
         self.now = now
     }
 
@@ -166,11 +173,23 @@ final class ShellyModel {
                 lastUpdated = fetchTime
                 state = .ready
             }
+            recordHistory(devices, at: fetchTime)
         } catch ShellyClientError.unauthorized {
             rejectedAuthKey = settings.credentials.authKey
             state = .authFailed
         } catch {
             state = .error((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+        }
+    }
+
+    /// F14.2 — only devices that are reachable and actually report a counter are recorded; an
+    /// offline plug's last-known counter (if the cloud returns one at all) would add nothing new,
+    /// and its gap gets spread over the right days once it reports again.
+    private func recordHistory(_ devices: [ShellyDeviceStatusDTO], at fetchTime: Date) {
+        guard let historyRecorder else { return }
+        for device in devices where device.online != false {
+            guard let total = device.status?.switch0?.aenergy?.total else { continue }
+            historyRecorder.record(deviceID: device.id, total: total, at: fetchTime)
         }
     }
 }

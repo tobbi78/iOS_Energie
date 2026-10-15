@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftData
 import Testing
 @testable import Energie
 
@@ -19,6 +20,7 @@ struct ShellyModelTests {
     private func makeModel(
         hasCredentials: Bool = true,
         deviceList: ShellyDeviceList? = nil,
+        modelContext: ModelContext? = nil,
         now: @escaping @Sendable () -> Date = Date.init
     ) -> ShellyModel {
         let settings = ShellySettings(store: InMemoryShellySecretStore(seed: hasCredentials ? [
@@ -37,8 +39,58 @@ struct ShellyModelTests {
             settings: settings,
             deviceList: resolvedDeviceList,
             client: client,
+            modelContext: modelContext,
             now: now
         )
+    }
+
+    /// `cloudKitDatabase: .none` explicitly — see SolarModelTests.makeContext for why.
+    private func makeContext() throws -> ModelContext {
+        let container = try ModelContainer(
+            for: ShellyDailySample.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        )
+        return ModelContext(container)
+    }
+
+    // MARK: - History recording (F14.2)
+
+    @Test func refreshRecordsEnergyDeltaBetweenTwoPolls() async throws {
+        nonisolated(unsafe) var total = 1000.0
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: """
+            [{"id":"a1b2c3","online":true,"status":{"switch:0":{"output":true,"aenergy":{"total":\(total)}}}}]
+            """)
+        }
+        let context = try makeContext()
+        let start = Calendar.current.startOfDay(for: Date()).addingTimeInterval(10 * 3600)
+        nonisolated(unsafe) var currentTime = start
+        let model = makeModel(deviceList: deviceList(withIDs: ["a1b2c3"]), modelContext: context, now: { currentTime })
+
+        await model.refresh()
+        total = 1250
+        currentTime = start.addingTimeInterval(60)
+        await model.refresh()
+
+        let rows = try context.fetch(FetchDescriptor<ShellyDailySample>())
+        #expect(rows.count == 1)
+        #expect(rows.first?.energyWh == 250)
+        #expect(rows.first?.lastCounterWh == 1250)
+    }
+
+    @Test func refreshSkipsOfflineDevicesAndDevicesWithoutCounter() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+            [{"id":"off","online":false,"status":{"switch:0":{"aenergy":{"total":500}}}},
+             {"id":"nocounter","online":true,"status":{"switch:0":{"output":true,"apower":3}}}]
+            """#)
+        }
+        let context = try makeContext()
+        let model = makeModel(deviceList: deviceList(withIDs: ["off", "nocounter"]), modelContext: context)
+
+        await model.refresh()
+
+        #expect(try context.fetch(FetchDescriptor<ShellyDailySample>()).isEmpty)
     }
 
     private func deviceList(withIDs ids: [String]) -> ShellyDeviceList {
