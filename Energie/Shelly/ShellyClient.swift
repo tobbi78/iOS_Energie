@@ -26,6 +26,13 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
     /// `ShellyDeviceStatusResponse`) couldn't make sense of. The raw body goes to the logger
     /// only, never to the user — same reasoning as `.http`'s `body`.
     case statusUnavailable
+    /// `v2/devices/api/set/switch` (F13.1) failed. `code` is Shelly's documented error code
+    /// (SHELLY_API_WERTE.md: `DEVICE_OFFLINE`, `DEVICE_FAILED_COMMAND`, `DEVICE_INVALID_MODE`,
+    /// `DEVICE_INVALID_CHANNEL`, `BAD_REQUEST`, `DEVICE_NOT_FOUND`, `INSTANCE_NOT_FOUND`,
+    /// `UNEXPECTED_SUBSERVICE_ERROR`) when `ShellyClient.setSwitch` could extract one from the
+    /// response body, `nil` otherwise — the exact error body shape isn't officially documented,
+    /// so extraction is best-effort (see `setSwitch`).
+    case switchCommandFailed(code: String?)
 
     var errorDescription: String? {
         switch self {
@@ -43,6 +50,17 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
             return "Kein Gerät mit dieser ID gefunden. Bitte die Geräte-ID in der Shelly-App prüfen."
         case .statusUnavailable:
             return "Gerätestatus konnte nicht gelesen werden. Bitte später erneut versuchen."
+        case .switchCommandFailed(let code):
+            switch code {
+            case "DEVICE_OFFLINE":
+                return "Die Steckdose ist offline."
+            case "DEVICE_FAILED_COMMAND":
+                return "Der Schaltbefehl ist fehlgeschlagen. Bitte erneut versuchen."
+            case "DEVICE_NOT_FOUND", "INSTANCE_NOT_FOUND":
+                return "Steckdose nicht gefunden."
+            default:
+                return "Schalten fehlgeschlagen. Bitte später erneut versuchen."
+            }
         }
     }
 }
@@ -115,6 +133,35 @@ struct ShellyClient {
             throw ShellyClientError.deviceNotFound
         }
         return device
+    }
+
+    /// F13.1 "Ein/Aus-Schalten" — the app's first write access to a real device. On failure,
+    /// tries to extract Shelly's documented error code from the response body (`code` at the top
+    /// level, or nested under `error.code` — the exact error envelope isn't officially
+    /// documented, see SHELLY_API_WERTE.md, so this is best-effort) and rethrows as
+    /// `.switchCommandFailed`, which maps known codes to a user-facing message.
+    func setSwitch(id: String, channel: Int, on: Bool) async throws {
+        let credentials = try await requireCredentials()
+        let request = ShellyEndpoints.setSwitchRequest(server: credentials.serverURI, authKey: credentials.authKey, id: id, channel: channel, on: on)
+        do {
+            _ = try await perform(request)
+        } catch ShellyClientError.http(_, let body) {
+            throw ShellyClientError.switchCommandFailed(code: Self.errorCode(fromResponseBody: body))
+        }
+    }
+
+    private static func errorCode(fromResponseBody body: String) -> String? {
+        guard let data = body.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        if let code = json["code"] as? String {
+            return code
+        }
+        if let error = json["error"] as? [String: Any], let code = error["code"] as? String {
+            return code
+        }
+        return nil
     }
 
     private func requireCredentials() async throws -> ShellyCredentials {

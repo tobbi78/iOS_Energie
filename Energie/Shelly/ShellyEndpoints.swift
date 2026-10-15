@@ -39,6 +39,23 @@ enum ShellyEndpoints {
         return request
     }
 
+    /// `/v2/devices/api/set/switch` (F13.1) — only `channel` 0 is used by this app (the
+    /// confirmed hardware is a single-channel Plug S-family device, same assumption as
+    /// `ShellyDeviceStatus.switch0`). Error codes on failure (`DEVICE_OFFLINE`,
+    /// `DEVICE_FAILED_COMMAND`, …) are surfaced by `ShellyClient.setSwitch`, not here.
+    static func setSwitchRequest(server: String, authKey: String, id: String, channel: Int, on: Bool) -> URLRequest {
+        // Same `+`-in-query-value caveat as `deviceStatusRequest` — encode the auth key by hand
+        // rather than via `URLQueryItem`.
+        let encodedAuthKey = authKey.addingPercentEncoding(withAllowedCharacters: .urlQueryValueAllowed) ?? authKey
+        let url = URL(string: server + "/v2/devices/api/set/switch?auth_key=" + encodedAuthKey)!
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["id": id, "channel": channel, "on": on])
+        return request
+    }
+
     private static func formEncodedRequest(server: String, path: String, parameters: [String: String]) -> URLRequest {
         var request = URLRequest(url: URL(string: server + path)!)
         request.httpMethod = "POST"

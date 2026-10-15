@@ -141,6 +141,52 @@ struct ShellyModelTests {
         }
     }
 
+    // MARK: - setSwitch (F13.1)
+
+    @Test func setSwitchCallsTheClientThenRefreshes() async throws {
+        nonisolated(unsafe) var setSwitchRequests = 0
+        nonisolated(unsafe) var statusRequests = 0
+        MockURLProtocol.requestHandler = { request in
+            if request.url?.path == "/v2/devices/api/set/switch" {
+                setSwitchRequests += 1
+                return MockURLProtocol.jsonResponse(url: request.url!, json: "{}")
+            } else {
+                statusRequests += 1
+                return MockURLProtocol.jsonResponse(url: request.url!, json: #"""
+                [{"id":"a1b2c3","online":true,"status":{"switch:0":{"output":true}}}]
+                """#)
+            }
+        }
+        let model = makeModel(deviceList: deviceList(withIDs: ["a1b2c3"]))
+
+        try await model.setSwitch(deviceID: "a1b2c3", on: true)
+
+        #expect(setSwitchRequests == 1)
+        #expect(statusRequests == 1)
+        #expect(model.state == .ready)
+        #expect(model.statuses["a1b2c3"]?.status?.switch0?.output == true)
+    }
+
+    /// A failed switch command is a per-card concern (`ShellyPlugCard` shows its own alert) —
+    /// it must not drop the whole screen into `.error` the way a failed `refresh()` does.
+    @Test func setSwitchPropagatesTheErrorWithoutChangingState() async throws {
+        let model = makeModel(deviceList: deviceList(withIDs: ["a1b2c3"]))
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: #"[{"id":"a1b2c3","online":true}]"#)
+        }
+        await model.refresh()
+        #expect(model.state == .ready)
+
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 400, json: #"{"code":"DEVICE_OFFLINE"}"#)
+        }
+
+        await #expect(throws: ShellyClientError.switchCommandFailed(code: "DEVICE_OFFLINE")) {
+            try await model.setSwitch(deviceID: "a1b2c3", on: false)
+        }
+        #expect(model.state == .ready)
+    }
+
     // MARK: - Poll loop (F16.1)
 
     @Test func pollingRefreshesRepeatedlyUntilStopped() async throws {
