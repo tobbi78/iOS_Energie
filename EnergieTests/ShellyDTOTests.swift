@@ -42,6 +42,20 @@ struct ShellyDTOTests {
         }
     }
 
+    // MARK: - ShellySwitchStatus — aenergy (F14.2)
+
+    @Test func switchStatusDecodesEnergyCounterTotal() throws {
+        let json = #"{"output":true,"apower":12.5,"aenergy":{"total":4567.89,"by_minute":[1,2,3],"minute_ts":1700000000}}"#
+        let status = try JSONDecoder().decode(ShellySwitchStatus.self, from: Data(json.utf8))
+        #expect(status.aenergy?.total == 4567.89)
+    }
+
+    @Test func switchStatusEnergyCounterIsNilWhenMissing() throws {
+        let json = #"{"output":false,"apower":0}"#
+        let status = try JSONDecoder().decode(ShellySwitchStatus.self, from: Data(json.utf8))
+        #expect(status.aenergy == nil)
+    }
+
     // MARK: - ShellyDeviceStatusDTO — gen/online tolerant decoding
 
     @Test func deviceStatusDTODecodesGenAsAString() throws {

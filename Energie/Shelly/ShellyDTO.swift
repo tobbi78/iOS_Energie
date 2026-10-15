@@ -149,6 +149,24 @@ nonisolated struct ShellySwitchStatus: Decodable, Equatable {
     let apower: Double?
     let voltage: Double?
     let current: Double?
+    /// Cumulative energy counter — the only energy figure Shelly reports at all, which is what
+    /// F14.2's own history recording diffs successive polls of (`ShellyHistoryRecorder`).
+    let aenergy: ShellyEnergyCounter?
+
+    init(output: Bool?, apower: Double?, voltage: Double?, current: Double?, aenergy: ShellyEnergyCounter? = nil) {
+        self.output = output
+        self.apower = apower
+        self.voltage = voltage
+        self.current = current
+        self.aenergy = aenergy
+    }
+}
+
+/// `aenergy` from `Switch.GetStatus` (SHELLY_API_WERTE.md). `total` is in Wh and cumulative since
+/// the device's last reboot — not a daily figure. `by_minute`/`minute_ts` are deliberately not
+/// decoded: they only cover the last three minutes and add nothing the counter doesn't.
+nonisolated struct ShellyEnergyCounter: Decodable, Equatable {
+    let total: Double?
 }
 
 /// Tolerant top-level decode for `/v2/devices/api/get` — same caveat as

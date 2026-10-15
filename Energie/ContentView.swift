@@ -119,7 +119,7 @@ struct ContentView: View {
         }
         .task {
             guard shellyModel == nil else { return }
-            let model = ShellyModel(settings: shellySettings, deviceList: shellyDeviceList)
+            let model = ShellyModel(settings: shellySettings, deviceList: shellyDeviceList, modelContext: modelContext)
             shellyModel = model
             model.start()
         }
