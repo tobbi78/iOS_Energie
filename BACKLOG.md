@@ -287,8 +287,8 @@ Neue Idee, noch **nicht** geplant/entschieden — nur als Backlog-Eintrag festge
 
 ### Epic 17 — Einstellungen
 
-- **F17.1 Verbindungseinstellungen.** `auth_key`/Server-URI verwalten, Verbindungstest, "Abmelden" (löscht nur den gespeicherten Schlüssel) — analog bestehendem PV-/Wärmepumpen-Einstellungen-Screen.
-- **F17.2 Geräteverwaltung.** Welche Steckdosen in der App angezeigt werden (Namen/Reihenfolge), insbesondere falls F11.3 auf manuelle Geräte-ID-Eingabe zurückfällt.
+- **F17.1 Verbindungseinstellungen. ✅ Umgesetzt (2026-10-15, Branch `feature/shelly-einstellungen`).** Neuer Button „Verbindung testen“ in `ShellySettingsScreen` ruft `ShellyClient.testConnection(deviceIDs:)` auf — fragt die gespeicherten Steckdosen über den bereits für F12/F15 genutzten `fetchDevices`-Pfad ab (gleiche Drossel/Chunking/`.unauthorized`-Erkennung) und zeigt „Verbindung OK – x von y Steckdosen online“ bzw. bei abgelehntem Schlüssel einen gezielten Hinweis; ohne gespeicherte Steckdosen ist der Button deaktiviert. Aus „Zugangsdaten entfernen“ wurde „Abmelden“: `ShellySettings.signOut()` löscht wie im Backlog gefordert nur den `auth_key` aus der Keychain, die (nicht geheime, iCloud-synchronisierte) Server-URI bleibt erhalten — ersetzt die bisherige `clearCredentials()`, die beides gelöscht hatte.
+- **F17.2 Geräteverwaltung. ✅ Umgesetzt (2026-10-15, Branch `feature/shelly-einstellungen`).** Umbenennen (Tippen auf eine Zeile oder Swipe-Action öffnet einen Alert mit Textfeld, `ShellyDeviceList.rename(id:to:)` lehnt leere Namen/unbekannte IDs ab) und Umsortieren (`EditButton`/Drag-Handle, `ShellyDeviceList.move(fromOffsets:toOffset:)`, von Hand nach `RangeReplaceableCollection.move`-Semantik implementiert, da dieses Model-File bewusst kein SwiftUI importiert) in `ShellyDevicesScreen`; die gespeicherte Reihenfolge ist dieselbe, in der `ShellyView` die Kartenliste rendert. Kein Ausblenden-Schalter (Nutzerentscheidung 2026-10-15) — wer eine Steckdose nicht sehen will, löscht sie wie bisher.
 
 ### Epic 18 — Tests
 

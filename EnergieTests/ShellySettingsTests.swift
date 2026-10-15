@@ -48,15 +48,17 @@ struct ShellySettingsTests {
         #expect(store.read(.authKey) == nil)
     }
 
-    @Test func clearCredentialsResetsAndDeletesBothValues() {
+    @Test func signOutDeletesOnlyTheAuthKeyAndKeepsTheServerURI() {
         let store = InMemoryShellySecretStore(seed: [
             .serverURI: "https://shelly-12-eu.shelly.cloud",
             .authKey: "key-1",
         ])
         let settings = ShellySettings(store: store)
-        settings.clearCredentials()
+        settings.signOut()
         #expect(!settings.credentials.isComplete)
-        #expect(store.read(.serverURI) == nil)
+        #expect(settings.credentials.serverURI == "https://shelly-12-eu.shelly.cloud")
+        #expect(settings.credentials.authKey.isEmpty)
+        #expect(store.read(.serverURI) == "https://shelly-12-eu.shelly.cloud")
         #expect(store.read(.authKey) == nil)
     }
 
