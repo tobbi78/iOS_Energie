@@ -9,8 +9,9 @@ import Foundation
 import SwiftUI
 
 /// Drives `ShellyView` (F12.1). Deliberately has no poll loop of its own yet — the user decided
-/// F12.1 should refresh on open and via pull-to-refresh only, with a recurring loop (and the
-/// shared 1-request/second throttle, F15.1) left to F16.1 once more of Epic 12 exists.
+/// F12.1 should refresh on open and via pull-to-refresh only, with a recurring loop left to
+/// F16.1 once more of Epic 12 exists. `ShellyClient` already paces every request through the
+/// shared account-wide throttle (F15.1) regardless of who calls it.
 nonisolated enum ShellyPlugsState: Equatable {
     case needsCredentials
     case noDevices
@@ -36,8 +37,8 @@ final class ShellyPlugStatusLoader {
     private let client: ShellyClient
     private let now: @Sendable () -> Date
     /// Guards against a second `refresh()` starting while one is already in flight (e.g. a
-    /// double pull-to-refresh) — with no throttle yet (F15.1 is still open), that's the only
-    /// thing standing between this screen and tripping the account-wide 1-request/second limit.
+    /// double pull-to-refresh) — redundant with the throttle (F15.1) for correctness, but avoids
+    /// needlessly queueing up a second request that would just sit waiting behind the first.
     private var isRefreshing = false
 
     init(
