@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// Aggregates the per-device status fetched by `ShellyPlugStatusLoader` into a single overview
+/// Aggregates the per-device status fetched by `ShellyModel` into a single overview
 /// for `ShellyPlugsSummaryCard` (F12.2) — "how many plugs are on, how many are offline, how much
 /// power are they drawing in total" at a glance, without having to scan every `ShellyPlugCard`
 /// individually once there's more than a couple of them.
@@ -27,7 +27,7 @@ nonisolated struct ShellyPlugsSummary: Equatable {
     /// - Parameters:
     ///   - devices: the saved plugs (`ShellyDeviceList.devices`), defining both the count and
     ///     the order-independent set to summarize.
-    ///   - statuses: latest known status per device ID (`ShellyPlugStatusLoader.statuses`).
+    ///   - statuses: latest known status per device ID (`ShellyModel.statuses`).
     ///     Entries for IDs not present in `devices` are ignored — only saved devices count.
     ///     A device with no entry here (not yet loaded) is treated the same as "offline": its
     ///     state simply isn't known yet.

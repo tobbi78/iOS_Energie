@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var pressureAlertSettings = HeatPumpPressureAlertSettings()
     @State private var shellySettings = ShellySettings()
     @State private var shellyDeviceList = ShellyDeviceList()
+    @State private var shellyModel: ShellyModel?
     @State private var heatPumpModel: HeatPumpModel?
     @State private var selectedTab: AppTab = .home
     @State private var watchSyncService = WatchSyncService()
@@ -66,7 +67,11 @@ struct ContentView: View {
                     .symbolEffect(.bounce, value: notificationEcho.heatPumpTrigger)
             }
             Tab(value: .shelly) {
-                ShellyView(settings: shellySettings, deviceList: shellyDeviceList, selectedTab: $selectedTab)
+                if let shellyModel {
+                    ShellyView(model: shellyModel, deviceList: shellyDeviceList, selectedTab: $selectedTab)
+                } else {
+                    ProgressView()
+                }
             } label: {
                 Label("Steckdosen", systemImage: "powerplug.fill")
             }
@@ -111,6 +116,12 @@ struct ContentView: View {
             )
             heatPumpModel = model
             await model.start()
+        }
+        .task {
+            guard shellyModel == nil else { return }
+            let model = ShellyModel(settings: shellySettings, deviceList: shellyDeviceList)
+            shellyModel = model
+            model.start()
         }
         .overlay {
             if showsLaunchScreen {

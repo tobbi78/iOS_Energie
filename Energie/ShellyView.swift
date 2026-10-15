@@ -9,22 +9,13 @@ import SwiftUI
 
 /// "Steckdosen" tab (F12.1, taking F16.2's navigation decision): one `ShellyPlugCard` per saved
 /// device, plus a `ShellyPlugsSummaryCard` on top once there's more than one (F12.2) — with just
-/// one plug, an overview of "itself" would be redundant. Refreshes on open and via
-/// pull-to-refresh only — see `ShellyPlugStatusLoader` for why there's no poll loop yet (F16.1 is
-/// still open).
+/// one plug, an overview of "itself" would be redundant. `ShellyModel` (F16.1) now owns a
+/// recurring poll loop independent of this tab being open; the `.task` below additionally
+/// refreshes immediately whenever the tab is opened, same as pull-to-refresh.
 struct ShellyView: View {
-    var settings: ShellySettings
+    var model: ShellyModel
     var deviceList: ShellyDeviceList
     @Binding var selectedTab: AppTab
-
-    @State private var loader: ShellyPlugStatusLoader
-
-    init(settings: ShellySettings, deviceList: ShellyDeviceList, selectedTab: Binding<AppTab>) {
-        self.settings = settings
-        self.deviceList = deviceList
-        self._selectedTab = selectedTab
-        self._loader = State(initialValue: ShellyPlugStatusLoader(settings: settings, deviceList: deviceList))
-    }
 
     var body: some View {
         NavigationStack {
@@ -32,13 +23,13 @@ struct ShellyView: View {
                 .navigationTitle("Steckdosen")
         }
         .task {
-            await loader.refresh()
+            await model.refresh()
         }
     }
 
     @ViewBuilder
     private var content: some View {
-        switch loader.state {
+        switch model.state {
         case .needsCredentials:
             goToSettings(
                 title: "Keine Shelly-Zugangsdaten",
@@ -56,7 +47,7 @@ struct ShellyView: View {
             plugList
         case .error(let message):
             ErrorView(message: message) {
-                Task { await loader.refresh() }
+                Task { await model.refresh() }
             }
         }
     }
@@ -67,15 +58,15 @@ struct ShellyView: View {
                 if deviceList.devices.count >= 2 {
                     ShellyPlugsSummaryCard(summary: ShellyPlugsSummary(
                         devices: deviceList.devices,
-                        statuses: loader.statuses
+                        statuses: model.statuses
                     ))
                         .staggeredAppear(index: 0)
                 }
                 ForEach(Array(deviceList.devices.enumerated()), id: \.element.id) { index, device in
-                    ShellyPlugCard(device: device, status: loader.statuses[device.id])
+                    ShellyPlugCard(device: device, status: model.statuses[device.id])
                         .staggeredAppear(index: index + (deviceList.devices.count >= 2 ? 1 : 0))
                 }
-                if let lastUpdated = loader.lastUpdated {
+                if let lastUpdated = model.lastUpdated {
                     Text("Aktualisiert um \(lastUpdated.formatted(date: .omitted, time: .shortened))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -85,7 +76,7 @@ struct ShellyView: View {
             .padding()
         }
         .refreshable {
-            await loader.refresh()
+            await model.refresh()
         }
     }
 
@@ -104,25 +95,33 @@ struct ShellyView: View {
 
 // Previews deliberately only cover the `needsCredentials`/`noDevices` states, same as
 // `SolarView`/`HeatPumpView` (which have no previews at all for their similarly network-backed
-// "ready" states): `.task` eagerly calls `loader.refresh()`, which would hit the real Shelly
+// "ready" states): `.task` eagerly calls `model.refresh()`, which would hit the real Shelly
 // Cloud API from a canvas preview — a non-mocked network round trip isn't something a preview
 // should depend on. The "ready" layout itself is covered by `ShellyPlugCard`'s own previews.
 
 #Preview("Zugangsdaten fehlen") {
+    let deviceList = ShellyDeviceList(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
     ShellyView(
-        settings: ShellySettings(store: InMemoryShellySecretStore()),
-        deviceList: ShellyDeviceList(userDefaults: UserDefaults(suiteName: UUID().uuidString)!),
+        model: ShellyModel(
+            settings: ShellySettings(store: InMemoryShellySecretStore()),
+            deviceList: deviceList
+        ),
+        deviceList: deviceList,
         selectedTab: .constant(.shelly)
     )
 }
 
 #Preview("Keine Steckdosen gespeichert") {
+    let deviceList = ShellyDeviceList(userDefaults: UserDefaults(suiteName: UUID().uuidString)!)
     ShellyView(
-        settings: ShellySettings(store: InMemoryShellySecretStore(seed: [
-            .serverURI: "https://shelly-12-eu.shelly.cloud",
-            .authKey: "preview-key",
-        ])),
-        deviceList: ShellyDeviceList(userDefaults: UserDefaults(suiteName: UUID().uuidString)!),
+        model: ShellyModel(
+            settings: ShellySettings(store: InMemoryShellySecretStore(seed: [
+                .serverURI: "https://shelly-12-eu.shelly.cloud",
+                .authKey: "preview-key",
+            ])),
+            deviceList: deviceList
+        ),
+        deviceList: deviceList,
         selectedTab: .constant(.shelly)
     )
 }

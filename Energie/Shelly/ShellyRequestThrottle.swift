@@ -12,8 +12,8 @@ import Foundation
 /// Shelly's limit is a single request at a time, so tracking just the last request's timestamp is
 /// enough; no sliding window of past timestamps is needed.
 actor ShellyRequestThrottle {
-    /// `ShellyClient` has no single owning model yet (F16.1, a `ShellyModel` with its own poll
-    /// loop, is still open) — each screen constructs its own `ShellyClient` on demand, so the
+    /// `ShellyClient` still has no single owning model — `ShellyModel` (F16.1) owns one instance
+    /// for polling, but `ShellyDevicesScreen` constructs its own for device verification, so the
     /// throttle itself has to be the shared part, unlike `EnphaseRequestThrottle`/
     /// `EnphaseRequestBudget`, which `SolarModel` owns once and hands to its `EnphaseClient`.
     static let shared = ShellyRequestThrottle()
