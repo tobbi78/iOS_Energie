@@ -50,8 +50,8 @@ enum ShellyClientError: Error, LocalizedError, Equatable {
 /// Access to the Shelly Cloud Control API using just the `auth_key` already in
 /// `ShellyCredentials` — no OAuth token, unlike `EnphaseClient`/`ViessmannClient`. Every call
 /// goes through the shared, account-wide 1-request/second throttle (F15.1) before hitting the
-/// network, whether it's a direct user action (F11.3's "automatisch suchen") or, once F16.1 adds
-/// a recurring poll loop, a background refresh.
+/// network, whether it's a direct user action (F11.3's "automatisch suchen") or a background
+/// refresh from `ShellyModel`'s poll loop (F16.1).
 struct ShellyClient {
     var urlSession: URLSession = .shared
     /// Async (not just `@Sendable`) so the closure can safely hop onto `ShellySettings`'s
@@ -61,7 +61,8 @@ struct ShellyClient {
     /// not read MainActor-isolated state from an arbitrary calling context.
     var credentials: @Sendable () async -> ShellyCredentials
     /// Defaults to the shared, app-wide instance (see `ShellyRequestThrottle.shared`) since
-    /// `ShellyClient` itself has no single long-lived owner yet to hold one instead.
+    /// `ShellyClient` itself still has no single long-lived owner — `ShellyModel` holds one for
+    /// polling, but `ShellyDevicesScreen` constructs its own for device verification (F11.3).
     var throttle: ShellyRequestThrottle = .shared
 
     /// F11.3 "Geräte automatisch suchen". Any failure — network, HTTP, or an unrecognized
