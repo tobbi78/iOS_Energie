@@ -233,8 +233,30 @@
     "Der gespeicherte Schlüssel wird aus der Keychain gelöscht. Die bereits erfassten Steckdosendaten bleiben erhalten." : {
 
     },
+    "Der hinterlegte Schlüssel wurde abgelehnt — vermutlich wurde das Passwort des Shelly-Kontos geändert. Bitte den neuen Schlüssel in den Einstellungen hinterlegen." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "The stored key was rejected — the Shelly account password was likely changed. Please enter the new key in Settings."
+          }
+        }
+      }
+    },
     "Der Schlüssel ändert sich automatisch bei einer Passwortänderung des Shelly-Kontos und muss dann hier neu eingegeben werden. Er bleibt — anders als die Server-URI — nur auf diesem Gerät gespeichert." : {
 
+    },
+    "Der Shelly-Schlüssel wurde abgelehnt. Wurde das Passwort des Shelly-Kontos geändert? Bitte den neuen Schlüssel in den Einstellungen hinterlegen." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "The Shelly key was rejected. Did the Shelly account password change? Please enter the new key in Settings."
+          }
+        }
+      }
     },
     "Die App zeigt Photovoltaik-Daten (über die Enphase-API) und Wärmepumpen-Daten (über die Viessmann-API) an, die ausschließlich aus dem eigenen Nutzerkonto der jeweiligen Person stammen, die die App installiert hat." : {
 
@@ -843,6 +865,17 @@
     },
     "Server-URI ungültig — bitte unverändert aus der Shelly-App übernehmen." : {
 
+    },
+    "Shelly-Schlüssel ungültig" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Invalid Shelly Key"
+          }
+        }
+      }
     },
     "Shelly-Steckdosen" : {
 
