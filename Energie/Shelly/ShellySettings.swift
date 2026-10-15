@@ -51,9 +51,11 @@ final class ShellySettings {
         return true
     }
 
-    func clearCredentials() {
-        credentials = ShellyCredentials(serverURI: "", authKey: "")
-        store.write(.serverURI, value: nil)
+    /// "Abmelden" (F17.1) — deletes only the `auth_key`. Unlike a full `clearCredentials()`,
+    /// `serverURI` is kept: it isn't secret, syncs via iCloud Keychain (F11.2), and the user would
+    /// otherwise have to re-paste it alongside the new key for no reason.
+    func signOut() {
+        credentials = ShellyCredentials(serverURI: credentials.serverURI, authKey: "")
         store.write(.authKey, value: nil)
     }
 

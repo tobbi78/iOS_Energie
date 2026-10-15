@@ -67,6 +67,35 @@ final class ShellyDeviceList {
         persist()
     }
 
+    /// Equivalent to `RangeReplaceableCollection.move(fromOffsets:toOffset:)`, reimplemented by
+    /// hand for the same reason as `remove(atOffsets:)` above (that extension lives in SwiftUI,
+    /// not Foundation). Used by the "Bearbeiten"/drag-to-reorder list in `ShellyDevicesScreen`
+    /// (F17.2) — the saved order is also the order `ShellyView`'s card list renders in.
+    func move(fromOffsets offsets: IndexSet, toOffset destination: Int) {
+        let moved = offsets.map { devices[$0] }
+        var adjustedDestination = destination
+        for index in offsets.sorted(by: >) {
+            devices.remove(at: index)
+            if index < adjustedDestination {
+                adjustedDestination -= 1
+            }
+        }
+        devices.insert(contentsOf: moved, at: adjustedDestination)
+        persist()
+    }
+
+    /// Renames a saved device (F17.2). Returns `false` without changing anything if `id` isn't
+    /// known, or if the trimmed name is empty — an unnamed plug would just fall back to showing
+    /// its raw ID everywhere, which is strictly worse than rejecting the rename outright.
+    @discardableResult
+    func rename(id: String, to name: String) -> Bool {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty, let index = devices.firstIndex(where: { $0.id == id }) else { return false }
+        devices[index].name = trimmedName
+        persist()
+        return true
+    }
+
     /// Normalizes a user-typed Shelly device ID: trims whitespace, lowercases it, and rejects
     /// anything containing characters outside `[a-z0-9]` — a device ID with a stray space or
     /// punctuation can only be a typo, never a real Shelly ID (in the Shelly app under

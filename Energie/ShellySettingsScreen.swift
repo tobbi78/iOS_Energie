@@ -19,7 +19,13 @@ struct ShellySettingsScreen: View {
     @State private var authKey = ""
     @State private var showsInvalidURIError = false
     @State private var showsSavedConfirmation = false
-    @State private var showsRemoveConfirmation = false
+    @State private var showsSignOutConfirmation = false
+    @State private var isTestingConnection = false
+    @State private var connectionTestOutcome: ConnectionTestOutcome?
+
+    private var client: ShellyClient {
+        ShellyClient(credentials: { await settings.credentials })
+    }
 
     var body: some View {
         Form {
@@ -44,8 +50,27 @@ struct ShellySettingsScreen: View {
                     } label: {
                         LabeledContent("Steckdosen", value: "\(deviceList.devices.count)")
                     }
-                    Button("Zugangsdaten entfernen", role: .destructive) {
-                        showsRemoveConfirmation = true
+                    if isTestingConnection {
+                        HStack {
+                            ProgressView()
+                            Text("Verbindung wird getestet …")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Button("Verbindung testen") {
+                            Task { await testConnection() }
+                        }
+                        .disabled(deviceList.devices.isEmpty)
+                    }
+                    if deviceList.devices.isEmpty {
+                        Text("Zum Testen zuerst eine Steckdose hinzufügen.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    } else if let connectionTestOutcome {
+                        connectionTestResultLabel(connectionTestOutcome)
+                    }
+                    Button("Abmelden", role: .destructive) {
+                        showsSignOutConfirmation = true
                     }
                 }
             }
@@ -83,17 +108,17 @@ struct ShellySettingsScreen: View {
             Button("OK") {}
         }
         .confirmationDialog(
-            "Zugangsdaten entfernen?",
-            isPresented: $showsRemoveConfirmation,
+            "Abmelden?",
+            isPresented: $showsSignOutConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Entfernen", role: .destructive) {
-                settings.clearCredentials()
-                serverURI = ""
+            Button("Abmelden", role: .destructive) {
+                settings.signOut()
                 authKey = ""
+                connectionTestOutcome = nil
             }
         } message: {
-            Text("Der gespeicherte Schlüssel wird aus der Keychain gelöscht. Die bereits erfassten Steckdosendaten bleiben erhalten.")
+            Text("Der Schlüssel wird von diesem Gerät gelöscht. Server-URI und Steckdosenliste bleiben erhalten.")
         }
     }
 
@@ -103,7 +128,49 @@ struct ShellySettingsScreen: View {
         if saved {
             serverURI = settings.credentials.serverURI
             showsSavedConfirmation = true
+            connectionTestOutcome = nil
         }
+    }
+
+    private func testConnection() async {
+        isTestingConnection = true
+        defer { isTestingConnection = false }
+        do {
+            let result = try await client.testConnection(deviceIDs: deviceList.devices.map(\.id))
+            connectionTestOutcome = .success(online: result.online, total: result.total)
+        } catch ShellyClientError.unauthorized {
+            connectionTestOutcome = .unauthorized
+        } catch {
+            connectionTestOutcome = .failure((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+        }
+    }
+
+    @ViewBuilder
+    private func connectionTestResultLabel(_ outcome: ConnectionTestOutcome) -> some View {
+        switch outcome {
+        case .success(let online, let total):
+            Label("Verbindung OK – \(online) von \(total) Steckdosen online", systemImage: "checkmark.circle.fill")
+                .font(.footnote)
+                .foregroundStyle(.green)
+        case .unauthorized:
+            Label("Schlüssel abgelehnt – bitte neu eingeben.", systemImage: "exclamationmark.triangle.fill")
+                .font(.footnote)
+                .foregroundStyle(.red)
+        case .failure(let message):
+            Label(message, systemImage: "exclamationmark.triangle.fill")
+                .font(.footnote)
+                .foregroundStyle(.red)
+        }
+    }
+
+    /// Result of a "Verbindung testen" tap (F17.1) — `.unauthorized` is split out from the
+    /// generic `.failure` case so the result label can point directly at a dead key rather than
+    /// showing `ShellyClientError.unauthorized`'s generic wording twice (it already explains
+    /// itself fully, but the dedicated case keeps this screen in control of its own phrasing).
+    private enum ConnectionTestOutcome: Equatable {
+        case success(online: Int, total: Int)
+        case unauthorized
+        case failure(String)
     }
 }
 

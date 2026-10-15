@@ -47,6 +47,9 @@
         }
       }
     },
+    "Abbrechen" : {
+
+    },
     "Abmelden" : {
       "localizations" : {
         "en" : {
@@ -58,6 +61,9 @@
       }
     },
     "Abmelden und Verlauf löschen?" : {
+
+    },
+    "Abmelden?" : {
 
     },
     "Aktualisieren" : {
@@ -230,9 +236,6 @@
     "Datenschutzerklärung" : {
 
     },
-    "Der gespeicherte Schlüssel wird aus der Keychain gelöscht. Die bereits erfassten Steckdosendaten bleiben erhalten." : {
-
-    },
     "Der hinterlegte Schlüssel wurde abgelehnt — vermutlich wurde das Passwort des Shelly-Kontos geändert. Bitte den neuen Schlüssel in den Einstellungen hinterlegen." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -245,6 +248,9 @@
       }
     },
     "Der Schlüssel ändert sich automatisch bei einer Passwortänderung des Shelly-Kontos und muss dann hier neu eingegeben werden. Er bleibt — anders als die Server-URI — nur auf diesem Gerät gespeichert." : {
+
+    },
+    "Der Schlüssel wird von diesem Gerät gelöscht. Server-URI und Steckdosenliste bleiben erhalten." : {
 
     },
     "Der Shelly-Schlüssel wurde abgelehnt. Wurde das Passwort des Shelly-Kontos geändert? Bitte den neuen Schlüssel in den Einstellungen hinterlegen." : {
@@ -406,9 +412,6 @@
           }
         }
       }
-    },
-    "Entfernen" : {
-
     },
     "Entwarnung senden" : {
       "localizations" : {
@@ -710,6 +713,9 @@
         }
       }
     },
+    "Name" : {
+
+    },
     "Name (optional)" : {
 
     },
@@ -850,6 +856,9 @@
         }
       }
     },
+    "Schlüssel abgelehnt – bitte neu eingeben." : {
+
+    },
     "Schwellwert" : {
       "localizations" : {
         "en" : {
@@ -883,6 +892,9 @@
     "Shelly-Zugangsdaten" : {
 
     },
+    "Sichern" : {
+
+    },
     "Speicherdauer" : {
 
     },
@@ -909,6 +921,9 @@
         }
       }
     },
+    "Steckdose umbenennen" : {
+
+    },
     "Steckdosen" : {
 
     },
@@ -925,7 +940,13 @@
         }
       }
     },
+    "Tippen zum Umbenennen, „Bearbeiten“ zum Sortieren oder Löschen. Die Reihenfolge gilt auch im Steckdosen-Tab." : {
+
+    },
     "Übersicht" : {
+
+    },
+    "Umbenennen" : {
 
     },
     "Verantwortlicher" : {
@@ -940,6 +961,22 @@
           }
         }
       }
+    },
+    "Verbindung OK – %lld von %lld Steckdosen online" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Verbindung OK – %1$lld von %2$lld Steckdosen online"
+          }
+        }
+      }
+    },
+    "Verbindung testen" : {
+
+    },
+    "Verbindung wird getestet …" : {
+
     },
     "Verbunden mit" : {
 
@@ -1078,12 +1115,6 @@
         }
       }
     },
-    "Zugangsdaten entfernen" : {
-
-    },
-    "Zugangsdaten entfernen?" : {
-
-    },
     "Zugangsdaten speichern" : {
       "localizations" : {
         "en" : {
@@ -1093,6 +1124,9 @@
           }
         }
       }
+    },
+    "Zum Testen zuerst eine Steckdose hinzufügen." : {
+
     },
     "Zweck der App" : {
 
