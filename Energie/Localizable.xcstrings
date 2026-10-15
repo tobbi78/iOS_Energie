@@ -24,6 +24,16 @@
         }
       }
     },
+    "%@, %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
     "%lld offline" : {
 
     },
@@ -875,6 +885,9 @@
     "Server-URI ungültig — bitte unverändert aus der Shelly-App übernehmen." : {
 
     },
+    "Shelly speichert keine Historie. Die App zeichnet den Verbrauch deshalb selbst auf, solange sie geöffnet ist — ab dem Tag der Einrichtung." : {
+
+    },
     "Shelly-Schlüssel ungültig" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -920,6 +933,9 @@
           }
         }
       }
+    },
+    "Steckdose" : {
+
     },
     "Steckdose umbenennen" : {
 
@@ -1000,6 +1016,9 @@
           }
         }
       }
+    },
+    "Verlauf wird aufgebaut" : {
+
     },
     "Viessmann Climate Solutions (Wärmepumpendaten)" : {
 

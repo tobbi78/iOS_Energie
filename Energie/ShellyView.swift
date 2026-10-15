@@ -5,6 +5,7 @@
 //  Created by Tobias Florian on 14.10.26.
 //
 
+import SwiftData
 import SwiftUI
 
 /// "Steckdosen" tab (F12.1, taking F16.2's navigation decision): one `ShellyPlugCard` per saved
@@ -21,6 +22,17 @@ struct ShellyView: View {
         NavigationStack {
             content
                 .navigationTitle("Steckdosen")
+                .toolbar {
+                    if model.state == .ready {
+                        ToolbarItem(placement: .primaryAction) {
+                            NavigationLink {
+                                ShellyHistoryScreen(devices: deviceList.devices)
+                            } label: {
+                                Label("Verlauf", systemImage: "chart.bar.xaxis")
+                            }
+                        }
+                    }
+                }
         }
         .task {
             await model.refresh()
@@ -113,6 +125,23 @@ struct ShellyView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - History submenu
+
+/// Dedicated screen for the plug history charts (F14.3), reached via the toolbar like
+/// `SolarView`'s `PVHistoryScreen` — the main tab stays focused on live values and switching.
+private struct ShellyHistoryScreen: View {
+    let devices: [ShellyDevice]
+
+    @Query(sort: \ShellyDailySample.date) private var samples: [ShellyDailySample]
+
+    var body: some View {
+        ScrollView {
+            ShellyHistoryChartsView(samples: samples, devices: devices)
+        }
+        .navigationTitle("Verlauf")
     }
 }
 
