@@ -320,6 +320,94 @@ struct ShellyClientTests {
             try await client.discoverDevices()
         }
     }
+
+    // MARK: - setSwitch (F13.1) — request shape
+
+    @Test func setSwitchPostsToTheV2SetSwitchEndpointWithIDChannelAndOn() async throws {
+        nonisolated(unsafe) var capturedRequest: URLRequest?
+        MockURLProtocol.requestHandler = { request in
+            capturedRequest = request
+            return MockURLProtocol.jsonResponse(url: request.url!, json: "{}")
+        }
+
+        try await makeClient().setSwitch(id: "a1b2c3", channel: 0, on: true)
+
+        let request = try #require(capturedRequest)
+        #expect(request.httpMethod == "POST")
+        let url = try #require(request.url)
+        let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        #expect(components.path == "/v2/devices/api/set/switch")
+        #expect(components.queryItems?.first(where: { $0.name == "auth_key" })?.value == "the-auth-key")
+
+        let body = try #require(MockURLProtocol.bodyData(from: request))
+        let json = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        #expect(json["id"] as? String == "a1b2c3")
+        #expect(json["channel"] as? Int == 0)
+        #expect(json["on"] as? Bool == true)
+    }
+
+    // MARK: - setSwitch — success / error handling
+
+    @Test func setSwitchSucceedsOnHTTP200() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: "{}")
+        }
+
+        try await makeClient().setSwitch(id: "a1b2c3", channel: 0, on: true)
+    }
+
+    @Test func setSwitchExtractsATopLevelErrorCode() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 400, json: #"{"code":"DEVICE_OFFLINE"}"#)
+        }
+
+        await #expect(throws: ShellyClientError.switchCommandFailed(code: "DEVICE_OFFLINE")) {
+            try await makeClient().setSwitch(id: "a1b2c3", channel: 0, on: true)
+        }
+    }
+
+    @Test func setSwitchExtractsANestedErrorCode() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 400, json: #"{"error":{"code":"DEVICE_FAILED_COMMAND"}}"#)
+        }
+
+        await #expect(throws: ShellyClientError.switchCommandFailed(code: "DEVICE_FAILED_COMMAND")) {
+            try await makeClient().setSwitch(id: "a1b2c3", channel: 0, on: true)
+        }
+    }
+
+    @Test func setSwitchFallsBackToANilCodeWhenTheBodyIsUnrecognized() async throws {
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, status: 500, json: #"{"message":"oops"}"#)
+        }
+
+        await #expect(throws: ShellyClientError.switchCommandFailed(code: nil)) {
+            try await makeClient().setSwitch(id: "a1b2c3", channel: 0, on: true)
+        }
+    }
+
+    @Test func switchCommandFailedMapsKnownCodesToDistinctMessages() {
+        #expect(ShellyClientError.switchCommandFailed(code: "DEVICE_OFFLINE").errorDescription == "Die Steckdose ist offline.")
+        #expect(ShellyClientError.switchCommandFailed(code: "DEVICE_FAILED_COMMAND").errorDescription != ShellyClientError.switchCommandFailed(code: "DEVICE_OFFLINE").errorDescription)
+        #expect(ShellyClientError.switchCommandFailed(code: nil).errorDescription != nil)
+    }
+
+    // MARK: - setSwitch — F15.1 shared throttle applies too
+
+    @Test func setSwitchGoesThroughTheSharedThrottleToo() async throws {
+        nonisolated(unsafe) var acquireCount = 0
+        MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.jsonResponse(url: request.url!, json: "{}")
+        }
+        let throttle = ShellyRequestThrottle(sleep: { _ in acquireCount += 1 })
+
+        try await makeClient(throttle: throttle).setSwitch(id: "a1b2c3", channel: 0, on: true)
+        try await makeClient(throttle: throttle).setSwitch(id: "a1b2c3", channel: 0, on: false)
+
+        // Second call within the same 1s window must wait — proves setSwitch is gated by the
+        // same throttle as discoverDevices/fetchDevices, not exempt as a write operation.
+        #expect(acquireCount == 1)
+    }
 }
 
 }
