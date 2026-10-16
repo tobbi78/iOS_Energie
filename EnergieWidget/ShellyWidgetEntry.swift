@@ -15,7 +15,7 @@ struct ShellyWidgetEntry: TimelineEntry {
     let snapshot: ShellyWidgetSnapshot?
     let state: State
 
-    enum State {
+    enum State: Equatable {
         case ready
         /// No (complete) Shelly credentials saved yet (F11.1).
         case notConfigured

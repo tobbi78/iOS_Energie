@@ -41,6 +41,7 @@
       }
     },
     "Produktion, Autarkiegrad, Anlagendruck und Außentemperatur in einer Kachel." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -49,6 +50,9 @@
           }
         }
       }
+    },
+    "Produktion, Autarkiegrad, Anlagendruck, Außentemperatur und — sofern eingerichtet — Shelly-Steckdosen in einer Kachel." : {
+
     },
     "PV & Wärmepumpe" : {
       "localizations" : {
