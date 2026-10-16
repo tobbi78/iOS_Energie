@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
+    "%lld offline" : {
+
+    },
+    "%lld von %lld an" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld von %2$lld an"
+          }
+        }
+      }
+    },
+    "+ %lld weitere" : {
+
+    },
     "Anlagendruck und Außentemperatur, mit Hintergrund-Druckalarm." : {
       "localizations" : {
         "en" : {
@@ -10,6 +26,9 @@
           }
         }
       }
+    },
+    "Gesamtleistung, Schaltzustand und die einzelnen Shelly-Steckdosen." : {
+
     },
     "Produktion und Autarkiegrad von heute." : {
       "localizations" : {
@@ -50,6 +69,9 @@
           }
         }
       }
+    },
+    "Steckdosen" : {
+
     },
     "Wärmepumpe" : {
       "localizations" : {

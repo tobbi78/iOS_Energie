@@ -33,6 +33,18 @@ nonisolated struct ShellyWidgetSnapshot: Codable, Equatable {
     let plugs: [Plug]
     let fetchedAt: Date
 
+    /// Direct memberwise initializer for previews/placeholders — doesn't need a round trip
+    /// through `ShellyPlugsSummary`/`ShellyPlugDisplay` when the caller already has the exact
+    /// display values in mind.
+    init(totalPower: Double?, onCount: Int, deviceCount: Int, offlineCount: Int, plugs: [Plug], fetchedAt: Date) {
+        self.totalPower = totalPower
+        self.onCount = onCount
+        self.deviceCount = deviceCount
+        self.offlineCount = offlineCount
+        self.plugs = plugs
+        self.fetchedAt = fetchedAt
+    }
+
     init(devices: [ShellyDevice], statuses: [String: ShellyDeviceStatusDTO], fetchedAt: Date) {
         let summary = ShellyPlugsSummary(devices: devices, statuses: statuses)
         totalPower = summary.totalPower
