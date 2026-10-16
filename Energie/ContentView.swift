@@ -156,6 +156,13 @@ struct ContentView: View {
             await notificationEcho.refresh()
         }
         .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .background {
+                // Leaving the foreground: nudge the Shelly widgets (F16.3) to pick up whatever
+                // ShellyModel's poll loop (foreground-only) last saw, rather than waiting for
+                // their own next 15-minute tick to notice a change made earlier in this session.
+                WidgetReload.shellyWidgetsChanged()
+                return
+            }
             // Reopening the app from the background: skip while the launch overlay is still up
             // (F10.3's reasoning) and let the `.task` above handle the cold-launch case.
             guard newPhase == .active, !showsLaunchScreen else { return }
