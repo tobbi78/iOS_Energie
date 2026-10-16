@@ -57,7 +57,6 @@ struct EnergieApp: App {
         // scheme's Run arguments, then removed again) so it doesn't add CloudKit overhead to
         // every normal debug launch — see EnergieSchema.swift's migration checklist. Must never
         // run against Production; `#if DEBUG` plus the opt-in env var both guard against that.
-        print("[CloudKitSchemaInit] isCloudKitEnabled=\(isCloudKitEnabled) envFlag=\(ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] ?? "<unset>")")
         // Gated on the real CloudKit account check, not `isCloudKitEnabled`/`ubiquityIdentityToken`
         // above — per Apple's own docs for `ubiquityIdentityToken`, "CloudKit clients should not
         // use this token" to decide whether the account is signed in; it tracks the unrelated
@@ -71,8 +70,7 @@ struct EnergieApp: App {
         if ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] == "1" {
             let accountStatusSemaphore = DispatchSemaphore(value: 0)
             var resolvedAccountStatus = CKAccountStatus.couldNotDetermine
-            CKContainer(identifier: SharedAppGroup.cloudKitContainerIdentifier).accountStatus { status, error in
-                print("[CloudKitSchemaInit] CKContainer.accountStatus=\(status) error=\(String(describing: error))")
+            CKContainer(identifier: SharedAppGroup.cloudKitContainerIdentifier).accountStatus { status, _ in
                 resolvedAccountStatus = status
                 accountStatusSemaphore.signal()
             }
@@ -96,9 +94,7 @@ struct EnergieApp: App {
                                 fatalError("Could not load store for CloudKit schema push: \(error)")
                             }
                         }
-                        print("[CloudKitSchemaInit] store loaded, calling initializeCloudKitSchema()…")
                         try schemaInitContainer.initializeCloudKitSchema()
-                        print("[CloudKitSchemaInit] initializeCloudKitSchema() finished without throwing")
                         if let store = schemaInitContainer.persistentStoreCoordinator.persistentStores.first {
                             try schemaInitContainer.persistentStoreCoordinator.remove(store)
                         }
