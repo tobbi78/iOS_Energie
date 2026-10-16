@@ -17,6 +17,7 @@ struct ShellySettingsScreen: View {
 
     @State private var serverURI = ""
     @State private var authKey = ""
+    @State private var isAuthKeyRevealed = false
     @State private var showsInvalidURIError = false
     @State private var showsSavedConfirmation = false
     @State private var showsSignOutConfirmation = false
@@ -80,9 +81,24 @@ struct ShellySettingsScreen: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .keyboardType(.URL)
-                SecureField("Authorization Key", text: $authKey)
+                HStack {
+                    Group {
+                        if isAuthKeyRevealed {
+                            TextField("Authorization Key", text: $authKey)
+                        } else {
+                            SecureField("Authorization Key", text: $authKey)
+                        }
+                    }
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                    Button {
+                        isAuthKeyRevealed.toggle()
+                    } label: {
+                        Image(systemName: isAuthKeyRevealed ? "eye.slash" : "eye")
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel(isAuthKeyRevealed ? "Schlüssel verbergen" : "Schlüssel anzeigen")
+                }
                 if showsInvalidURIError {
                     Label("Server-URI ungültig — bitte unverändert aus der Shelly-App übernehmen.", systemImage: "exclamationmark.triangle.fill")
                         .font(.footnote)
@@ -115,6 +131,7 @@ struct ShellySettingsScreen: View {
             Button("Abmelden", role: .destructive) {
                 settings.signOut()
                 authKey = ""
+                isAuthKeyRevealed = false
                 connectionTestOutcome = nil
             }
         } message: {
