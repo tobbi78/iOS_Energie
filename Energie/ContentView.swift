@@ -41,7 +41,7 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab("Start", systemImage: "house.fill", value: .home) {
-                HomeView(solarModel: solarModel, heatPumpModel: heatPumpModel, selectedTab: $selectedTab)
+                HomeView(solarModel: solarModel, heatPumpModel: heatPumpModel, shellyModel: shellyModel, shellyDeviceList: shellyDeviceList, selectedTab: $selectedTab)
             }
             Tab(value: .pv) {
                 if let solarModel {

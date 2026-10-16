@@ -7,14 +7,16 @@
 
 import SwiftUI
 
-/// Central Home screen (HP-5): combined KPIs from both energy sources, each tappable to jump
-/// into its own tab. Deliberately does not compute anything that correlates the two sources
-/// (e.g. "PV surplus covers X% of heat-pump demand") — that would undermine the explicit
-/// per-source independence the rest of the app relies on (see
+/// Central Home screen (HP-5): combined KPIs from all three energy/consumption sources, each
+/// tappable to jump into its own tab. Deliberately does not compute anything that correlates
+/// the sources (e.g. "PV surplus covers X% of heat-pump demand") — that would undermine the
+/// explicit per-source independence the rest of the app relies on (see
 /// Plans/Waermepumpe-Integration.md, Abschnitt 4).
 struct HomeView: View {
     var solarModel: SolarModel?
     var heatPumpModel: HeatPumpModel?
+    var shellyModel: ShellyModel?
+    var shellyDeviceList: ShellyDeviceList
     @Binding var selectedTab: AppTab
 
     var body: some View {
@@ -34,6 +36,13 @@ struct HomeView: View {
                         }
                     } content: {
                         heatPumpContent
+                    }
+                    HomeSection(title: "Steckdosen", icon: "powerplug.fill", tint: .shellyAccent) {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            selectedTab = .shelly
+                        }
+                    } content: {
+                        shellyContent
                     }
                 }
                 .padding()
@@ -153,6 +162,66 @@ struct HomeView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: heatPumpModel?.state)
+    }
+
+    /// Same KPI-grid/status-row pattern as `pvContent`/`heatPumpContent`, built on the same
+    /// `ShellyPlugsSummary` aggregation `ShellyPlugsSummaryCard` uses in the "Steckdosen" tab
+    /// itself (`Shelly/ShellyPlugsSummary.swift`), so the numbers always agree with that screen.
+    @ViewBuilder
+    private var shellyContent: some View {
+        Group {
+            if let shellyModel {
+                switch shellyModel.state {
+                case .ready:
+                    let summary = ShellyPlugsSummary(devices: shellyDeviceList.devices, statuses: shellyModel.statuses)
+                    HomeKPIGrid {
+                        MetricCard(
+                            title: "Leistung",
+                            value: ShellyPlugDisplay.formatPower(summary.totalPower),
+                            icon: "bolt.fill",
+                            tint: .shellyAccent
+                        )
+                        .staggeredAppear(index: 0)
+                        MetricCard(
+                            title: "Eingeschaltet",
+                            value: "\(summary.onCount) von \(summary.deviceCount)",
+                            icon: "power",
+                            tint: .green
+                        )
+                        .staggeredAppear(index: 1)
+                        if summary.offlineCount > 0 {
+                            MetricCard(
+                                title: "Offline",
+                                value: "\(summary.offlineCount)",
+                                icon: "wifi.slash",
+                                tint: .secondary
+                            )
+                            .staggeredAppear(index: 2)
+                        }
+                    }
+                    .transition(.opacity)
+                case .needsCredentials:
+                    HomeStatusRow(text: "Keine Zugangsdaten — tippe hier, um sie in den Einstellungen zu hinterlegen.")
+                        .transition(.opacity)
+                case .noDevices:
+                    HomeStatusRow(text: "Noch keine Steckdosen hinzugefügt.")
+                        .transition(.opacity)
+                case .loading:
+                    HomeStatusRow(text: "Lädt…")
+                        .transition(.opacity)
+                case .authFailed:
+                    HomeStatusRow(text: "Shelly-Schlüssel ungültig — bitte in den Einstellungen erneuern.")
+                        .transition(.opacity)
+                case .error(let message):
+                    HomeStatusRow(text: message)
+                        .transition(.opacity)
+                }
+            } else {
+                HomeStatusRow(text: "Lädt…")
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: shellyModel?.state)
     }
 
     private func formattedKWh(_ wh: Double) -> String {
