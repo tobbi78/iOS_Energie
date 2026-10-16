@@ -56,6 +56,7 @@ struct EnergieApp: App {
         // scheme's Run arguments, then removed again) so it doesn't add CloudKit overhead to
         // every normal debug launch — see EnergieSchema.swift's migration checklist. Must never
         // run against Production; `#if DEBUG` plus the opt-in env var both guard against that.
+        print("[CloudKitSchemaInit] isCloudKitEnabled=\(isCloudKitEnabled) envFlag=\(ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] ?? "<unset>")")
         if isCloudKitEnabled,
             ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] == "1" {
             do {
@@ -75,7 +76,9 @@ struct EnergieApp: App {
                             fatalError("Could not load store for CloudKit schema push: \(error)")
                         }
                     }
+                    print("[CloudKitSchemaInit] store loaded, calling initializeCloudKitSchema()…")
                     try schemaInitContainer.initializeCloudKitSchema()
+                    print("[CloudKitSchemaInit] initializeCloudKitSchema() finished without throwing")
                     if let store = schemaInitContainer.persistentStoreCoordinator.persistentStores.first {
                         try schemaInitContainer.persistentStoreCoordinator.remove(store)
                     }
