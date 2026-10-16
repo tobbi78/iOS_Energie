@@ -7,6 +7,8 @@
 
 import SwiftUI
 import SwiftData
+import CoreData
+import CloudKit
 
 @main
 struct EnergieApp: App {
@@ -35,7 +37,8 @@ struct EnergieApp: App {
         // `isStoredInMemoryOnly`* — so the tests' own, supposedly-local containers were affected
         // too, independently of whether this one ever even gets constructed during a test run.
         let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = (!isRunningTests && FileManager.default.ubiquityIdentityToken != nil)
+        let isCloudKitEnabled = !isRunningTests && FileManager.default.ubiquityIdentityToken != nil
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = isCloudKitEnabled
             ? .private(SharedAppGroup.cloudKitContainerIdentifier)
             : .none
         let modelConfiguration = ModelConfiguration(
@@ -43,6 +46,65 @@ struct EnergieApp: App {
             isStoredInMemoryOnly: false,
             cloudKitDatabase: cloudKitDatabase
         )
+
+#if DEBUG
+        // One-off push of the CloudKit *Development* schema. CloudKit normally infers its schema
+        // from records that actually get mirrored, so a freshly added entity (e.g.
+        // `ShellyDailySample`, F14.1) only shows up in the CloudKit Console once something syncs
+        // it — slow and easy to miss entirely if no device happens to write one. This uploads
+        // throwaway representative records for every entity instead, so the Development schema
+        // is complete right after a single debug run. Gated behind an env var (set once in the
+        // scheme's Run arguments, then removed again) so it doesn't add CloudKit overhead to
+        // every normal debug launch — see EnergieSchema.swift's migration checklist. Must never
+        // run against Production; `#if DEBUG` plus the opt-in env var both guard against that.
+        // Gated on the real CloudKit account check, not `isCloudKitEnabled`/`ubiquityIdentityToken`
+        // above — per Apple's own docs for `ubiquityIdentityToken`, "CloudKit clients should not
+        // use this token" to decide whether the account is signed in; it tracks the unrelated
+        // CloudDocuments service, which this app's entitlements never enable, so it can read `nil`
+        // even while CloudKit itself reports the account as fully available (observed directly:
+        // simulator signed into iCloud, `CKContainer.accountStatus` = `.available`, token = nil
+        // regardless). Blocking synchronously on the account-status round trip is only acceptable
+        // here because this whole block is a one-off, opt-in dev action, not the normal launch
+        // path — and it must complete before the real `ModelContainer` below opens the same store
+        // file, or both ends up with two Core Data stacks on the same SQLite file at once.
+        if ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] == "1" {
+            let accountStatusSemaphore = DispatchSemaphore(value: 0)
+            var resolvedAccountStatus = CKAccountStatus.couldNotDetermine
+            CKContainer(identifier: SharedAppGroup.cloudKitContainerIdentifier).accountStatus { status, _ in
+                resolvedAccountStatus = status
+                accountStatusSemaphore.signal()
+            }
+            accountStatusSemaphore.wait()
+
+            if resolvedAccountStatus == .available {
+                do {
+                    try autoreleasepool {
+                        let storeDescription = NSPersistentStoreDescription(url: modelConfiguration.url)
+                        storeDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+                            containerIdentifier: SharedAppGroup.cloudKitContainerIdentifier
+                        )
+                        storeDescription.shouldAddStoreAsynchronously = false
+                        guard let managedObjectModel = NSManagedObjectModel.makeManagedObjectModel(for: EnergieSchemaV3.models) else {
+                            fatalError("Could not derive a managed object model for the CloudKit schema push")
+                        }
+                        let schemaInitContainer = NSPersistentCloudKitContainer(name: "Energie", managedObjectModel: managedObjectModel)
+                        schemaInitContainer.persistentStoreDescriptions = [storeDescription]
+                        schemaInitContainer.loadPersistentStores { _, error in
+                            if let error {
+                                fatalError("Could not load store for CloudKit schema push: \(error)")
+                            }
+                        }
+                        try schemaInitContainer.initializeCloudKitSchema()
+                        if let store = schemaInitContainer.persistentStoreCoordinator.persistentStores.first {
+                            try schemaInitContainer.persistentStoreCoordinator.remove(store)
+                        }
+                    }
+                } catch {
+                    fatalError("CloudKit schema initialization failed: \(error)")
+                }
+            }
+        }
+#endif
 
         do {
             return try ModelContainer(
