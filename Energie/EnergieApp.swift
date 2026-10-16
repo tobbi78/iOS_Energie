@@ -23,24 +23,26 @@ struct EnergieApp: App {
         // types satisfy CloudKit's constraints (F0.2): every non-optional property has a
         // declaration-site default, no `@Attribute(.unique)`, no relationships.
         //
-        // Falls back to local-only storage when no iCloud account is signed in
-        // (`ubiquityIdentityToken` is a lightweight, synchronous check — no network/CloudKit
-        // round-trip). Without this, SwiftData's CoreData+CloudKit mirroring setup fails hard
-        // with `CKAccountStatusNoAccount` and brings down the whole process, not just the sync —
-        // observed directly in this environment, which has no iCloud account signed in.
+        // No pre-flight account check here: an earlier version gated this on
+        // `FileManager.default.ubiquityIdentityToken`, but that token tracks the unrelated
+        // CloudDocuments service (which this app's entitlements never enable) and can read `nil`
+        // even while CloudKit itself is fully available — Apple's own docs for
+        // `ubiquityIdentityToken` say CloudKit clients shouldn't use it for this at all. Missing
+        // or signed-out iCloud accounts are a first-class, documented case for
+        // `NSPersistentCloudKitContainer`: it recovers from `CKErrorNotAuthenticated`/`.noAccount`
+        // internally (and resumes automatically via `CKAccountChanged` once an account becomes
+        // available) rather than crashing the process.
         //
-        // Also forced local-only under XCTest, regardless of account status, as defense in
-        // depth for this container specifically — the actual crash traced down to a different
-        // cause (see SolarModelTests.makeContext's comment): `ModelConfiguration`'s
-        // `cloudKitDatabase` defaults to `.automatic`, which auto-discovers and tries to mirror
-        // through whatever container is in the app's entitlements *regardless of
-        // `isStoredInMemoryOnly`* — so the tests' own, supposedly-local containers were affected
-        // too, independently of whether this one ever even gets constructed during a test run.
+        // Still forced local-only under XCTest, regardless of account status, as defense in depth
+        // for this container specifically (see `SolarModelTests.makeContext`'s comment):
+        // `ModelConfiguration`'s `cloudKitDatabase` defaults to `.automatic`, which
+        // auto-discovers and tries to mirror through whatever container is in the app's
+        // entitlements *regardless of `isStoredInMemoryOnly`* — so the tests' own,
+        // supposedly-local containers were affected too.
         let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        let isCloudKitEnabled = !isRunningTests && FileManager.default.ubiquityIdentityToken != nil
-        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = isCloudKitEnabled
-            ? .private(SharedAppGroup.cloudKitContainerIdentifier)
-            : .none
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = isRunningTests
+            ? .none
+            : .private(SharedAppGroup.cloudKitContainerIdentifier)
         let modelConfiguration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
