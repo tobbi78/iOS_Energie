@@ -58,39 +58,54 @@ struct EnergieApp: App {
         // every normal debug launch — see EnergieSchema.swift's migration checklist. Must never
         // run against Production; `#if DEBUG` plus the opt-in env var both guard against that.
         print("[CloudKitSchemaInit] isCloudKitEnabled=\(isCloudKitEnabled) envFlag=\(ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] ?? "<unset>")")
-        // `ubiquityIdentityToken` above only answers yes/no; `CKContainer.accountStatus` gives the
-        // actual reason (noAccount/restricted/couldNotDetermine + underlying error) when it's no.
-        CKContainer(identifier: SharedAppGroup.cloudKitContainerIdentifier).accountStatus { status, error in
-            print("[CloudKitSchemaInit] CKContainer.accountStatus=\(status) error=\(String(describing: error))")
-        }
-        if isCloudKitEnabled,
-            ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] == "1" {
-            do {
-                try autoreleasepool {
-                    let storeDescription = NSPersistentStoreDescription(url: modelConfiguration.url)
-                    storeDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
-                        containerIdentifier: SharedAppGroup.cloudKitContainerIdentifier
-                    )
-                    storeDescription.shouldAddStoreAsynchronously = false
-                    guard let managedObjectModel = NSManagedObjectModel.makeManagedObjectModel(for: EnergieSchemaV3.models) else {
-                        fatalError("Could not derive a managed object model for the CloudKit schema push")
-                    }
-                    let schemaInitContainer = NSPersistentCloudKitContainer(name: "Energie", managedObjectModel: managedObjectModel)
-                    schemaInitContainer.persistentStoreDescriptions = [storeDescription]
-                    schemaInitContainer.loadPersistentStores { _, error in
-                        if let error {
-                            fatalError("Could not load store for CloudKit schema push: \(error)")
+        // Gated on the real CloudKit account check, not `isCloudKitEnabled`/`ubiquityIdentityToken`
+        // above — per Apple's own docs for `ubiquityIdentityToken`, "CloudKit clients should not
+        // use this token" to decide whether the account is signed in; it tracks the unrelated
+        // CloudDocuments service, which this app's entitlements never enable, so it can read `nil`
+        // even while CloudKit itself reports the account as fully available (observed directly:
+        // simulator signed into iCloud, `CKContainer.accountStatus` = `.available`, token = nil
+        // regardless). Blocking synchronously on the account-status round trip is only acceptable
+        // here because this whole block is a one-off, opt-in dev action, not the normal launch
+        // path — and it must complete before the real `ModelContainer` below opens the same store
+        // file, or both ends up with two Core Data stacks on the same SQLite file at once.
+        if ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] == "1" {
+            let accountStatusSemaphore = DispatchSemaphore(value: 0)
+            var resolvedAccountStatus = CKAccountStatus.couldNotDetermine
+            CKContainer(identifier: SharedAppGroup.cloudKitContainerIdentifier).accountStatus { status, error in
+                print("[CloudKitSchemaInit] CKContainer.accountStatus=\(status) error=\(String(describing: error))")
+                resolvedAccountStatus = status
+                accountStatusSemaphore.signal()
+            }
+            accountStatusSemaphore.wait()
+
+            if resolvedAccountStatus == .available {
+                do {
+                    try autoreleasepool {
+                        let storeDescription = NSPersistentStoreDescription(url: modelConfiguration.url)
+                        storeDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+                            containerIdentifier: SharedAppGroup.cloudKitContainerIdentifier
+                        )
+                        storeDescription.shouldAddStoreAsynchronously = false
+                        guard let managedObjectModel = NSManagedObjectModel.makeManagedObjectModel(for: EnergieSchemaV3.models) else {
+                            fatalError("Could not derive a managed object model for the CloudKit schema push")
+                        }
+                        let schemaInitContainer = NSPersistentCloudKitContainer(name: "Energie", managedObjectModel: managedObjectModel)
+                        schemaInitContainer.persistentStoreDescriptions = [storeDescription]
+                        schemaInitContainer.loadPersistentStores { _, error in
+                            if let error {
+                                fatalError("Could not load store for CloudKit schema push: \(error)")
+                            }
+                        }
+                        print("[CloudKitSchemaInit] store loaded, calling initializeCloudKitSchema()…")
+                        try schemaInitContainer.initializeCloudKitSchema()
+                        print("[CloudKitSchemaInit] initializeCloudKitSchema() finished without throwing")
+                        if let store = schemaInitContainer.persistentStoreCoordinator.persistentStores.first {
+                            try schemaInitContainer.persistentStoreCoordinator.remove(store)
                         }
                     }
-                    print("[CloudKitSchemaInit] store loaded, calling initializeCloudKitSchema()…")
-                    try schemaInitContainer.initializeCloudKitSchema()
-                    print("[CloudKitSchemaInit] initializeCloudKitSchema() finished without throwing")
-                    if let store = schemaInitContainer.persistentStoreCoordinator.persistentStores.first {
-                        try schemaInitContainer.persistentStoreCoordinator.remove(store)
-                    }
+                } catch {
+                    fatalError("CloudKit schema initialization failed: \(error)")
                 }
-            } catch {
-                fatalError("CloudKit schema initialization failed: \(error)")
             }
         }
 #endif
