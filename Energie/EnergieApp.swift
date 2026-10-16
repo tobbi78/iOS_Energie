@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import CoreData
+import CloudKit
 
 @main
 struct EnergieApp: App {
@@ -57,6 +58,11 @@ struct EnergieApp: App {
         // every normal debug launch — see EnergieSchema.swift's migration checklist. Must never
         // run against Production; `#if DEBUG` plus the opt-in env var both guard against that.
         print("[CloudKitSchemaInit] isCloudKitEnabled=\(isCloudKitEnabled) envFlag=\(ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] ?? "<unset>")")
+        // `ubiquityIdentityToken` above only answers yes/no; `CKContainer.accountStatus` gives the
+        // actual reason (noAccount/restricted/couldNotDetermine + underlying error) when it's no.
+        CKContainer(identifier: SharedAppGroup.cloudKitContainerIdentifier).accountStatus { status, error in
+            print("[CloudKitSchemaInit] CKContainer.accountStatus=\(status) error=\(String(describing: error))")
+        }
         if isCloudKitEnabled,
             ProcessInfo.processInfo.environment["INITIALIZE_CLOUDKIT_SCHEMA"] == "1" {
             do {
