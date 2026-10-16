@@ -29,7 +29,9 @@ struct CombinedWidgetProvider: TimelineProvider {
             pvSnapshot: PVWidgetDataSource.Snapshot(producedWh: 4200, selfSufficiencyRate: 0.62, batterySocPercent: 54, fetchedAt: .now),
             pvState: .ready,
             heatPumpSnapshot: HPWidgetDataSource.Snapshot(pressureBar: 1.4, outsideTemperatureCelsius: 8.0, fetchedAt: .now),
-            heatPumpState: .ready
+            heatPumpState: .ready,
+            shellySnapshot: ShellyWidgetSnapshot(totalPower: 142, onCount: 2, deviceCount: 4, offlineCount: 1, plugs: [], fetchedAt: .now),
+            shellyState: .ready
         )
     }
 
@@ -51,10 +53,12 @@ struct CombinedWidgetProvider: TimelineProvider {
     private func makeEntry(triggerAlerts: Bool = false) async -> (CombinedWidgetEntry, TimeInterval) {
         async let pvResult = PVWidgetDataSource.fetchLatestSnapshot()
         async let hpResult = HPWidgetDataSource.fetchLatestSnapshot()
+        async let shellyResult = ShellyWidgetDataSource.fetchLatestSnapshot()
         async let usedThisMonth = PVWidgetDataSource.requestsUsedThisMonth()
 
         let (pvSnapshot, pvState) = resolvePV(await pvResult, triggerAlerts: triggerAlerts)
         let (hpSnapshot, hpState, hpDelay) = resolveHeatPump(await hpResult, triggerAlerts: triggerAlerts)
+        let (shellySnapshot, shellyState) = resolveShelly(await shellyResult)
 
         let pvDelay = PVWidgetPollPacing.nextPollDelay(
             usedThisMonth: await usedThisMonth,
@@ -68,9 +72,11 @@ struct CombinedWidgetProvider: TimelineProvider {
             pvSnapshot: pvSnapshot,
             pvState: pvState,
             heatPumpSnapshot: hpSnapshot,
-            heatPumpState: hpState
+            heatPumpState: hpState,
+            shellySnapshot: shellySnapshot,
+            shellyState: shellyState
         )
-        return (entry, min(pvDelay, hpDelay))
+        return (entry, min(pvDelay, hpDelay, ShellyWidgetProvider.pollInterval))
     }
 
     private func resolvePV(
@@ -121,6 +127,27 @@ struct CombinedWidgetProvider: TimelineProvider {
                 state = .error
             }
             return (HPWidgetDataSource.cachedSnapshot(), state, delay)
+        }
+    }
+
+    /// No alerts to trigger here (F16.4 — schalten stays app-only, and there's no Shelly
+    /// equivalent of the PV/Wärmepumpe alarms) and no error-specific delay — the Shelly section
+    /// always refreshes at `ShellyWidgetProvider.pollInterval`, same as the standalone widget.
+    private func resolveShelly(
+        _ result: Result<ShellyWidgetSnapshot, ShellyWidgetDataSource.FetchError>
+    ) -> (ShellyWidgetSnapshot?, ShellyWidgetEntry.State) {
+        switch result {
+        case .success(let snapshot):
+            return (snapshot, .ready)
+        case .failure(let error):
+            let state: ShellyWidgetEntry.State
+            switch error {
+            case .notConfigured: state = .notConfigured
+            case .noDevices: state = .noDevices
+            case .unauthorized: state = .authFailed
+            case .failed: state = .error
+            }
+            return (ShellyWidgetDataSource.cachedSnapshot(), state)
         }
     }
 }

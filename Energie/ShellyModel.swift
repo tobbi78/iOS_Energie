@@ -123,6 +123,9 @@ final class ShellyModel {
             throw ShellyClientError.unauthorized
         }
         await refresh()
+        // So the Shelly widgets (F16.3) don't keep showing the pre-switch state until their own
+        // next 15-minute poll — only on success, a failed command changed nothing to reflect.
+        WidgetReload.shellyWidgetsChanged()
     }
 
     /// - Parameter force: Bypasses the `rejectedAuthKey` short-circuit below — used for an

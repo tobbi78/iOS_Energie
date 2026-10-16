@@ -19,4 +19,9 @@ struct CombinedWidgetEntry: TimelineEntry {
     let pvState: PVWidgetEntry.State
     let heatPumpSnapshot: HPWidgetDataSource.Snapshot?
     let heatPumpState: HPWidgetEntry.State
+    /// `nil`/`.notConfigured`/`.noDevices` hide the Shelly section entirely (F16.3,
+    /// Nutzerentscheidung 2026-10-15) — a user without Shelly set up sees this tile exactly as
+    /// before, rather than an empty/placeholder third section.
+    let shellySnapshot: ShellyWidgetSnapshot?
+    let shellyState: ShellyWidgetEntry.State
 }

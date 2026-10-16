@@ -29,7 +29,7 @@ nonisolated struct ShellyDevice: Codable, Equatable, Identifiable {
 @Observable
 @MainActor
 final class ShellyDeviceList {
-    static let devicesKey = "ShellyDeviceList.devices"
+    nonisolated static let devicesKey = "ShellyDeviceList.devices"
 
     private static let allowedDeviceIDCharacters = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyz0123456789")
 
@@ -38,12 +38,18 @@ final class ShellyDeviceList {
 
     init(userDefaults: UserDefaults = SharedAppGroup.userDefaults) {
         self.userDefaults = userDefaults
-        if let data = userDefaults.data(forKey: Self.devicesKey),
-           let decoded = try? JSONDecoder().decode([ShellyDevice].self, from: data) {
-            devices = decoded
-        } else {
-            devices = []
+        devices = Self.loadDevices(from: userDefaults)
+    }
+
+    /// Reads the saved device list without needing a `ShellyDeviceList` instance — used by
+    /// `ShellyWidgetDataSource` (F16.3), which runs in the widget extension process and has no
+    /// reason to pull in the `@MainActor`/`@Observable` wrapper just to read a snapshot.
+    nonisolated static func loadDevices(from userDefaults: UserDefaults) -> [ShellyDevice] {
+        guard let data = userDefaults.data(forKey: devicesKey),
+              let decoded = try? JSONDecoder().decode([ShellyDevice].self, from: data) else {
+            return []
         }
+        return decoded
     }
 
     /// Returns `false` without changing anything if a device with this ID is already present —

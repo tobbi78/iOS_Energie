@@ -146,6 +146,32 @@ struct ShellyDeviceListTests {
         #expect(reloaded.devices == [ShellyDevice(id: "a1b2c3", name: "Wohnzimmer", model: "Plug S")])
     }
 
+    // MARK: - loadDevices(from:) (F16.3)
+
+    @Test func loadDevicesReturnsEmptyWhenNothingIsStoredYet() {
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        #expect(ShellyDeviceList.loadDevices(from: defaults).isEmpty)
+    }
+
+    @Test func loadDevicesReadsWhatAnInstanceAlreadyPersisted() {
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        let list = ShellyDeviceList(userDefaults: defaults)
+        list.add(ShellyDevice(id: "aaa", name: "Erste", model: nil))
+        list.add(ShellyDevice(id: "bbb", name: "Zweite", model: "Plug S"))
+
+        #expect(ShellyDeviceList.loadDevices(from: defaults) == [
+            ShellyDevice(id: "aaa", name: "Erste", model: nil),
+            ShellyDevice(id: "bbb", name: "Zweite", model: "Plug S"),
+        ])
+    }
+
+    @Test func loadDevicesReturnsEmptyForUndecodableData() {
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        defaults.set(Data("not valid JSON".utf8), forKey: ShellyDeviceList.devicesKey)
+
+        #expect(ShellyDeviceList.loadDevices(from: defaults).isEmpty)
+    }
+
     // MARK: - normalizedDeviceID
 
     @Test func normalizedDeviceIDTrimsAndLowercases() {

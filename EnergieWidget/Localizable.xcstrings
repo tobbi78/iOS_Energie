@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
+    "%lld offline" : {
+
+    },
+    "%lld von %lld an" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld von %2$lld an"
+          }
+        }
+      }
+    },
+    "+ %lld weitere" : {
+
+    },
     "Anlagendruck und Außentemperatur, mit Hintergrund-Druckalarm." : {
       "localizations" : {
         "en" : {
@@ -10,6 +26,9 @@
           }
         }
       }
+    },
+    "Gesamtleistung, Schaltzustand und die einzelnen Shelly-Steckdosen." : {
+
     },
     "Produktion und Autarkiegrad von heute." : {
       "localizations" : {
@@ -22,6 +41,7 @@
       }
     },
     "Produktion, Autarkiegrad, Anlagendruck und Außentemperatur in einer Kachel." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -30,6 +50,9 @@
           }
         }
       }
+    },
+    "Produktion, Autarkiegrad, Anlagendruck, Außentemperatur und — sofern eingerichtet — Shelly-Steckdosen in einer Kachel." : {
+
     },
     "PV & Wärmepumpe" : {
       "localizations" : {
@@ -50,6 +73,9 @@
           }
         }
       }
+    },
+    "Steckdosen" : {
+
     },
     "Wärmepumpe" : {
       "localizations" : {
